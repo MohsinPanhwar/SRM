@@ -1,114 +1,449 @@
-﻿@model SRM.Models.Agent
+﻿@using System.Security.Claims
+@model SRM.Models.Agent
 @{
     ViewBag.Title = "Manage User";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+<style>
+    .profile-container {
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-top: 20px;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .form-group {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .setup-btn-green {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+        .setup-btn-green:hover {
+            background-color: #218838;
+        }
+
+    /* Radio Group Styling */
+    .radio-group {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        margin-top: 8px;
+    }
+
+    .radio-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+    }
+
+    /* Table Styling */
+    .setup-header {
+        background: #343a40;
+        color: white;
+        padding: 12px 15px;
+        border-radius: 4px 4px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .table-responsive {
+        border: 1px solid #dee2e6;
+        border-top: none;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    #allUsersTable thead th {
+        position: sticky;
+        top: 0;
+        background: #f8f9fa;
+        z-index: 10;
+        border-bottom: 2px solid #dee2e6;
+    }
+</style>
+
 <div class="profile-container">
-    <h2>Manage Profile</h2>
+    <h2>Manage Users</h2>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
-
-    @using (Html.BeginForm("ManageUser", "User", FormMethod.Post))
-    {
-        @Html.AntiForgeryToken()
-
-        <!-- Row 1: Pno + Uid (read-only) -->
-        <div class="form-row">
-            <div class="form-group">
-                @Html.LabelFor(m => m.Pno)
-                @Html.TextBoxFor(m => m.Pno, new { @class = "form-control", @readonly = "readonly" })
-            </div>
-          
-        </div>
-
-        <!-- Row 2: Name + Email -->
-        <div class="form-row">
-            <div class="form-group">
-                @Html.LabelFor(m => m.Name)
-                @Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
-            </div>
-            <div class="form-group">
-                @Html.LabelFor(m => m.Email)
-                @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email" })
+    <div class="form-row" style="background: #fdfdfd; padding: 15px; border: 1px solid #eee; border-radius: 8px;">
+        <div class="form-group" style="flex: 1 1 100%; margin-bottom: 0;">
+            <label for="Pno">Search User by PNo.</label>
+            <div class="action-row" style="display: flex; gap: 10px;">
+                @Html.TextBoxFor(m => m.Pno, new { @class = "form-control", @id = "PnoSearch", placeholder = "Enter PNo (e.g. 10254)" })
+                <button type="button" id="btnLookup" class="setup-btn-green">🔍 Find Record</button>
+                <button type="button" id="btnBackToList" class="Back-To-List" style="display:none;">Back to List</button>
             </div>
         </div>
+    </div>
 
-        <!-- Row 3: Mobile + MobileOperator -->
-        <div class="form-row">
-            <div class="form-group">
-                @Html.LabelFor(m => m.Mobile)
-                @Html.TextBoxFor(m => m.Mobile, new { @class = "form-control" })
-            </div>
-            <div class="form-group">
-                @Html.LabelFor(m => m.MobileOperator)
-                @Html.TextBoxFor(m => m.MobileOperator, new { @class = "form-control" })
-            </div>
-        </div>
+    <div id="userListSection">
+        <table class="crud-table">
+            <thead>
+                <tr>
+                    <th style="width: 100px;">PNo.</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th style="text-align:center;">Status</th>
+                    <th style="text-align:center;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="allUsersTableBody">
+                @* Populated via AJAX *@
+            </tbody>
+        </table>
+    </div>
 
-        <!-- Row 4: WorkArea + Privilege -->
-        <div class="form-row">
-            <div class="form-group">
-                @Html.LabelFor(m => m.WorkArea)
-                @Html.TextBoxFor(m => m.WorkArea, new { @class = "form-control" })
-            </div>
-            <div class="form-group">
-                @Html.LabelFor(m => m.Privilege)
-                @Html.TextBoxFor(m => m.Privilege, new { @class = "form-control" })
-            </div>
-        </div>
+    <div id="userDetailsForm" style="display:none; margin-top: 20px;">
+        <div class="alert alert-info">Editing details for PNo: <strong id="displayPno"></strong></div>
 
-        <!-- Row 5: RoleId + ProgramId -->
-        <div class="form-row">
-            <div class="form-group">
-                @Html.LabelFor(m => m.RoleId)
-                @Html.TextBoxFor(m => m.RoleId, new { @class = "form-control"})
-            </div>
-            <div class="form-group">
-                @Html.LabelFor(m => m.ProgramId)
-                @Html.TextBoxFor(m => m.ProgramId, new { @class = "form-control" })
-            </div>
-        </div>
+        @using (Html.BeginForm("ManageUser", "User", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.Pno, new { id = "MainHiddenPno" })
 
-        <!-- Row 6: Status + LastUpdate (readonly) -->
-        <div class="form-row">
-            <div class="form-group">
-                @Html.LabelFor(m => m.Status)
-                @Html.TextBoxFor(m => m.Status, new { @class = "form-control" })
+            <div class="form-row">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Name)
+                    @Html.TextBoxFor(m => m.Name, new { @class = "form-control", id = "EditName" })
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Email)
+                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control", id = "EditEmail", type = "email" })
+                </div>
             </div>
-            <div class="form-group">
-                <label>Last Update</label>
-                <input type="text" class="form-control" value="@(Model.LastUpdate?.ToString("g"))" readonly />
+
+            <div class="form-row">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Mobile)
+                    @Html.TextBoxFor(m => m.Mobile, new { @class = "form-control", id = "EditMobile" })
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.MobileOperator)
+                    <select id="MobileOperator" name="MobileOperator" class="form-control">
+                        <option value="">-- Select Operator --</option>
+                    </select>
+                </div>
             </div>
-        </div>
 
-        <!-- Save button row -->
-        <div class="form-row full-width">
-            <button type="submit" class="btn btn-success">Save Changes</button>
-        </div>
-    }
+            <div class="form-row">
+                <div class="form-group">
+                    <label>User Type</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="typeIndiv" name="UserType" value="U" checked>
+                            <label for="typeIndiv">Individual</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="typeGroup" name="UserType" value="G">
+                            <label for="typeGroup">Group</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Group Name</label>
+                    <select id="GroupDropdown" name="GroupName" class="form-control" disabled>
+                        <option value="">-- Select Group --</option>
+                    </select>
+                </div>
+            </div>
 
-    <hr />
+            <div class="form-row">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.WorkArea)
+                    @Html.TextBoxFor(m => m.WorkArea, new { @class = "form-control", id = "EditWorkArea" })
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Privilege)
+                    @Html.TextBoxFor(m => m.Privilege, new { @class = "form-control", id = "EditPrivilege" })
+                </div>
+            </div>
 
-    <h3>Change Password</h3>
-    @using (Html.BeginForm("ChangePassword", "User", FormMethod.Post))
-    {
-        @Html.AntiForgeryToken()
-        <div class="form-group">
-            <label>Current Password</label>
-            <input type="password" name="currentPassword" class="form-control" required />
+            <div class="form-row">
+                <div class="form-group">
+                    <label>User Role</label>
+                    <select id="EditRoleId" name="RoleId" class="form-control">
+                        <option value="Engineer">Engineer</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Program Name</label>
+                    <select id="EditProgramId" name="ProgramId" class="form-control">
+                        <option value="">-- Select Program --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Status</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="statusActive" name="Status" value="A" checked>
+                            <label for="statusActive" style="color: green; font-weight: bold;">Active</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="statusInactive" name="Status" value="I">
+                            <label for="statusInactive" style="color: red; font-weight: bold;">Inactive</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Last Update</label>
+                    <input type="text" id="lastUpdateDisplay" class="form-control" readonly />
+                </div>
+            </div>
+
+            <div class="form-row" style="margin-top: 20px;">
+                <button type="submit" class="btn btn-success" style="flex: 1; padding: 12px;">💾 Save Changes</button>
+
+                @{
+                    var isAdmin = (Context.User.Identity as ClaimsIdentity)?.FindFirst("IsAdmin")?.Value;
+                    bool auth = (isAdmin == "Y" || isAdmin == "True" || Session["IsAdmin"]?.ToString() == "True");
+                }
+                @if (auth)
+                {
+                    <button type="button" id="btnShowPass" class="btn btn-warning" style="flex: 1; padding: 12px;">🔑 Reset Password</button>
+                }
+            </div>
+        }
+
+        <div id="passwordFields" style="display:none; margin-top: 20px; padding: 20px; border: 1px solid #ffeeba; background: #fffaf0; border-radius: 8px;">
+            <h4 style="color: #856404;">Change User Password</h4>
+            @using (Html.BeginForm("ChangePassword", "User", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Pno" id="PasswordResetPno" />
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" name="newPassword" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <input type="password" name="confirmPassword" class="form-control" required />
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Password</button>
+            }
         </div>
-        <div class="form-group">
-            <label>New Password</label>
-            <input type="password" name="newPassword" class="form-control" required />
-        </div>
-        <div class="form-group">
-            <label>Confirm New Password</label>
-            <input type="password" name="confirmPassword" class="form-control" required />
-        </div>
-        <button type="submit" class="btn btn-warning">Change Password</button>
-    }
+    </div>
+
+    <div id="messageContainer" style="margin-top: 25px;">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success"><strong>✓ Success:</strong> @TempData["Success"]</div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger"><strong>⚠ Error:</strong> @TempData["Error"]</div>
+        }
+    </div>
 </div>
+
+@section scripts {
+    <script>
+    $(function () {
+        // --- 1. INITIALIZATION & DROPDOWNS ---
+        function init() {
+            // Load Operators
+            $.getJSON('@Url.Action("GetMobileOperators", "User")', function (data) {
+                $.each(data, function (i, v) { $('#MobileOperator').append($('<option>', { value: v, text: v })); });
+            });
+            // Load Programs
+            $.getJSON('@Url.Action("GetPrograms", "User")', function (data) {
+                $.each(data, function (i, item) { $('#EditProgramId').append($('<option>', { value: item.ProgramId, text: item.ProgramName })); });
+            });
+            loadTable();
+        }
+
+        function loadTable() {
+            $.getJSON('@Url.Action("GetAllUsers", "User")', function (data) {
+                var rows = '';
+                $('#userCount').text('Total: ' + data.length + ' users found');
+                $.each(data, function (i, u) {
+                    var sClass = (u.Status === "A" || u.Status === "Y") ? "text-success" : "text-danger";
+                    rows += '<tr>' +
+                        '<td>' + u.Pno + '</td>' +
+                        '<td>' + u.Name + '</td>' +
+                        '<td>' + u.Email + '</td>' +
+                        '<td>' + (u.Mobile || '-') + '</td>' +
+                        '<td>' + (u.RoleId || 'User') + '</td>' +
+                        '<td align="center"><span class="' + sClass + '" style="font-weight:bold;">' + (u.Status === "A" ? "Active" : "Inactive") + '</span></td>' +
+                        '<td align="center"><button class="btn btn-sm btn-info btn-edit-row" data-pno="' + u.Pno + '">Select</button></td>' +
+                    '</tr>';
+                });
+                $('#allUsersTable tbody').html(rows);
+            });
+        }
+
+        init();
+
+        // --- 2. SEARCH & TOGGLE LOGIC ---
+        $('#btnLookup').click(function () {
+            var pVal = $('#PnoSearch').val().trim();
+            if (!pVal) return;
+
+            $(this).text("Searching...").prop('disabled', true);
+            $.ajax({
+                url: '@Url.Action("GetUserByPno", "User")',
+                type: 'GET',
+                data: { pno: pVal },
+                success: function (res) {
+                    if (res.success) {
+                        // Populate
+                        $('#displayPno').text(pVal);
+                        $('#MainHiddenPno, #PasswordResetPno').val(pVal);
+                        $('#EditName').val(res.data.Name);
+                        $('#EditEmail').val(res.data.Email);
+                        $('#EditMobile').val(res.data.Mobile);
+                        $('#MobileOperator').val(res.data.MobileOperator);
+                        $('#EditWorkArea').val(res.data.WorkArea);
+                        $('#EditPrivilege').val(res.data.Privilege);
+                        $('#EditRoleId').val(res.data.RoleId);
+                        $('#EditProgramId').val(res.data.ProgramId);
+                        $('#lastUpdateDisplay').val(res.data.LastUpdate);
+
+                        if (res.data.UserType === "G") $('#typeGroup').prop('checked', true).trigger('change');
+                        else $('#typeIndiv').prop('checked', true).trigger('change');
+
+                        if (res.data.Status === "A" || res.data.Status === "Y") $('#statusActive').prop('checked', true);
+                        else $('#statusInactive').prop('checked', true);
+
+                        // Swap Sections
+                        $('#userListSection').hide();
+                        $('#userDetailsForm').fadeIn();
+                        $('#btnBackToList').show();
+                    } else {
+                        alert(res.message);
+                    }
+                },
+                complete: function() { $('#btnLookup').html("🔍 Find Record").prop('disabled', false); }
+            });
+        });
+
+        $('#btnBackToList').click(function() {
+            $('#userDetailsForm, #passwordFields').hide();
+            $('#userListSection').fadeIn();
+            $(this).hide();
+            $('#PnoSearch').val('');
+        });
+
+        $(document).on('click', '.btn-edit-row', function() {
+            $('#PnoSearch').val($(this).data('pno'));
+            $('#btnLookup').trigger('click');
+        });
+
+        // --- 3. UI EXTRAS ---
+        $('input[name="UserType"]').on('change', function() {
+            $('#GroupDropdown').prop('disabled', !$('#typeGroup').is(':checked'));
+        });
+
+        $('#btnShowPass').click(function() { $('#passwordFields').slideToggle(); });
+
+        if ($('.alert').length > 0) {
+            $('html, body').animate({ scrollTop: $("#messageContainer").offset().top }, 500);
+            setTimeout(function() { $('.alert').fadeOut(); }, 5000);
+        }
+    });
+        $(function () {
+
+        // 1. Load Table Data
+        function loadAllUsers() {
+            $.getJSON('@Url.Action("GetAllUsers", "User")', function (data) {
+                var rows = '';
+                $.each(data, function (i, item) {
+                    var statusColor = (item.Status === "A" || item.Status === "Y") ? "#28a745" : "#dc3545";
+                    var statusText = (item.Status === "A" || item.Status === "Y") ? "Active" : "Inactive";
+
+                    rows += `<tr data-pno="${item.Pno}">
+                        <td><strong>${item.Pno}</strong></td>
+                        <td>${item.Name}</td>
+                        <td>${item.Email}</td>
+                        <td>${item.RoleId || "User"}</td>
+                        <td style="text-align:center; color:${statusColor}; font-weight:bold;">${statusText}</td>
+                        <td class="actions-cell" style="text-align:center;">
+                            <button type="button" class="btn-select-user" data-pno="${item.Pno}" title="Edit" style="border:none; background:none; cursor:pointer; font-size:1.2em;">✏️</button>
+                        </td>
+                    </tr>`;
+                });
+                $('#allUsersTableBody').html(rows);
+            });
+        }
+        loadAllUsers();
+
+        // 2. Find Record Action
+        $('#btnLookup').click(function () {
+            var pnoVal = $('#PnoSearch').val().trim();
+            if (pnoVal === "") { alert("Please enter a PNo."); return; }
+
+            $.ajax({
+                url: '@Url.Action("GetUserByPno", "User")',
+                type: 'GET',
+                data: { pno: pnoVal },
+                success: function (res) {
+                    if (res.success) {
+                        // Populate the form fields
+                        $('#EditName').val(res.data.Name);
+                        $('#EditEmail').val(res.data.Email);
+                        $('#EditMobile').val(res.data.Mobile);
+                        $('#EditRoleId').val(res.data.RoleId);
+                        $('#MainHiddenPno').val(pnoVal);
+
+                        // UI Transition
+                        $('#userListSection').hide();
+                        $('#userDetailsForm').fadeIn();
+                        $('#btnBackToList').show();
+                        $('#messageContainer').empty();
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            });
+        });
+
+        // 3. Edit Icon Click (Triggers Search logic)
+        $(document).on('click', '.btn-select-user', function() {
+            var pno = $(this).data('pno');
+            $('#PnoSearch').val(pno);
+            $('#btnLookup').trigger('click');
+        });
+
+        // 4. Back to List Action
+        $('#btnBackToList').click(function() {
+            $('#userDetailsForm').hide();
+            $('#userListSection').fadeIn();
+            $(this).hide();
+            $('#PnoSearch').val('');
+        });
+
+        // Auto-scroll to message if exists
+        if ($('.alert').length > 0) {
+            setTimeout(function() { $('.alert').fadeOut(); }, 5000);
+        }
+    });
+    </script>
+}
+    </script>
+}

@@ -3,15 +3,16 @@ using System.Linq;
 using System.Web.Mvc;
 using SRM.Data;
 using SRM.Models;
+using System.Security.Claims;
+using System.Collections.Generic;
 
 namespace SRM.Controllers
 {
-    [Authorize] // any logged-in user
+    [Authorize]
     public class UserController : Controller
     {
         private readonly AppDbContext _db = new AppDbContext();
 
-        // GET: Manage Profile
         public ActionResult ManageUser()
         {
             var pno = Session["AgentPno"] as string;
@@ -25,123 +26,153 @@ namespace SRM.Controllers
             return View("~/Views/SystemSetup/ManageUser.cshtml", agent);
         }
 
-        // POST: Update profile
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult ManageUser(Agent model)
         {
-            if (!ModelState.IsValid)
-                return View("~/Views/SystemSetup/ManageUser.cshtml", model);
-
-            try
+            var agent = _db.agent.FirstOrDefault(a => a.Pno == model.Pno);
+            if (agent != null)
             {
-                var agent = _db.agent.FirstOrDefault(a => a.Pno == model.Pno);
-                if (agent == null)
-                    return HttpNotFound();
-
                 agent.Name = model.Name;
                 agent.Email = model.Email;
                 agent.Mobile = model.Mobile;
-                agent.LastUpdate = DateTime.UtcNow;
+                agent.MobileOperator = Request.Form["MobileOperator"];
+                agent.Status = Request.Form["Status"];
+                agent.UserType = Request.Form["UserType"];
+                agent.LastUpdate = DateTime.Now;
 
                 _db.SaveChanges();
-
-                TempData["Success"] = "Profile updated successfully!";
-                return RedirectToAction("ManageUser"); // must redirect
+                TempData["Success"] = "User details updated successfully!";
             }
-            catch (Exception ex)
+            else
             {
-                ModelState.AddModelError("", "Error updating profile: " + ex.Message);
-                return View("~/Views/SystemSetup/ManageUser.cshtml", model); // only on error
+                TempData["Error"] = "User not found.";
             }
+            return RedirectToAction("ManageUser", new { pno = model.Pno });
         }
 
-        // POST: Change password
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ChangePassword(string currentPassword, string newPassword, string confirmPassword)
+        public ActionResult ChangePassword(string Pno, string newPassword, string confirmPassword)
         {
-            var pno = Session["AgentPno"] as string;
-            if (string.IsNullOrEmpty(pno))
-                return RedirectToAction("Login", "Account");
+            // 1. Extract the claim value from JWT
+            var adminClaim = (User.Identity as ClaimsIdentity)?.FindFirst("IsAdmin")?.Value;
 
-            var agent = _db.agent.FirstOrDefault(a => a.Pno == pno);
-            if (agent == null)
-                return HttpNotFound();
+            // 2. Flexible Verification: 
+            // Checks if JWT says "Y" or "True", OR checks the Session backup
+            bool isAuthorized = (adminClaim == "Y" || adminClaim == "True") ||
+                                (Session["IsAdmin"]?.ToString() == "True" || Session["IsAdmin"]?.ToString() == "Y");
 
-            if (string.IsNullOrEmpty(currentPassword) || string.IsNullOrEmpty(newPassword))
+            if (!isAuthorized)
             {
-                ModelState.AddModelError("", "Please provide both current and new password.");
+                // Debug hint: Includes the actual value found to help you see what's wrong
+                TempData["Error"] = $"Unauthorized. Admin access required. (Found: {adminClaim ?? "None"})";
                 return RedirectToAction("ManageUser");
             }
 
-            if (newPassword != confirmPassword)
+            // 3. Validation
+            if (string.IsNullOrEmpty(newPassword) || newPassword != confirmPassword)
             {
-                ModelState.AddModelError("", "New passwords do not match.");
+                TempData["Error"] = "Passwords are empty or do not match.";
                 return RedirectToAction("ManageUser");
             }
 
-            if (!VerifyPassword(currentPassword, agent.Password))
+            // 4. Update Database
+            var agent = _db.agent.FirstOrDefault(a => a.Pno == Pno);
+            if (agent != null)
             {
-                ModelState.AddModelError("", "Current password is incorrect.");
-                return RedirectToAction("ManageUser");
+                agent.Password = HashPassword(newPassword);
+                agent.LastUpdate = DateTime.UtcNow;
+                _db.SaveChanges();
+                TempData["Success"] = "Password reset successfully for " + Pno;
+            }
+            else
+            {
+                TempData["Error"] = "User record not found.";
             }
 
-            agent.Password = HashPassword(newPassword);
-            agent.LastUpdate = DateTime.UtcNow;
-            _db.SaveChanges();
-
-            TempData["Success"] = "Password changed successfully!";
             return RedirectToAction("ManageUser");
         }
 
         #region Helpers
-
         private string HashPassword(string password)
         {
             using (var sha256 = new System.Security.Cryptography.SHA256Managed())
             {
                 var salt = new byte[16];
-                using (var rng = new System.Security.Cryptography.RNGCryptoServiceProvider())
-                {
-                    rng.GetBytes(salt);
-                }
-
+                using (var rng = new System.Security.Cryptography.RNGCryptoServiceProvider()) { rng.GetBytes(salt); }
                 var pbkdf2 = new System.Security.Cryptography.Rfc2898DeriveBytes(password, salt, 10000);
                 byte[] hash = pbkdf2.GetBytes(20);
-
                 byte[] hashBytes = new byte[36];
                 Array.Copy(salt, 0, hashBytes, 0, 16);
                 Array.Copy(hash, 0, hashBytes, 16, 20);
-
                 return Convert.ToBase64String(hashBytes);
             }
         }
 
-        private bool VerifyPassword(string password, string hash)
+        [HttpGet]
+        public JsonResult GetUserByPno(string pno)
+        {
+            var agent = _db.agent.FirstOrDefault(x => x.Pno == pno);
+            if (agent != null)
+            {
+                return Json(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        agent.Name,
+                        agent.Email,
+                        agent.Mobile,
+                        agent.MobileOperator,
+                        agent.WorkArea,
+                        agent.Privilege,
+                        agent.RoleId,
+                        agent.ProgramId,
+                        agent.Status,
+                        LastUpdate = agent.LastUpdate?.ToString("g")
+                    }
+                }, JsonRequestBehavior.AllowGet);
+            }
+            return Json(new { success = false, message = "No record found." }, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpGet]
+        public JsonResult GetAllUsers()
+        {
+            var users = _db.agent
+                .Select(u => new {
+                    u.Pno,
+                    u.Name,
+                    u.Email,
+                    u.Mobile,
+                    u.RoleId,
+                    u.Status
+                })
+                .OrderByDescending(u => u.Pno)
+                .ToList();
+
+            return Json(users, JsonRequestBehavior.AllowGet);
+        }
+        [HttpGet]
+        public JsonResult GetMobileOperators()
         {
             try
             {
-                byte[] hashBytes = Convert.FromBase64String(hash);
-                byte[] salt = new byte[16];
-                Array.Copy(hashBytes, 0, salt, 0, 16);
+                var operators = _db.agent
+                    .Select(a => a.MobileOperator)
+                    .Where(o => o != null && o != "")
+                    .Distinct()
+                    .ToList();
 
-                var pbkdf2 = new System.Security.Cryptography.Rfc2898DeriveBytes(password, salt, 10000);
-                byte[] computedHash = pbkdf2.GetBytes(20);
-
-                for (int i = 0; i < 20; i++)
-                {
-                    if (hashBytes[i + 16] != computedHash[i])
-                        return false;
-                }
-
-                return true;
+                return Json(operators, JsonRequestBehavior.AllowGet);
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
+                return Json(new List<string> { "Error loading" }, JsonRequestBehavior.AllowGet);
             }
         }
+
 
         #endregion
     }

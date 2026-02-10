@@ -9,7 +9,7 @@ body {
     display: flex;
     flex-direction: column;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f8f9fa;
+    background: #f7f7f7;
 }
 
 /* ===== NAVBAR ===== */
@@ -332,6 +332,39 @@ footer {
                 filter: brightness(1.1);
             }
 
+/* THE BACK TO LIST BUTTON: Inheriting the Green Gradient Style */
+.Back-To-List {
+    height: 38px !important;
+    min-width: 160px !important;
+    padding: 0 20px !important;
+    background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    /* Use 'none' by default so jQuery can toggle it */
+    display: none !important;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+    white-space: nowrap;
+}
+
+    .Back-To-List:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(27, 77, 62, 0.25) !important;
+        filter: brightness(1.1);
+        color: #ffffff !important;
+    }
+
+/* This special rule allows jQuery's .show() to work despite the !important above */
+#btnBackToList[style*="display: block"],
+#btnBackToList[style*="display: inline-block"] {
+    display: inline-flex !important;
+}
 /* ===== CRUD TABLE & INLINE EDITING ===== */
 .crud-table {
     width: 100%;
@@ -550,3 +583,32 @@ footer {
         border-radius: 0;
         margin-bottom: 20px;
     }
+
+.table-responsive {
+    max-height: 400px; /* Limits height so it doesn't push the message too far down */
+    overflow-y: auto;
+}
+
+.table thead th {
+    position: sticky;
+    top: 0;
+    background-color: #343a40;
+    color: white;
+    z-index: 1;
+}
+
+.badge-success {
+    background-color: #28a745;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+}
+
+.badge-danger {
+    background-color: #dc3545;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+}
