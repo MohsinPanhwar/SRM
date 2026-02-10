@@ -1,0 +1,127 @@
+﻿@model SRM.Models.ViewModels.ManageGroupVM
+
+@{
+    ViewBag.Title = "Manage Groups";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class=" setup-container">
+    <div class="section-header">
+        <h2>Manage Groups</h2>
+        @* Replaced inline styles with action-row class *@
+        <div class="action-row">
+            @Html.DropDownList("newProgramName", Model.ProgramList, "-- Select Program --", new { @id = "newProgramName" })
+            <input type="text" id="newGroupName" placeholder="Enter Group Name" required />
+            @Html.DropDownList("newManagerName", Model.AgentList, "-- Select Manager --", new { @id = "newManagerName" })
+            <button id="addGroupBtn" class="setup-btn-green">+ Add Group</button>
+        </div>
+    </div>
+
+    <table class="crud-table">
+        <thead>
+            <tr>
+                <th>Program Name</th>
+                <th>Group Name</th>
+                <th>Manager PNo</th>
+                <th>No. of Members</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="groupTableBody">
+            @foreach (var grp in Model.ExistingGroups)
+            {
+                <tr data-id="@grp.GroupId">
+                    <td class="program-name">@grp.ProgramName</td>
+                    <td class="group-name">@grp.GroupName</td>
+                    <td class="manager-name">@grp.Manager</td>
+                    <td class="members-count">@grp.MembersCount</td>
+                    <td class="actions-cell">
+                        <button class="edit-btn" title="Edit">✏️</button>
+                        <button class="delete-btn" title="Delete">❌</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+    @section scripts {
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+$(function(){
+
+    // 1. ADD NEW GROUP
+    $('#addGroupBtn').click(function(){
+        var data = {
+            GroupId: 0,
+            ProgramName: $('#newProgramName').val(),
+            GroupName: $('#newGroupName').val().trim(),
+            Manager: $('#newManagerName').val()
+        };
+
+        if(!data.ProgramName || !data.GroupName){
+            alert('Program and Group Name are required');
+            return;
+        }
+
+        $.post('@Url.Action("SaveGroup","Group")', data, function(res){
+            if(res.success) location.reload();
+            else alert(res.message);
+        });
+    });
+
+    // 2. INLINE EDIT (Removed form-control, added edit-input)
+    $(document).on('click', '.edit-btn', function(){
+        var row = $(this).closest('tr');
+
+        var program = row.find('.program-name').text().trim();
+        var group = row.find('.group-name').text().trim();
+        var manager = row.find('.manager-name').text().trim();
+
+        // Swap to custom edit-input class (matching Programs/WorkAreas)
+        row.find('.program-name').html(`<input type="text" class="edit-input" value="${program}" />`);
+        row.find('.group-name').html(`<input type="text" class="edit-input" value="${group}" />`);
+        row.find('.manager-name').html(`<input type="text" class="edit-input" value="${manager}" />`);
+
+        // Swap Action Buttons to match others
+        row.find('.actions-cell').html(`
+            <button class="save-btn">💾</button>
+            <button class="cancel-btn">🚫</button>
+        `);
+    });
+
+    // 3. SAVE INLINE EDIT
+    $(document).on('click', '.save-btn', function(){
+        var row = $(this).closest('tr');
+        var id = row.data('id');
+
+        var data = {
+            GroupId: id,
+            ProgramName: row.find('.program-name input').val().trim(),
+            GroupName: row.find('.group-name input').val().trim(),
+            Manager: row.find('.manager-name input').val().trim()
+        };
+
+        if(!data.ProgramName || !data.GroupName){
+            alert('Required fields cannot be empty');
+            return;
+        }
+
+        $.post('@Url.Action("SaveGroup","Group")', data, function(res){
+            if(res.success) location.reload();
+            else alert(res.message);
+        });
+    });
+
+    // 4. CANCEL & DELETE (Logic remains same, styling follows CSS)
+    $(document).on('click', '.cancel-btn', function(){ location.reload(); });
+
+    $(document).on('click', '.delete-btn', function(){
+        var row = $(this).closest('tr');
+        if(confirm('Delete this group?')){
+            $.post('@Url.Action("DeleteGroup","Group")', { id: row.data('id') }, function(res){
+                if(res.success) row.remove();
+            });
+        }
+    });
+});
+        </script>
+    }

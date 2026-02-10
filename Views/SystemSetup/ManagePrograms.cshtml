@@ -1,0 +1,126 @@
+﻿@model List<SRM.Models.Program_Setup>
+
+@{
+    ViewBag.Title = "Manage Programs";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class=" setup-container">
+    <div class="section-header">
+        <h2>Manage Programs</h2>
+        @* Added action-row for consistent 38px height and spacing *@
+        <div class="action-row">
+            <input type="text" id="newProgramName" placeholder="Enter program name" />
+            <button id="addProgramBtn" class="setup-btn-green">+ Add Program</button>
+        </div>
+    </div>
+
+    <table class="crud-table">
+        <thead>
+            <tr>
+                <th>Program Name</th>
+                @* Actions column width is now controlled by the CSS actions-cell class *@
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="programTableBody">
+            @foreach (var program in Model)
+            {
+                <tr data-id="@program.Program_Id">
+                    <td class="program-name">@program.Program_Name</td>
+                    <td class="actions-cell">
+                        <button class="edit-btn" title="Edit">✏️</button>
+                        <button class="delete-btn" title="Delete">❌</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+    @section scripts {
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+$(function(){
+
+    // ADD PROGRAM
+    $('#addProgramBtn').click(function(){
+        var name = $('#newProgramName').val().trim();
+        if(!name){ alert('Enter program name'); return; }
+
+        $.post('@Url.Action("Add","Program")', { programName: name }, function(res){
+            if(res.success){
+                // Using the exact same HTML structure as the foreach loop
+                $('#programTableBody').append(`
+                    <tr data-id="${res.program.Program_Id}">
+                        <td class="program-name">${res.program.Program_Name}</td>
+                        <td class="actions-cell">
+                            <button class="edit-btn">✏️</button>
+                            <button class="delete-btn">❌</button>
+                        </td>
+                    </tr>
+                `);
+                $('#newProgramName').val('');
+            } else {
+                alert(res.message);
+            }
+        });
+    });
+
+    // DELETE PROGRAM
+    $(document).on('click', '.delete-btn', function(){
+        var row = $(this).closest('tr');
+        var id = row.data('id');
+
+        if(confirm('Delete this program?')){
+            $.post('@Url.Action("Delete","Program")', { id: id }, function(res){
+                if(res.success) row.remove();
+                else alert(res.message);
+            });
+        }
+    });
+
+    // EDIT PROGRAM (Now matches Group logic)
+    $(document).on('click', '.edit-btn', function(){
+        var row = $(this).closest('tr');
+        var nameCell = row.find('.program-name');
+        var oldName = nameCell.text().trim();
+
+        // Standardize input styling with edit-input class
+        nameCell.html(`<input type="text" class="edit-input" value="${oldName}" style="width:100%"/>`);
+
+        // Change buttons to Save/Cancel (💾/🚫) to match Manage Groups
+        row.find('.actions-cell').html(`
+            <button class="save-btn">💾</button>
+            <button class="cancel-btn">🚫</button>
+        `);
+    });
+
+    // SAVE EDITS
+    $(document).on('click', '.save-btn', function(){
+        var row = $(this).closest('tr');
+        var id = row.data('id');
+        var newName = row.find('.edit-input').val().trim();
+
+        if(!newName){ alert('Name cannot be empty'); return; }
+
+        $.post('@Url.Action("Edit","Program")', { id: id, programName: newName }, function(res){
+            if(res.success){
+                // Reset row to standard view
+                row.find('.program-name').text(res.program.Program_Name);
+                row.find('.actions-cell').html(`
+                    <button class="edit-btn">✏️</button>
+                    <button class="delete-btn">❌</button>
+                `);
+            } else {
+                alert(res.message);
+            }
+        });
+    });
+
+    // CANCEL EDIT (Quick reset like in Groups)
+    $(document).on('click', '.cancel-btn', function(){
+        location.reload();
+    });
+
+});
+        </script>
+    }

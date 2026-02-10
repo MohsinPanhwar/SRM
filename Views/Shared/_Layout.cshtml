@@ -1,0 +1,109 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Service Request Manager</title>
+    <link rel="stylesheet" href="~/Content/site.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="/Home/home" class="logo">SRM</a>
+            <div class="nav-items">
+
+                <div class="dropdown">
+                    <button class="dropbtn">System Setup</button>
+                    <div class="dropdown-content">
+                        <a href="@Url.Action("ManagePrograms", "Program")">Manage Program</a>
+                        <a href="@Url.Action("ManageUser", "User")">Manage User</a>
+                        <a href="@Url.Action("ManageGroup", "Group")">Manage Group</a>
+                        <a href="@Url.Action("ManageLocation", "Location")">Manage Work Area</a>
+                        <a href="@Url.Action("ManageRole", "Role")">Manage Role</a>
+                        <a href="@Url.Action("MessageBoard", "Message")">Message Board</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn">Asset Issuance</button>
+                    <div class="dropdown-content">
+                        <a href="@Url.Action("Index", "InventoryCategory")">View All Categories</a>
+                        <a href="@Url.Action("Index", "InventoryBrand")">View All Brands</a>
+                        <a href="@Url.Action("Issuance", "AssetIssuance")">Issuance</a>
+                        <a href="@Url.Action("IssuedAssetHistory", "AssetIssuance")">View All Asset</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn">Service Request</button>
+                    <div class="dropdown-content">
+                        <a href="@Url.Action("LogNew", "ServiceRequest")">Log new request</a>
+                        <a href="@Url.Action("Index", "ServiceRequest", new { status = "All" })">Show all requests</a>
+                        <a href="@Url.Action("SendSmsToEngineer", "ServiceRequest")">Send SMS</a>
+                        <a href="@Url.Action("SendPasswordToAgents", "ServiceRequest")">Send Password to Agents</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn">Hardware Dispatch</button>
+                    <div class="dropdown-content">
+                        <a href="@Url.Action("LogNewHardware", "HardwareDispatch")">Log New Hardware Dispatch</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn">Log Reports</button>
+                    <div class="dropdown-content">
+                        <a href="@Url.Action("DailyNOCReports", "LogReport")">View Daily Log Reports</a>
+                        <a href="@Url.Action("ManageReportCategory", "LogReport")">Add new description</a>
+                        <a href="@Url.Action("LogNew", "LogReport")">Log new report</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn">Incident Management</button>
+                    <div class="dropdown-content">
+                        <a href="@Url.Action("LogNewIncident", "Incident")">Log new Incident</a>
+                        <a href="@Url.Action("Index", "Incident")">Show all Incident</a>
+                        <a href="@Url.Action("Search", "Incident")">Search</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn">Activity Management</button>
+                    <div class="dropdown-content">
+                        <a href="@Url.Action("LogNewActivity", "Activity")">Log new Activity</a>
+                        <a href="@Url.Action("Index", "Activity")">Show All Activities</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn">MIS</button>
+                    <div class="dropdown-content">
+                        <a href="@Url.Action("Overall", "Mis")">MIS</a>
+                        <a href="@Url.Action("Dashboards", "Mis")">Dashboards</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <button class="logout-button" onclick="window.location.href='@Url.Action("Logout","Account")'">Logout</button>
+
+
+    </nav>
+  
+    <!-- Body placeholder -->
+    <div class="main-container">
+        @RenderBody()
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        &copy; 2026 Service Request Manager | All Rights Reserved
+    </footer>
+
+    @RenderSection("scripts", required: false)
+</body>
+</html>

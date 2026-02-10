@@ -1,0 +1,125 @@
+﻿@model IEnumerable<SRM.Models.Location>
+
+@{
+    ViewBag.Title = "Manage Locations";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class=" setup-container">
+    <div class="section-header">
+        <h2>Manage Work Areas</h2>
+        @* Added action-row for consistent 38px height and spacing *@
+        <div class="action-row">
+            <input type="text" id="newLocationName" placeholder="Enter work area name" />
+            <button id="addLocationBtn" class="setup-btn-green">+ Add Work Area</button>
+        </div>
+    </div>
+
+    <table class="crud-table">
+        <thead>
+            <tr>
+                <th>Work Area</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="locationTableBody">
+            @foreach (var loc in Model)
+            {
+                <tr data-id="@loc.sno">
+                    <td class="location-name">@loc.Location_Description</td>
+                    <td class="actions-cell">
+                        <button class="edit-btn" title="Edit">✏️</button>
+                        <button class="delete-btn" title="Delete">❌</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+$(function(){
+
+    // ADD LOCATION
+    $('#addLocationBtn').click(function(){
+        var name = $('#newLocationName').val().trim();
+        if(!name){ alert('Enter work area name'); return; }
+
+        $.post('@Url.Action("SaveLocation","Location")', { Location_Description: name }, function(res){
+            if(res.success){
+                $('#locationTableBody').append(`
+                    <tr data-id="${res.location.sno}">
+                        <td class="location-name">${res.location.Location_Description}</td>
+                        <td class="actions-cell">
+                            <button class="edit-btn">✏️</button>
+                            <button class="delete-btn">❌</button>
+                        </td>
+                    </tr>
+                `);
+                $('#newLocationName').val('');
+            } else {
+                alert(res.message);
+            }
+        });
+    });
+
+    // DELETE LOCATION
+    $(document).on('click', '.delete-btn', function(){
+        var row = $(this).closest('tr');
+        var id = row.data('id');
+
+        if(confirm('Delete this work area?')){
+            $.post('@Url.Action("DeleteLocation","Location")', { id: id }, function(res){
+                if(res.success) row.remove();
+                else alert(res.message);
+            });
+        }
+    });
+
+    // EDIT LOCATION (Updated to match Group/Program logic)
+    $(document).on('click', '.edit-btn', function(){
+        var row = $(this).closest('tr');
+        var nameCell = row.find('.location-name');
+        var oldName = nameCell.text().trim();
+
+        // Standardize input styling with edit-input class
+        nameCell.html(`<input type="text" class="edit-input" value="${oldName}" style="width:100%"/>`);
+
+        // Swap to Save/Cancel (💾/🚫)
+        row.find('.actions-cell').html(`
+            <button class="save-btn">💾</button>
+            <button class="cancel-btn">🚫</button>
+        `);
+    });
+
+    // SAVE EDITS
+    $(document).on('click', '.save-btn', function(){
+        var row = $(this).closest('tr');
+        var id = row.data('id');
+        var newName = row.find('.edit-input').val().trim();
+
+        if(!newName){ alert('Name cannot be empty'); return; }
+
+        $.post('@Url.Action("SaveLocation","Location")', { sno: id, Location_Description: newName }, function(res){
+            if(res.success){
+                // Reset row to standard view
+                row.find('.location-name').text(res.location.Location_Description);
+                row.find('.actions-cell').html(`
+                    <button class="edit-btn">✏️</button>
+                    <button class="delete-btn">❌</button>
+                `);
+            } else {
+                alert(res.message);
+            }
+        });
+    });
+
+    // CANCEL EDIT (Matches Group/Program reset)
+    $(document).on('click', '.cancel-btn', function(){
+        location.reload();
+    });
+
+});
+    </script>
+}

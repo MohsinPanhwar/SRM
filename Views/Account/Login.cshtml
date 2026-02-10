@@ -1,0 +1,125 @@
+﻿@{
+    ViewBag.Title = "Login";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Service Request Manager</title>
+    <link rel="stylesheet" href="~/Content/Auth.css">
+</head>
+<body class="login-page">
+
+    <div class="login-container">
+
+        <!-- Messages -->
+        @if (TempData["SuccessMessage"] != null || ViewBag.SuccessMessage != null)
+        {
+            <div class="success-message show">
+                @(TempData["SuccessMessage"] ?? ViewBag.SuccessMessage)
+            </div>
+        }
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="error-message show">
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+                {
+                    <div>@ViewBag.ErrorMessage</div>
+                }
+            </div>
+        }
+
+        <!-- Header -->
+        <div class="login-header">
+            <h1>Sign In</h1>
+            <p>Service Request Manager</p>
+        </div>
+
+        <!-- Form -->
+        @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { id = "loginForm" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="form-group">
+                <label for="pno">Personnel Number or Email</label>
+                <input type="text"
+                       id="pno"
+                       name="pno"
+                       class="form-control"
+                       placeholder="Enter Pno."
+                       value=""
+                       autocomplete="off"
+                       required
+                       autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password"
+                       id="password"
+                       name="password"
+                       class="form-control"
+                       placeholder="Enter Password"
+                       value=""
+                       autocomplete="new-password"
+                       required>
+            </div>
+
+            /*<div class="form-check">
+                <input type="checkbox" id="rememberMe" name="rememberMe" value="true">
+                <label for="rememberMe">Remember me for 30 days</label>
+            </div>*/
+
+            <button type="submit" class="btn-login" id="loginBtn">
+                Sign In
+                <span class="loading-spinner" id="spinner"></span>
+            </button>
+        }
+
+        <!-- Footer -->
+        <div class="login-footer">
+            <p>Don't have an account? <a href="@Url.Action("Register", "Account")">Create one now</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('loginForm');
+            const btn = document.getElementById('loginBtn');
+            const spinner = document.getElementById('spinner');
+
+            // Show spinner & disable button on submit
+            form.addEventListener('submit', function (e) {
+                if (!form.checkValidity()) {
+                    e.preventDefault();
+                    return;
+                }
+                btn.disabled = true;
+                btn.textContent = "Signing in...";
+                spinner.style.display = 'inline-block';
+            });
+
+            // Real-time validation feedback
+            const inputs = [document.getElementById('pno'), document.getElementById('password')];
+
+            inputs.forEach(input => {
+                input.addEventListener('input', function () {
+                    this.classList.remove('is-invalid');
+                });
+
+                input.addEventListener('blur', function () {
+                    if (this.value.trim() === '') {
+                        this.classList.add('is-invalid');
+                    } else {
+                        this.classList.remove('is-invalid');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

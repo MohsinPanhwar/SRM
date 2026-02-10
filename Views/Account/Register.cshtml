@@ -1,0 +1,172 @@
+﻿@{
+    ViewBag.Title = "Register";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Agent Management System</title>
+    <link rel="stylesheet" href="~/Content/Auth.css">
+</head>
+<body class="register-page">
+
+    <div class="register-container">
+        <!-- using same container class as login -->
+        <!-- Messages (same as login) -->
+        @if (ViewBag.SuccessMessage != null)
+        {
+            <div class="success-message show">
+                @ViewBag.SuccessMessage
+            </div>
+        }
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="error-message show">
+                @Html.ValidationSummary(true, "Please correct the following errors:")
+            </div>
+        }
+
+        <!-- Header (same structure as login) -->
+        <div class="auth-header">
+            <h1>Create Account</h1>
+            <p>Agent Management System</p>
+        </div>
+
+        <!-- Form -->
+        @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { id = "registerForm", autocomplete = "off" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <!-- Remove the form-row around PNo + Name -->
+            <div class="form-group">
+                <label for="pno">Personnel Number (PNo.)</label>
+                <input type="text"
+                       id="pno"
+                       name="pno"
+                       class="form-control"
+                       placeholder="P001"
+                       autocomplete="off"
+                       required
+                       autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text"
+                       id="name"
+                       name="name"
+                       class="form-control"
+                       placeholder="Enter your full name"
+                       autocomplete="name"
+                       required>
+            </div>
+
+            <!-- Keep the rest as is -->
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="example@domain.com" autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label for="mobile">Mobile Number</label>
+                <input type="tel" id="mobile" name="mobile" class="form-control" placeholder="03001234567" autocomplete="tel">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password"
+                       id="password"
+                       name="password"
+                       class="form-control"
+                       placeholder="Enter your password"
+                       autocomplete="new-password"
+                       required>
+                <div class="password-requirements">
+                    <div class="requirement unmet" id="req-length">At least 6 characters</div>
+                    <div class="requirement unmet" id="req-uppercase">At least 1 uppercase letter</div>
+                    <div class="requirement unmet" id="req-number">At least 1 number</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password"
+                       id="confirmPassword"
+                       name="confirmPassword"
+                       class="form-control"
+                       placeholder="Confirm your password"
+                       autocomplete="new-password"
+                       required>
+            </div> <button type="submit" class="btn-register" id="registerBtn">
+                Create Account
+                <span class="loading-spinner" id="spinner"></span>
+            </button>
+        }
+
+        <!-- Footer (same style as login) -->
+        <div class="auth-footer">
+            <p>Already have an account? <a href="@Url.Action("Login", "Account")">Sign in here</a></p>
+        </div>
+
+    </div>
+
+    <!-- Your existing JavaScript (unchanged but cleaned up a bit) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('registerForm');
+            const btn = document.getElementById('registerBtn');
+            const spinner = document.getElementById('spinner');
+            const password = document.getElementById('password');
+            const confirm = document.getElementById('confirmPassword');
+
+            const reqLength = document.getElementById('req-length');
+            const reqUpper = document.getElementById('req-uppercase');
+            const reqNumber = document.getElementById('req-number');
+
+            // Password strength
+            password.addEventListener('input', function () {
+                const val = this.value.trim();
+
+                reqLength.classList.toggle('met', val.length >= 6);
+                reqLength.classList.toggle('unmet', val.length < 6);
+
+                reqUpper.classList.toggle('met', /[A-Z]/.test(val));
+                reqUpper.classList.toggle('unmet', !/[A-Z]/.test(val));
+
+                reqNumber.classList.toggle('met', /\d/.test(val));
+                reqNumber.classList.toggle('unmet', !/\d/.test(val));
+            });
+
+            // Confirm password match
+            confirm.addEventListener('input', function () {
+                const match = password.value === this.value && this.value.length > 0;
+                this.classList.toggle('is-invalid', !match && this.value.length > 0);
+            });
+
+            // Submit handling
+            form.addEventListener('submit', function (e) {
+                if (!form.checkValidity() || password.value !== confirm.value) {
+                    e.preventDefault();
+                    if (password.value !== confirm.value) {
+                        confirm.classList.add('is-invalid');
+                        alert('Passwords do not match!');
+                    }
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.textContent = 'Creating Account...';
+                spinner.style.display = 'inline-block';
+            });
+
+            // Clear invalid state on input
+            form.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', () => input.classList.remove('is-invalid'));
+            });
+        });
+    </script>
+</body>
+</html>

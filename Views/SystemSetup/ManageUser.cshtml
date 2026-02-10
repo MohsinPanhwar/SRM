@@ -1,0 +1,114 @@
+﻿@model SRM.Models.Agent
+@{
+    ViewBag.Title = "Manage User";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="profile-container">
+    <h2>Manage Profile</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @using (Html.BeginForm("ManageUser", "User", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+
+        <!-- Row 1: Pno + Uid (read-only) -->
+        <div class="form-row">
+            <div class="form-group">
+                @Html.LabelFor(m => m.Pno)
+                @Html.TextBoxFor(m => m.Pno, new { @class = "form-control", @readonly = "readonly" })
+            </div>
+          
+        </div>
+
+        <!-- Row 2: Name + Email -->
+        <div class="form-row">
+            <div class="form-group">
+                @Html.LabelFor(m => m.Name)
+                @Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.Email)
+                @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email" })
+            </div>
+        </div>
+
+        <!-- Row 3: Mobile + MobileOperator -->
+        <div class="form-row">
+            <div class="form-group">
+                @Html.LabelFor(m => m.Mobile)
+                @Html.TextBoxFor(m => m.Mobile, new { @class = "form-control" })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.MobileOperator)
+                @Html.TextBoxFor(m => m.MobileOperator, new { @class = "form-control" })
+            </div>
+        </div>
+
+        <!-- Row 4: WorkArea + Privilege -->
+        <div class="form-row">
+            <div class="form-group">
+                @Html.LabelFor(m => m.WorkArea)
+                @Html.TextBoxFor(m => m.WorkArea, new { @class = "form-control" })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.Privilege)
+                @Html.TextBoxFor(m => m.Privilege, new { @class = "form-control" })
+            </div>
+        </div>
+
+        <!-- Row 5: RoleId + ProgramId -->
+        <div class="form-row">
+            <div class="form-group">
+                @Html.LabelFor(m => m.RoleId)
+                @Html.TextBoxFor(m => m.RoleId, new { @class = "form-control"})
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.ProgramId)
+                @Html.TextBoxFor(m => m.ProgramId, new { @class = "form-control" })
+            </div>
+        </div>
+
+        <!-- Row 6: Status + LastUpdate (readonly) -->
+        <div class="form-row">
+            <div class="form-group">
+                @Html.LabelFor(m => m.Status)
+                @Html.TextBoxFor(m => m.Status, new { @class = "form-control" })
+            </div>
+            <div class="form-group">
+                <label>Last Update</label>
+                <input type="text" class="form-control" value="@(Model.LastUpdate?.ToString("g"))" readonly />
+            </div>
+        </div>
+
+        <!-- Save button row -->
+        <div class="form-row full-width">
+            <button type="submit" class="btn btn-success">Save Changes</button>
+        </div>
+    }
+
+    <hr />
+
+    <h3>Change Password</h3>
+    @using (Html.BeginForm("ChangePassword", "User", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        <div class="form-group">
+            <label>Current Password</label>
+            <input type="password" name="currentPassword" class="form-control" required />
+        </div>
+        <div class="form-group">
+            <label>New Password</label>
+            <input type="password" name="newPassword" class="form-control" required />
+        </div>
+        <div class="form-group">
+            <label>Confirm New Password</label>
+            <input type="password" name="confirmPassword" class="form-control" required />
+        </div>
+        <button type="submit" class="btn btn-warning">Change Password</button>
+    }
+</div>

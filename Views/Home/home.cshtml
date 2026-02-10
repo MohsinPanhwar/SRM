@@ -1,0 +1,43 @@
+﻿@model SRM.Models.Agent
+@{
+    ViewBag.Title = "Home";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Banner -->
+<section class="home-banner">
+    <img src="~/Content/images/Banner.jpeg" alt="Banner" style="width:100%; height:auto;">
+</section>
+
+<!-- User Info Cards -->
+<section class="user-info-cards" style="margin: 30px 0;">
+    <div class="card-grid" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
+
+        <!-- Profile Summary -->
+        <div class="card" style="flex: 1 1 300px; max-width: 300px;">
+            <div class="card-icon">👤</div>
+            <h3>@Model.Name</h3>
+            <p><strong>Role:</strong> @Model.Privilege</p>
+            <p><strong>Work Area:</strong> @Model.WorkArea</p>
+            <p><strong>Email:</strong> @Model.Email</p>
+            <a href="@Url.Action("ManageUser", "User")" class="btn-card">Edit Profile</a>
+        </div>
+
+        <!-- Status Card -->
+        <div class="card" style="flex: 1 1 300px; max-width: 300px;">
+            <div class="card-icon">✅</div>
+            <h3>Status</h3>
+            <p><strong>Current:</strong> @(Model.Status ?? "N/A")</p>
+            <p><strong>Last Update:</strong> @Model.LastUpdate?.ToString("dd-MM-yyyy hh:mm tt")</p>
+        </div>
+
+        <!-- Contact Info Card -->
+        <div class="card" style="flex: 1 1 300px; max-width: 300px;">
+            <div class="card-icon">📞</div>
+            <h3>Contact</h3>
+            <p><strong>Mobile:</strong> @Model.Mobile</p>
+            <p><strong>Operator:</strong> @Model.MobileOperator</p>
+        </div>
+
+    </div>
+</section>
