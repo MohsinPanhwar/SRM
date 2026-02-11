@@ -23,6 +23,15 @@ namespace SRM.Controllers
             if (agent == null)
                 return HttpNotFound();
 
+            // 🔥 INTEGRATION: Fetch Roles from DB for the dropdown
+            // Mapping RoleId to ProgramId as requested
+            var roles = _db.Roles.Select(r => new {
+                r.Role_Id,
+                r.Role_Name
+            }).ToList();
+
+            ViewBag.RoleList = new SelectList(roles, "RoleId", "RoleName");
+
             return View("~/Views/SystemSetup/ManageUser.cshtml", agent);
         }
 
@@ -31,8 +40,12 @@ namespace SRM.Controllers
         public ActionResult ManageUser(Agent model)
         {
             var agent = _db.agent.FirstOrDefault(a => a.Pno == model.Pno);
+
             if (agent != null)
             {
+                // 🔥 INTEGRATION: ProgramId (The Role) update
+                agent.ProgramId = model.ProgramId;
+
                 agent.Name = model.Name;
                 agent.Email = model.Email;
                 agent.Mobile = model.Mobile;
@@ -40,16 +53,32 @@ namespace SRM.Controllers
                 agent.Status = Request.Form["Status"];
                 agent.UserType = Request.Form["UserType"];
                 agent.LastUpdate = DateTime.Now;
+                agent.WorkArea = Request.Form["WorkArea"];
+
+                string selectedGid = Request.Form["GId"];
+                if (!string.IsNullOrEmpty(selectedGid))
+                {
+                    agent.Gid = int.Parse(selectedGid);
+                }
 
                 _db.SaveChanges();
+
                 TempData["Success"] = "User details updated successfully!";
+
+                // 🔥 Re-populate dropdown before returning view
+                var roles = _db.Roles.Select(r => new { r.Role_Id, r.Role_Name }).ToList();
+                ViewBag.RoleList = new SelectList(roles, "RoleId", "RoleName", agent.ProgramId);
+
+                return View("~/Views/SystemSetup/ManageUser.cshtml", agent);
             }
             else
             {
                 TempData["Error"] = "User not found.";
+                return View("~/Views/SystemSetup/ManageUser.cshtml", model);
             }
-            return RedirectToAction("ManageUser", new { pno = model.Pno });
         }
+
+        // ... Keep existing ChangePassword and GetUserByPno ...
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -130,6 +159,8 @@ namespace SRM.Controllers
                         agent.RoleId,
                         agent.ProgramId,
                         agent.Status,
+                        agent.UserType,
+                        Gid = agent.Gid,
                         LastUpdate = agent.LastUpdate?.ToString("g")
                     }
                 }, JsonRequestBehavior.AllowGet);
@@ -140,21 +171,25 @@ namespace SRM.Controllers
         [HttpGet]
         public JsonResult GetAllUsers()
         {
-            var users = _db.agent
-                .Select(u => new {
-                    u.Pno,
-                    u.Name,
-                    u.Email,
-                    u.Mobile,
-                    u.RoleId,
-                    u.Status
-                })
-                .OrderByDescending(u => u.Pno)
-                .ToList();
+            var users = (from u in _db.agent
+                         join r in _db.Roles on u.ProgramId equals r.Role_Id into roleJoin
+                         from role in roleJoin.DefaultIfEmpty()
+                         select new
+                         {
+                             u.Pno,
+                             u.Name,
+                             u.Email,
+                             u.Mobile,
+                             RoleName = role != null ? role.Role_Name : "No Role Assigned",
+                             u.Status
+                         })
+                        .OrderByDescending(u => u.Pno)
+                        .ToList();
 
             return Json(users, JsonRequestBehavior.AllowGet);
         }
-        [HttpGet]
+
+[HttpGet]
         public JsonResult GetMobileOperators()
         {
             try
@@ -173,7 +208,63 @@ namespace SRM.Controllers
             }
         }
 
+        public JsonResult GetPrograms()
+        {
+            try
+            {
+                var programs = _db.Programs
+                    .Select(p => new
+                    {
+                        Id = p.Program_Id,
+                        Name = p.Program_Name
+                    })
+                    .ToList();
 
+                return Json(programs, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception)
+            {
+                return Json(new List<object>(), JsonRequestBehavior.AllowGet);
+            }
+        }
+        public JsonResult GetGroups()
+        {
+            try
+            {
+                var Groups = _db.groups
+                    .Select(g=> new
+                    {
+                        GId =g.gid,
+                        GName= g.gname
+                    })
+                    .ToList();
+
+                return Json(Groups, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception)
+            {
+                return Json(new List<object>(), JsonRequestBehavior.AllowGet);
+            }
+        }
+        public JsonResult GetWorkAreas()
+        {
+            try
+            {
+                var locations = _db.Locations
+                    .Select(l => l.Location_Description) // Adjust 'LocationName' to your actual column name
+                    .Where(l => !string.IsNullOrEmpty(l))
+                    .Distinct()
+                    .OrderBy(l => l)
+                    .ToList();
+
+                return Json(locations, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception)
+            {
+                return Json(new List<string>(), JsonRequestBehavior.AllowGet);
+            }
+        }
+        
         #endregion
     }
 }

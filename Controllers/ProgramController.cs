@@ -23,10 +23,20 @@ namespace SRM.Controllers
             if (string.IsNullOrWhiteSpace(programName))
                 return Json(new { success = false, message = "Program name required" });
 
+            // --- 1. DUPLICATION CHECK ---
+            // We check if any program already exists with the same name (ignoring spaces and case)
+            var normalizedName = programName.Trim().ToLower();
+            bool exists = _db.Programs.Any(x => x.Program_Name.Trim().ToLower() == normalizedName);
+
+            if (exists)
+            {
+                return Json(new { success = false, message = "This program name already exists." });
+            }
+
+            // --- 2. PROCEED WITH SAVE ---
             var program = new Program_Setup
             {
-                Program_Name = programName,
-        
+                Program_Name = programName.Trim(), // Good practice to trim before saving
             };
 
             _db.Programs.Add(program);
@@ -34,7 +44,6 @@ namespace SRM.Controllers
 
             return Json(new { success = true, program });
         }
-
         // POST: Delete program
         [HttpPost]
         public JsonResult Delete(int id)

@@ -16,5 +16,7 @@ namespace SRM.Data
         public DbSet<Group> groups { get; set; }
 
         public System.Data.Entity.DbSet<SRM.Models.Location> Locations { get; set; }
+        public System.Data.Entity.DbSet<SRM.Models.Privilege> Privileges { get; set; }
+        public System.Data.Entity.DbSet<SRM.Models.Roles> Roles { get; set; }
     }
 }

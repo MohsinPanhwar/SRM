@@ -28,8 +28,10 @@
                 <tr data-id="@program.Program_Id">
                     <td class="program-name">@program.Program_Name</td>
                     <td class="actions-cell">
-                        <button class="edit-btn" title="Edit">✏️</button>
-                        <button class="delete-btn" title="Delete">❌</button>
+                        <div class="icon-btn-group">
+                            <button class="edit-btn" title="Edit">✏️</button>
+                            <button class="delete-btn" title="Delete">❌</button>
+                            </div>
                     </td>
                 </tr>
             }
@@ -39,16 +41,19 @@
     @section scripts {
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
-$(function(){
+$(function() {
 
-    // ADD PROGRAM
-    $('#addProgramBtn').click(function(){
+    // ADD PROGRAM (With Duplication Handling)
+    $('#addProgramBtn').click(function() {
         var name = $('#newProgramName').val().trim();
-        if(!name){ alert('Enter program name'); return; }
+        if (!name) {
+            alert('Enter program name');
+            return;
+        }
 
-        $.post('@Url.Action("Add","Program")', { programName: name }, function(res){
-            if(res.success){
-                // Using the exact same HTML structure as the foreach loop
+        // Note: URL points to "Add" in "Program" controller
+        $.post('@Url.Action("Add", "Program")', { programName: name }, function(res) {
+            if (res.success) {
                 $('#programTableBody').append(`
                     <tr data-id="${res.program.Program_Id}">
                         <td class="program-name">${res.program.Program_Name}</td>
@@ -59,68 +64,90 @@ $(function(){
                     </tr>
                 `);
                 $('#newProgramName').val('');
+                alert("Program added successfully!");
             } else {
-                alert(res.message);
+                // This captures the "already exists" message from your C# logic
+                alert("Error: " + res.message);
             }
         });
     });
 
     // DELETE PROGRAM
-    $(document).on('click', '.delete-btn', function(){
+    $(document).on('click', '.delete-btn', function() {
         var row = $(this).closest('tr');
         var id = row.data('id');
 
-        if(confirm('Delete this program?')){
-            $.post('@Url.Action("Delete","Program")', { id: id }, function(res){
-                if(res.success) row.remove();
-                else alert(res.message);
+        if (confirm('Delete this program?')) {
+            $.post('@Url.Action("Delete", "Program")', { id: id }, function(res) {
+                if (res.success) {
+                    row.remove();
+                } else {
+                    alert(res.message);
+                }
             });
         }
     });
 
-    // EDIT PROGRAM (Now matches Group logic)
-    $(document).on('click', '.edit-btn', function(){
+    // EDIT PROGRAM
+    $(document).on('click', '.edit-btn', function() {
         var row = $(this).closest('tr');
         var nameCell = row.find('.program-name');
         var oldName = nameCell.text().trim();
 
-        // Standardize input styling with edit-input class
-        nameCell.html(`<input type="text" class="edit-input" value="${oldName}" style="width:100%"/>`);
+        // Store old name in data attribute in case user cancels or error occurs
+        row.data('old-name', oldName);
 
-        // Change buttons to Save/Cancel (💾/🚫) to match Manage Groups
+        nameCell.html(`<input type="text" class="edit-input" value="${oldName}" style="width:100%" />`);
+
         row.find('.actions-cell').html(`
             <button class="save-btn">💾</button>
             <button class="cancel-btn">🚫</button>
         `);
     });
 
-    // SAVE EDITS
-    $(document).on('click', '.save-btn', function(){
+    // SAVE EDITS (With Duplication Handling)
+    $(document).on('click', '.save-btn', function() {
         var row = $(this).closest('tr');
         var id = row.data('id');
         var newName = row.find('.edit-input').val().trim();
+        var oldName = row.data('old-name');
 
-        if(!newName){ alert('Name cannot be empty'); return; }
+        if (!newName) {
+            alert('Name cannot be empty');
+            return;
+        }
 
-        $.post('@Url.Action("Edit","Program")', { id: id, programName: newName }, function(res){
-            if(res.success){
-                // Reset row to standard view
-                row.find('.program-name').text(res.program.Program_Name);
-                row.find('.actions-cell').html(`
-                    <button class="edit-btn">✏️</button>
-                    <button class="delete-btn">❌</button>
-                `);
+        // Optimization: If name hasn't changed, just revert to text view
+        if (newName.toLowerCase() === oldName.toLowerCase()) {
+            revertRow(row, oldName);
+            return;
+        }
+
+        $.post('@Url.Action("Edit", "Program")', { id: id, programName: newName }, function(res) {
+            if (res.success) {
+                revertRow(row, res.program.Program_Name);
             } else {
-                alert(res.message);
+                // This captures duplication errors during editing
+                alert("Error: " + res.message);
             }
         });
     });
 
-    // CANCEL EDIT (Quick reset like in Groups)
-    $(document).on('click', '.cancel-btn', function(){
-        location.reload();
+    // CANCEL EDIT
+    $(document).on('click', '.cancel-btn', function() {
+        var row = $(this).closest('tr');
+        var oldName = row.data('old-name');
+        revertRow(row, oldName);
     });
 
-});
-        </script>
+    // Helper function to revert row to standard view
+    function revertRow(row, name) {
+        row.find('.program-name').text(name);
+        row.find('.actions-cell').html(`
+            <button class="edit-btn">✏️</button>
+            <button class="delete-btn">❌</button>
+        `);
+    }
+
+});        </script>
     }

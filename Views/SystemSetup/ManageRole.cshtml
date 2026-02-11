@@ -1,0 +1,281 @@
+﻿@model SRM.Models.ViewModels.ManageRoleVM
+
+@{
+    ViewBag.Title = "Manage Roles";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Manage Roles</h2>
+        <div class="action-row">
+            <input type="hidden" id="roleId" value="0" />
+            <input type="text" id="roleName" placeholder="Enter role name..." style="width: 300px;" />
+
+            <button id="addRoleBtn" class="setup-btn-green">➕ Add Role</button>
+        </div>
+    </div>
+
+    @* Unified Privilege Container *@
+    <div class="role-form-container" style="margin-top: 20px; background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+
+        <div id="formStatus" class="status-bar">
+            <span class="status-icon">🔒</span>
+            <span class="status-text">Form Locked. Enter a name to create or select a role to view.</span>
+        </div>
+
+        <h4 style="margin-bottom: 20px; color: #2c3e50; font-weight: 600;">Set Privileges</h4>
+
+        <div class="privilege-grid">
+            <div class="privilege-group">
+                <label class="group-title">User & System</label>
+                <label><input type="checkbox" class="priv-cb" id="CanAddEditEngineer" disabled> Add/Edit Engineer</label>
+                <label><input type="checkbox" class="priv-cb" id="CanAddEditGroups" disabled> Add/Edit Groups</label>
+                <label><input type="checkbox" class="priv-cb" id="CanAddEditAsset" disabled> Add/Edit Asset</label>
+                <label><input type="checkbox" class="priv-cb" id="CanHardware" disabled> Hardware Module</label>
+            </div>
+
+            <div class="privilege-group">
+                <label class="group-title">Request Handling</label>
+                <label><input type="checkbox" class="priv-cb" id="CanLogNewRequest" disabled> Log New Request</label>
+                <label><input type="checkbox" class="priv-cb" id="CanAddNewIncident" disabled> Add New Incident</label>
+                <label><input type="checkbox" class="priv-cb" id="CanViewIncident" disabled> View Incident</label>
+                <label><input type="checkbox" class="priv-cb" id="CanReopenAny" disabled> Reopen Any Request</label>
+                <label><input type="checkbox" class="priv-cb" id="CanLogNOC" disabled> Log NOC</label>
+            </div>
+
+            <div class="privilege-group">
+                <label class="group-title">View Permissions</label>
+                <label><input type="checkbox" class="priv-cb" id="CanViewForwardAny" disabled> View/Forward Any</label>
+                <label><input type="checkbox" class="priv-cb" id="CanOnlyViewAny" disabled> Only View Any</label>
+                <label><input type="checkbox" class="priv-cb" id="CanViewForwardOwn" disabled> View/Forward Own</label>
+                <label><input type="checkbox" class="priv-cb" id="CanViewOwnGroup" disabled> View Own Group</label>
+            </div>
+
+            <div class="privilege-group">
+                <label class="group-title">Others</label>
+                <label><input type="checkbox" class="priv-cb" id="CanSendSMS" disabled> Send SMS</label>
+                <label><input type="checkbox" class="priv-cb" id="CanSendPassword" disabled> Send Password</label>
+                <label><input type="checkbox" class="priv-cb" id="CanViewReports" disabled> View Reports</label>
+                <label><input type="checkbox" class="priv-cb" id="CanViewEditMessage" disabled> View/Edit Message</label>
+            </div>
+        </div>
+    </div>
+
+    <table class="crud-table" style="margin-top: 30px;">
+        <thead>
+            <tr>
+                <th>Role ID</th>
+                <th>Role Name</th>
+                <th>Users</th>
+                <th style="width: 120px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="roleTableBody">
+            @if (Model.ExistingRoles != null)
+            {
+                foreach (var role in Model.ExistingRoles)
+                {
+                    <tr data-id="@role.RoleId">
+                        <td>@role.RoleId</td>
+                        <td class="role-name">@role.RoleName</td>
+                        <td>@role.UserCount</td>
+                        <td class="actions-cell">
+                            <div class="icon-btn-group">
+                                <button class="edit-role-btn" title="Edit Role">✏️</button>
+                                <button class="delete-role-btn" title="Delete">❌</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<style>
+    /* State-based Status Bar */
+    .status-bar {
+        padding: 12px 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        font-size: 0.95em;
+        background: #f8f9fa;
+        border-left: 5px solid #adb5bd;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .status-viewing {
+        background: #e3f2fd;
+        border-left-color: #2196f3;
+        color: #0d47a1;
+    }
+
+    .status-editing {
+        background: #fff3e0;
+        border-left-color: #ff9800;
+        color: #e65100;
+    }
+
+    /* Grid Layout */
+    .privilege-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 20px;
+    }
+
+    .privilege-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .group-title {
+        font-weight: 700;
+        color: #2c3e50;
+        border-bottom: 2px solid #3498db;
+        margin-bottom: 10px;
+        font-size: 0.8em;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .privilege-group label {
+        font-weight: 400;
+        font-size: 0.92em;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: 0.2s;
+    }
+
+        .privilege-group label:has(input:not(:disabled)):hover {
+            background: #f0f7ff;
+            color: #007bff;
+        }
+
+    input[type="checkbox"]:disabled {
+        cursor: not-allowed;
+    }
+
+    .icon-btn-group {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+        .icon-btn-group button {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 4px 8px;
+            transition: 0.2s;
+        }
+
+            .icon-btn-group button:hover {
+                background: #f8f9fa;
+                border-color: #bbb;
+                transform: translateY(-1px);
+            }
+</style>
+
+@section scripts {
+    <script>
+$(function () {
+    // 1. FORM CONTROL: Keeps things active
+    function resetForm(isUpdate = false, name = "") {
+        const $status = $('#formStatus');
+        const $addBtn = $('#addRoleBtn');
+        const $checks = $('.priv-cb');
+
+        // Always ensure checkboxes are enabled
+        $checks.prop('disabled', false);
+        $addBtn.show();
+
+        if (isUpdate) {
+            $status.addClass('status-editing');
+            $status.find('.status-icon').text('📝');
+            $status.find('.status-text').html(`Editing: <strong>${name}</strong>`);
+            $addBtn.text('💾 Update Role').removeClass('setup-btn-green').addClass('btn-warning');
+        } else {
+            $status.removeClass('status-editing');
+            $status.find('.status-icon').text('➕');
+            $status.find('.status-text').text("Add New Role");
+
+            $('#roleId').val('0');
+            $('#roleName').val('');
+            $checks.prop('checked', false);
+            $addBtn.text('➕ Add Role').addClass('setup-btn-green').removeClass('btn-warning');
+        }
+    }
+
+    // 2. EDIT ACTION: Load and stay active
+    $(document).on('click', '.edit-role-btn', function () {
+        const id = $(this).closest('tr').data('id');
+        $.get('@Url.Action("GetRoleDetails", "Role")', { id: id }, function (res) {
+            if (res.success) {
+                $('#roleId').val(res.data.RoleId);
+                $('#roleName').val(res.data.RoleName);
+
+                // Map checkboxes
+                $('.priv-cb').each(function () {
+                    $(this).prop('checked', res.data[this.id] === true);
+                });
+
+                resetForm(true, res.data.RoleName);
+                $("html, body").animate({ scrollTop: 0 }, "fast");
+            }
+        });
+    });
+
+    // 3. SAVE / UPDATE
+    $('#addRoleBtn').click(function () {
+        const name = $('#roleName').val().trim();
+        if (!name) { alert("Please enter a role name."); return; }
+
+        const formData = {
+            RoleId: $('#roleId').val(),
+            RoleName: name
+        };
+
+        $('.priv-cb').each(function () {
+            formData[this.id] = $(this).is(':checked');
+        });
+
+        $.post('@Url.Action("SaveRole", "Role")', formData, function (res) {
+            if (res.success) {
+                alert("Saved successfully!");
+                location.reload();
+            } else {
+                alert(res.message);
+            }
+        });
+    });
+
+    // 4. DELETE
+    $(document).on('click', '.delete-role-btn', function () {
+        const row = $(this).closest('tr');
+        if (confirm('Delete this role?')) {
+            $.post('@Url.Action("DeleteRole", "Role")', { id: row.data('id') }, function (res) {
+                if (res.success) row.fadeOut();
+                else alert(res.message);
+            });
+        }
+    });
+
+    // 5. RESET
+    $('#resetFormBtn').click(function() {
+        resetForm(false);
+    });
+
+    // Initialize as a fresh, open form
+    resetForm(false);
+});
+    </script>
+}

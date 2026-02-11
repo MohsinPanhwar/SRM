@@ -95,6 +95,7 @@
             </div>
         </div>
     </div>
+    <hr />
 
     <div id="userListSection">
         <table class="crud-table">
@@ -161,8 +162,8 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Group Name</label>
-                    <select id="GroupDropdown" name="GroupName" class="form-control" disabled>
+                    <label>User Group</label>
+                    <select id="GroupDropdown" name="GId" class="form-control" disabled>
                         <option value="">-- Select Group --</option>
                     </select>
                 </div>
@@ -171,7 +172,9 @@
             <div class="form-row">
                 <div class="form-group">
                     @Html.LabelFor(m => m.WorkArea)
-                    @Html.TextBoxFor(m => m.WorkArea, new { @class = "form-control", id = "EditWorkArea" })
+                    <select id="EditWorkArea" name="WorkArea" class="form-control">
+                        <option value="">-- Select Work Area --</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     @Html.LabelFor(m => m.Privilege)
@@ -262,6 +265,8 @@
     </div>
 </div>
 
+ 
+
 @section scripts {
     <script>
     $(function () {
@@ -271,9 +276,37 @@
             $.getJSON('@Url.Action("GetMobileOperators", "User")', function (data) {
                 $.each(data, function (i, v) { $('#MobileOperator').append($('<option>', { value: v, text: v })); });
             });
-            // Load Programs
+            // Load Work Areas from Locations
+            $.getJSON('@Url.Action("GetWorkAreas", "User")', function (data) {
+                var $dropdown = $('#EditWorkArea');
+                $dropdown.find('option:not(:first)').remove();
+                $.each(data, function (i, loc) {
+                    $dropdown.append($('<option>', {
+                        value: loc,
+                        text: loc
+                    }));
+                });
+            });
+            // Load Groups
+            $.getJSON('@Url.Action("GetGroups", "User")', function (data) {
+                var $dropdown = $('#GroupDropdown');
+                $dropdown.find('option:not(:first)').remove();
+                $.each(data, function (i, item) {
+                    $dropdown.append($('<option>', {
+                        value: item.GId,   // The ID (gid)
+                        text: item.GName   // The Name (gname)
+                    }));
+                });
+            });
             $.getJSON('@Url.Action("GetPrograms", "User")', function (data) {
-                $.each(data, function (i, item) { $('#EditProgramId').append($('<option>', { value: item.ProgramId, text: item.ProgramName })); });
+                var $dropdown = $('#EditProgramId');
+                $dropdown.find('option:not(:first)').remove();
+                $.each(data, function (i, item) {
+                    $dropdown.append($('<option>', {
+                        value: item.Id,   // This is the number (Program_Id)
+                        text: item.Name   // This is the description (Program_Name)
+                    }));
+                });
             });
             loadTable();
         }
@@ -356,10 +389,13 @@
         });
 
         // --- 3. UI EXTRAS ---
-        $('input[name="UserType"]').on('change', function() {
-            $('#GroupDropdown').prop('disabled', !$('#typeGroup').is(':checked'));
+        $('input[name="UserType"]').on('change', function () {
+            if ($('#typeGroup').is(':checked')) {
+                $('#GroupDropdown').prop('disabled', false);
+            } else {
+                $('#GroupDropdown').prop('disabled', true).val(''); // Clear selection if switching to Individual
+            }
         });
-
         $('#btnShowPass').click(function() { $('#passwordFields').slideToggle(); });
 
         if ($('.alert').length > 0) {
@@ -404,18 +440,49 @@
                 data: { pno: pnoVal },
                 success: function (res) {
                     if (res.success) {
-                        // Populate the form fields
+                        // --- Standard Text Fields ---
                         $('#EditName').val(res.data.Name);
                         $('#EditEmail').val(res.data.Email);
                         $('#EditMobile').val(res.data.Mobile);
-                        $('#EditRoleId').val(res.data.RoleId);
                         $('#MainHiddenPno').val(pnoVal);
+                        $('#displayPno').text(pnoVal); // If you have the display label
 
-                        // UI Transition
+                        // --- Dropdowns (The Magic Happens Here) ---
+                        // jQuery .val() will find the option with the matching text/value and select it
+                        $('#MobileOperator').val(res.data.MobileOperator);
+                        $('#EditProgramId').val(res.data.ProgramId);
+                        $('#EditWorkArea').val(res.data.WorkArea);
+                        $('#GroupDropdown').val(res.data.GId); // Assuming GId is returned in your GetUserByPno
+                      
+                                if (res.data.UserType === "G") {
+                                    $('#typeGroup').prop('checked', true);
+                                    $('#GroupDropdown').prop('disabled', false); // FORCE ENABLE HERE
+                                } else {
+                                    $('#typeIndiv').prop('checked', true);
+                                    $('#GroupDropdown').prop('disabled', true);
+                                }
+
+                                // 2. Set the Group Value (Must happen after or while enabled)
+                                // Make sure res.data.Gid matches the property name in your GetUserByPno JSON
+                                $('#GroupDropdown').val(res.data.Gid);
+
+                                // ... rest of your UI swap logic ...
+                         
+                        $('#EditRoleId').val(res.data.RoleId);
+
+                        // --- Radio Buttons (Bonus: Status & UserType) ---
+                        if (res.data.Status === "A" || res.data.Status === "Y") $('#statusActive').prop('checked', true);
+                        else $('#statusInactive').prop('checked', true);
+
+                        if (res.data.UserType === "G") $('#typeGroup').prop('checked', true).trigger('change');
+                        else $('#typeIndiv').prop('checked', true).trigger('change');
+
+                        // --- UI Transition ---
                         $('#userListSection').hide();
                         $('#userDetailsForm').fadeIn();
                         $('#btnBackToList').show();
                         $('#messageContainer').empty();
+
                     } else {
                         alert(res.message);
                     }
@@ -443,7 +510,5 @@
             setTimeout(function() { $('.alert').fadeOut(); }, 5000);
         }
     });
-    </script>
-}
     </script>
 }

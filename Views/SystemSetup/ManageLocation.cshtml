@@ -27,8 +27,10 @@
                 <tr data-id="@loc.sno">
                     <td class="location-name">@loc.Location_Description</td>
                     <td class="actions-cell">
-                        <button class="edit-btn" title="Edit">✏️</button>
-                        <button class="delete-btn" title="Delete">❌</button>
+                        <div class="icon-btn-group">
+                            <button type="button" class="edit-btn" title="Edit">✏️</button>
+                            <button type="button" class="delete-btn" title="Delete">❌</button>
+                        </div>
                     </td>
                 </tr>
             }
@@ -39,15 +41,18 @@
 @section scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-$(function(){
+$(function() {
 
-    // ADD LOCATION
-    $('#addLocationBtn').click(function(){
+    // 1. ADD LOCATION
+    $('#addLocationBtn').click(function() {
         var name = $('#newLocationName').val().trim();
-        if(!name){ alert('Enter work area name'); return; }
+        if (!name) {
+            alert('Enter work area name');
+            return;
+        }
 
-        $.post('@Url.Action("SaveLocation","Location")', { Location_Description: name }, function(res){
-            if(res.success){
+        $.post('@Url.Action("SaveLocation", "Location")', { Location_Description: name }, function(res) {
+            if (res.success) {
                 $('#locationTableBody').append(`
                     <tr data-id="${res.location.sno}">
                         <td class="location-name">${res.location.Location_Description}</td>
@@ -58,67 +63,90 @@ $(function(){
                     </tr>
                 `);
                 $('#newLocationName').val('');
+                alert("Location added successfully!");
             } else {
-                alert(res.message);
+                // Displays the duplication error from the backend
+                alert("Error: " + res.message);
             }
         });
     });
 
-    // DELETE LOCATION
-    $(document).on('click', '.delete-btn', function(){
+    // 2. DELETE LOCATION
+    $(document).on('click', '.delete-btn', function() {
         var row = $(this).closest('tr');
         var id = row.data('id');
 
-        if(confirm('Delete this work area?')){
-            $.post('@Url.Action("DeleteLocation","Location")', { id: id }, function(res){
-                if(res.success) row.remove();
-                else alert(res.message);
+        if (confirm('Delete this work area?')) {
+            $.post('@Url.Action("DeleteLocation", "Location")', { id: id }, function(res) {
+                if (res.success) {
+                    row.remove();
+                } else {
+                    alert(res.message);
+                }
             });
         }
     });
 
-    // EDIT LOCATION (Updated to match Group/Program logic)
-    $(document).on('click', '.edit-btn', function(){
+    // 3. EDIT LOCATION
+    $(document).on('click', '.edit-btn', function() {
         var row = $(this).closest('tr');
         var nameCell = row.find('.location-name');
         var oldName = nameCell.text().trim();
 
-        // Standardize input styling with edit-input class
+        // Store original name in memory to restore if user cancels
+        row.data('old-name', oldName);
+
         nameCell.html(`<input type="text" class="edit-input" value="${oldName}" style="width:100%"/>`);
 
-        // Swap to Save/Cancel (💾/🚫)
         row.find('.actions-cell').html(`
             <button class="save-btn">💾</button>
             <button class="cancel-btn">🚫</button>
         `);
     });
 
-    // SAVE EDITS
-    $(document).on('click', '.save-btn', function(){
+    // 4. SAVE EDITS
+    $(document).on('click', '.save-btn', function() {
         var row = $(this).closest('tr');
         var id = row.data('id');
         var newName = row.find('.edit-input').val().trim();
+        var oldName = row.data('old-name');
 
-        if(!newName){ alert('Name cannot be empty'); return; }
+        if (!newName) {
+            alert('Name cannot be empty');
+            return;
+        }
 
-        $.post('@Url.Action("SaveLocation","Location")', { sno: id, Location_Description: newName }, function(res){
-            if(res.success){
-                // Reset row to standard view
-                row.find('.location-name').text(res.location.Location_Description);
-                row.find('.actions-cell').html(`
-                    <button class="edit-btn">✏️</button>
-                    <button class="delete-btn">❌</button>
-                `);
+        // Optimization: If name hasn't changed, just revert to text view
+        if (newName.toLowerCase() === oldName.toLowerCase()) {
+            revertRow(row, oldName);
+            return;
+        }
+
+        $.post('@Url.Action("SaveLocation", "Location")', { sno: id, Location_Description: newName }, function(res) {
+            if (res.success) {
+                revertRow(row, res.location.Location_Description);
             } else {
-                alert(res.message);
+                // Displays duplication errors during edit
+                alert("Error: " + res.message);
             }
         });
     });
 
-    // CANCEL EDIT (Matches Group/Program reset)
-    $(document).on('click', '.cancel-btn', function(){
-        location.reload();
+    // 5. CANCEL EDIT
+    $(document).on('click', '.cancel-btn', function() {
+        var row = $(this).closest('tr');
+        var oldName = row.data('old-name');
+        revertRow(row, oldName);
     });
+
+    // Helper function to switch back to standard table view
+    function revertRow(row, name) {
+        row.find('.location-name').text(name);
+        row.find('.actions-cell').html(`
+            <button class="edit-btn">✏️</button>
+            <button class="delete-btn">❌</button>
+        `);
+    }
 
 });
     </script>

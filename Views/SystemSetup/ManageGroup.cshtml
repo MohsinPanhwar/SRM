@@ -8,12 +8,12 @@
     <div class="section-header">
         <h2>Manage Groups</h2>
         @* Replaced inline styles with action-row class *@
-        <div class="action-row">
-            @Html.DropDownList("newProgramName", Model.ProgramList, "-- Select Program --", new { @id = "newProgramName" })
-            <input type="text" id="newGroupName" placeholder="Enter Group Name" required />
-            @Html.DropDownList("newManagerName", Model.AgentList, "-- Select Manager --", new { @id = "newManagerName" })
-            <button id="addGroupBtn" class="setup-btn-green">+ Add Group</button>
-        </div>
+    <div class="action-row">
+        <input type="text" id="newGroupName" placeholder="Enter Group Name" required />
+        @Html.DropDownList("newManagerName", Model.AgentList, "-- Select Manager --", new { @id = "newManagerName" })
+        @Html.DropDownList("newProgramName", Model.ProgramList, "-- Select Program --", new { @id = "newProgramName" })
+        <button id="addGroupBtn" class="setup-btn-green">+ Add Group</button>
+    </div>
     </div>
 
     <table class="crud-table">
@@ -35,8 +35,10 @@
                     <td class="manager-name">@grp.Manager</td>
                     <td class="members-count">@grp.MembersCount</td>
                     <td class="actions-cell">
-                        <button class="edit-btn" title="Edit">✏️</button>
-                        <button class="delete-btn" title="Delete">❌</button>
+                        <div class="icon-btn-group">
+                            <button class="edit-btn" title="Edit">✏️</button>
+                            <button class="delete-btn" title="Delete">❌</button>
+                        </div>
                     </td>
                 </tr>
             }
@@ -46,10 +48,10 @@
     @section scripts {
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
-$(function(){
+$(function() {
 
     // 1. ADD NEW GROUP
-    $('#addGroupBtn').click(function(){
+    $('#addGroupBtn').click(function() {
         var data = {
             GroupId: 0,
             ProgramName: $('#newProgramName').val(),
@@ -57,31 +59,38 @@ $(function(){
             Manager: $('#newManagerName').val()
         };
 
-        if(!data.ProgramName || !data.GroupName){
+        if (!data.ProgramName || !data.GroupName) {
             alert('Program and Group Name are required');
             return;
         }
 
-        $.post('@Url.Action("SaveGroup","Group")', data, function(res){
-            if(res.success) location.reload();
-            else alert(res.message);
+        $.post('@Url.Action("SaveGroup","Group")', data, function(res) {
+            if (res.success) {
+                // For Add, reload is often cleanest to get the new ID and row formatting
+                location.reload();
+            } else {
+                alert("Error: " + res.message);
+            }
         });
     });
 
-    // 2. INLINE EDIT (Removed form-control, added edit-input)
-    $(document).on('click', '.edit-btn', function(){
+    // 2. INLINE EDIT
+    $(document).on('click', '.edit-btn', function() {
         var row = $(this).closest('tr');
 
-        var program = row.find('.program-name').text().trim();
-        var group = row.find('.group-name').text().trim();
-        var manager = row.find('.manager-name').text().trim();
+        // Store current values in data attributes for Cancel logic
+        row.data('old-program', row.find('.program-name').text().trim());
+        row.data('old-group', row.find('.group-name').text().trim());
+        row.data('old-manager', row.find('.manager-name').text().trim());
 
-        // Swap to custom edit-input class (matching Programs/WorkAreas)
+        var program = row.data('old-program');
+        var group = row.data('old-group');
+        var manager = row.data('old-manager');
+
         row.find('.program-name').html(`<input type="text" class="edit-input" value="${program}" />`);
         row.find('.group-name').html(`<input type="text" class="edit-input" value="${group}" />`);
         row.find('.manager-name').html(`<input type="text" class="edit-input" value="${manager}" />`);
 
-        // Swap Action Buttons to match others
         row.find('.actions-cell').html(`
             <button class="save-btn">💾</button>
             <button class="cancel-btn">🚫</button>
@@ -89,7 +98,7 @@ $(function(){
     });
 
     // 3. SAVE INLINE EDIT
-    $(document).on('click', '.save-btn', function(){
+    $(document).on('click', '.save-btn', function() {
         var row = $(this).closest('tr');
         var id = row.data('id');
 
@@ -100,28 +109,52 @@ $(function(){
             Manager: row.find('.manager-name input').val().trim()
         };
 
-        if(!data.ProgramName || !data.GroupName){
+        if (!data.ProgramName || !data.GroupName) {
             alert('Required fields cannot be empty');
             return;
         }
 
-        $.post('@Url.Action("SaveGroup","Group")', data, function(res){
-            if(res.success) location.reload();
-            else alert(res.message);
+        $.post('@Url.Action("SaveGroup","Group")', data, function(res) {
+            if (res.success) {
+                // Update UI without reload
+                revertRow(row, data.ProgramName, data.GroupName, data.Manager);
+                alert("Group updated successfully!");
+            } else {
+                // Show duplication error
+                alert("Error: " + res.message);
+            }
         });
     });
 
-    // 4. CANCEL & DELETE (Logic remains same, styling follows CSS)
-    $(document).on('click', '.cancel-btn', function(){ location.reload(); });
-
-    $(document).on('click', '.delete-btn', function(){
+    // 4. CANCEL EDIT
+    $(document).on('click', '.cancel-btn', function() {
         var row = $(this).closest('tr');
-        if(confirm('Delete this group?')){
-            $.post('@Url.Action("DeleteGroup","Group")', { id: row.data('id') }, function(res){
-                if(res.success) row.remove();
+        revertRow(row, row.data('old-program'), row.data('old-group'), row.data('old-manager'));
+    });
+
+    // 5. DELETE
+    $(document).on('click', '.delete-btn', function() {
+        var row = $(this).closest('tr');
+        if (confirm('Delete this group?')) {
+            $.post('@Url.Action("DeleteGroup","Group")', { id: row.data('id') }, function(res) {
+                if (res.success) row.remove();
+                else alert(res.message);
             });
         }
     });
+
+    // Helper to switch back to read-only mode
+    function revertRow(row, program, group, manager) {
+        row.find('.program-name').text(program);
+        row.find('.group-name').text(group);
+        row.find('.manager-name').text(manager);
+        row.find('.actions-cell').html(`
+            <div class="icon-btn-group">
+                <button class="edit-btn" title="Edit">✏️</button>
+                <button class="delete-btn" title="Delete">❌</button>
+            </div>
+        `);
+    }
 });
         </script>
     }

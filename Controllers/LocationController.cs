@@ -23,10 +23,22 @@ namespace SRM.Controllers
             if (string.IsNullOrWhiteSpace(Location_Description))
                 return Json(new { success = false, message = "Work area name required" });
 
+            // 1. DUPLICATION CHECK
+            var normalizedName = Location_Description.Trim().ToLower();
+
+            // Check if any other location has the same name, excluding the current 'sno'
+            bool exists = _db.Locations.Any(x => x.Location_Description.Trim().ToLower() == normalizedName && x.sno != sno);
+
+            if (exists)
+            {
+                return Json(new { success = false, message = "This Work Area already exists." });
+            }
+
+            // 2. SAVE LOGIC
             Location loc;
             if (sno == 0)
             {
-                loc = new Location { Location_Description = Location_Description };
+                loc = new Location { Location_Description = Location_Description.Trim() };
                 _db.Locations.Add(loc);
             }
             else
@@ -35,7 +47,7 @@ namespace SRM.Controllers
                 if (loc == null)
                     return Json(new { success = false, message = "Location not found" });
 
-                loc.Location_Description = Location_Description;
+                loc.Location_Description = Location_Description.Trim();
             }
 
             _db.SaveChanges();
