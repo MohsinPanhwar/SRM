@@ -42,7 +42,6 @@ namespace SRM.Controllers
             return Json(roles, JsonRequestBehavior.AllowGet);
         }
 
-        // 3. AJAX: Save Role (Create or Update)
         [HttpPost]
         public JsonResult SaveRole(ManageRoleVM vm)
         {
@@ -51,7 +50,6 @@ namespace SRM.Controllers
 
             try
             {
-                // Duplication Check
                 bool exists = _db.Roles.Any(r => r.Role_Name.Trim().ToLower() == vm.RoleName.Trim().ToLower() && r.Role_Id != vm.RoleId);
                 if (exists) return Json(new { success = false, message = "Role name already exists" });
 
@@ -60,36 +58,39 @@ namespace SRM.Controllers
 
                 if (vm.RoleId == 0)
                 {
-                    // --- CREATE MODE ---
+                    // CREATE MODE
                     priv = new Privilege();
                     MapPrivilegesFromVM(vm, priv);
                     _db.Privileges.Add(priv);
-                    _db.SaveChanges(); // Get the generated privilege_id
+                    _db.SaveChanges();
 
                     role = new Roles
                     {
                         Role_Name = vm.RoleName.Trim(),
-                        Privilege_Id = priv.privilege_id // Link manually
+                        Privilege_Id = priv.privilege_id
                     };
                     _db.Roles.Add(role);
                 }
                 else
                 {
-                    // --- EDIT MODE ---
+                    // EDIT MODE
                     role = _db.Roles.Find(vm.RoleId);
                     if (role == null) return Json(new { success = false, message = "Role not found" });
 
                     role.Role_Name = vm.RoleName.Trim();
-
                     priv = _db.Privileges.Find(role.Privilege_Id);
-                    if (priv != null)
-                    {
-                        MapPrivilegesFromVM(vm, priv);
-                    }
+                    if (priv != null) MapPrivilegesFromVM(vm, priv);
                 }
 
                 _db.SaveChanges();
-                return Json(new { success = true });
+
+                // --- THE FIX IS HERE ---
+                // We return the RoleId so the JS knows which row to update or create
+                return Json(new
+                {
+                    success = true,
+                    role = new { RoleId = role.Role_Id }
+                });
             }
             catch (Exception ex)
             {

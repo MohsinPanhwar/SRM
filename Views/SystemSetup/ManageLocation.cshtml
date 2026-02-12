@@ -4,10 +4,10 @@
     ViewBag.Title = "Manage Locations";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<div class=" setup-container">
+
+<div class="setup-container">
     <div class="section-header">
         <h2>Manage Work Areas</h2>
-        @* Added action-row for consistent 38px height and spacing *@
         <div class="action-row">
             <input type="text" id="newLocationName" placeholder="Enter work area name" />
             <button id="addLocationBtn" class="setup-btn-green">+ Add Work Area</button>
@@ -18,7 +18,7 @@
         <thead>
             <tr>
                 <th>Work Area</th>
-                <th>Actions</th>
+                <th style="width: 120px;">Actions</th>
             </tr>
         </thead>
         <tbody id="locationTableBody">
@@ -39,115 +39,134 @@
 </div>
 
 @section scripts {
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-$(function() {
+        $(function() {
+            // 1. TOAST HELPER
+            function showToast(message, type = 'success') {
+                const id = 'toast-' + Date.now();
+                const icon = type === 'success' ? '✅' : '🗑️';
+                const toastClass = type === 'success' ? 'toast-success' : 'toast-error';
 
-    // 1. ADD LOCATION
-    $('#addLocationBtn').click(function() {
-        var name = $('#newLocationName').val().trim();
-        if (!name) {
-            alert('Enter work area name');
-            return;
-        }
+                const html = `
+                    <div id="${id}" class="toast-msg ${toastClass}" style="display:none; position:relative; left:-40px; opacity:0;">
+                        <span style="margin-right:10px;">${icon}</span>
+                        <span>${message}</span>
+                    </div>`;
 
-        $.post('@Url.Action("SaveLocation", "Location")', { Location_Description: name }, function(res) {
-            if (res.success) {
-                $('#locationTableBody').append(`
-                    <tr data-id="${res.location.sno}">
-                        <td class="location-name">${res.location.Location_Description}</td>
-                        <td class="actions-cell">
-                            <button class="edit-btn">✏️</button>
-                            <button class="delete-btn">❌</button>
-                        </td>
-                    </tr>
-                `);
-                $('#newLocationName').val('');
-                alert("Location added successfully!");
-            } else {
-                // Displays the duplication error from the backend
-                alert("Error: " + res.message);
+                if ($('#notification-area').length === 0) {
+                    $('body').append('<div id="notification-area"></div>');
+                }
+
+                $('#notification-area').append(html);
+
+                $(`#${id}`).show().animate({ left: "0px", opacity: "1" }, 300)
+                           .delay(1000)
+                           .fadeOut(function () { $(this).remove(); });
             }
-        });
-    });
 
-    // 2. DELETE LOCATION
-    $(document).on('click', '.delete-btn', function() {
-        var row = $(this).closest('tr');
-        var id = row.data('id');
+            // 2. ADD LOCATION
+            $('#addLocationBtn').click(function() {
+                var name = $('#newLocationName').val().trim();
+                if (!name) {
+                    showToast('Enter work area name', 'error');
+                    return;
+                }
 
-        if (confirm('Delete this work area?')) {
-            $.post('@Url.Action("DeleteLocation", "Location")', { id: id }, function(res) {
-                if (res.success) {
-                    row.remove();
-                } else {
-                    alert(res.message);
+                $.post('@Url.Action("SaveLocation", "Location")', { Location_Description: name }, function(res) {
+                    if (res.success) {
+                        showToast("Work Area added!", "success");
+
+                        var newRow = `
+                            <tr data-id="${res.location.sno}" style="display:none;">
+                                <td class="location-name">${res.location.Location_Description}</td>
+                                <td class="actions-cell">
+                                    <div class="icon-btn-group">
+                                        <button class="edit-btn">✏️</button>
+                                        <button class="delete-btn">❌</button>
+                                    </div>
+                                </td>
+                            </tr>`;
+
+                        var $nr = $(newRow);
+                        $('#locationTableBody').append($nr);
+                        // Row still fades in smoothly when added
+                        $nr.fadeIn(800).css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
+
+                        $('#newLocationName').val('');
+                    } else {
+                        showToast(res.message, "error");
+                    }
+                });
+            });
+
+            // 3. SAVE EDITS
+            $(document).on('click', '.save-btn', function() {
+                var row = $(this).closest('tr');
+                var id = row.data('id');
+                var newName = row.find('.edit-input').val().trim();
+
+                if (!newName) {
+                    showToast('Name cannot be empty', 'error');
+                    return;
+                }
+
+                $.post('@Url.Action("SaveLocation", "Location")', { sno: id, Location_Description: newName }, function(res) {
+                    if (res.success) {
+                        revertRow(row, res.location.Location_Description);
+                        showToast("Work Area updated!");
+                        row.css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
+                    } else {
+                        showToast(res.message, "error");
+                    }
+                });
+            });
+
+            // 4. DELETE LOCATION
+            $(document).on('click', '.delete-btn', function() {
+                var row = $(this).closest('tr');
+                if (confirm('Delete this work area?')) {
+                    $.post('@Url.Action("DeleteLocation", "Location")', { id: row.data('id') }, function(res) {
+                        if (res.success) {
+                            row.css('background-color', '#fff5f5').fadeOut(600, function () {
+                                $(this).remove();
+                                showToast("Work Area deleted", "error");
+                            });
+                        } else {
+                            showToast(res.message, "error");
+                        }
+                    });
                 }
             });
-        }
-    });
 
-    // 3. EDIT LOCATION
-    $(document).on('click', '.edit-btn', function() {
-        var row = $(this).closest('tr');
-        var nameCell = row.find('.location-name');
-        var oldName = nameCell.text().trim();
+            // --- UI HELPERS ---
+            $(document).on('click', '.edit-btn', function() {
+                var row = $(this).closest('tr');
+                var oldName = row.find('.location-name').text().trim();
+                row.data('old-name', oldName);
 
-        // Store original name in memory to restore if user cancels
-        row.data('old-name', oldName);
+                row.find('.location-name').html(`<input type="text" class="edit-input" value="${oldName}" style="width:100%"/>`);
+                row.find('.actions-cell').html(`
+                    <div class="icon-btn-group">
+                        <button class="save-btn">💾</button>
+                        <button class="cancel-btn">🚫</button>
+                    </div>
+                `);
+            });
 
-        nameCell.html(`<input type="text" class="edit-input" value="${oldName}" style="width:100%"/>`);
+            $(document).on('click', '.cancel-btn', function() {
+                var row = $(this).closest('tr');
+                revertRow(row, row.data('old-name'));
+            });
 
-        row.find('.actions-cell').html(`
-            <button class="save-btn">💾</button>
-            <button class="cancel-btn">🚫</button>
-        `);
-    });
-
-    // 4. SAVE EDITS
-    $(document).on('click', '.save-btn', function() {
-        var row = $(this).closest('tr');
-        var id = row.data('id');
-        var newName = row.find('.edit-input').val().trim();
-        var oldName = row.data('old-name');
-
-        if (!newName) {
-            alert('Name cannot be empty');
-            return;
-        }
-
-        // Optimization: If name hasn't changed, just revert to text view
-        if (newName.toLowerCase() === oldName.toLowerCase()) {
-            revertRow(row, oldName);
-            return;
-        }
-
-        $.post('@Url.Action("SaveLocation", "Location")', { sno: id, Location_Description: newName }, function(res) {
-            if (res.success) {
-                revertRow(row, res.location.Location_Description);
-            } else {
-                // Displays duplication errors during edit
-                alert("Error: " + res.message);
+            function revertRow(row, name) {
+                row.find('.location-name').text(name);
+                row.find('.actions-cell').html(`
+                    <div class="icon-btn-group">
+                        <button class="edit-btn">✏️</button>
+                        <button class="delete-btn">❌</button>
+                    </div>
+                `);
             }
         });
-    });
-
-    // 5. CANCEL EDIT
-    $(document).on('click', '.cancel-btn', function() {
-        var row = $(this).closest('tr');
-        var oldName = row.data('old-name');
-        revertRow(row, oldName);
-    });
-
-    // Helper function to switch back to standard table view
-    function revertRow(row, name) {
-        row.find('.location-name').text(name);
-        row.find('.actions-cell').html(`
-            <button class="edit-btn">✏️</button>
-            <button class="delete-btn">❌</button>
-        `);
-    }
-
-});
     </script>
 }

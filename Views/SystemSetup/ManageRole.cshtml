@@ -11,8 +11,8 @@
         <div class="action-row">
             <input type="hidden" id="roleId" value="0" />
             <input type="text" id="roleName" placeholder="Enter role name..." style="width: 300px;" />
-
-            <button id="addRoleBtn" class="setup-btn-green">➕ Add Role</button>
+            @* Added a Reset button to trigger your resetForm function *@
+            
         </div>
     </div>
 
@@ -59,6 +59,8 @@
                 <label><input type="checkbox" class="priv-cb" id="CanViewReports" disabled> View Reports</label>
                 <label><input type="checkbox" class="priv-cb" id="CanViewEditMessage" disabled> View/Edit Message</label>
             </div>
+            <button id="addRoleBtn" class="setup-btn-green">➕ Add Role</button>
+            <button id="resetFormBtn" class="setup-btn-green" style="margin-left:10px;">Reset Form</button>
         </div>
     </div>
 
@@ -82,8 +84,8 @@
                         <td>@role.UserCount</td>
                         <td class="actions-cell">
                             <div class="icon-btn-group">
-                                <button class="edit-role-btn" title="Edit Role">✏️</button>
-                                <button class="delete-role-btn" title="Delete">❌</button>
+                                <button class="edit-btn" title="Edit">✏️</button>
+                                <button class="delete-btn" title="Delete">❌</button>
                             </div>
                         </td>
                     </tr>
@@ -94,7 +96,7 @@
 </div>
 
 <style>
-    /* State-based Status Bar */
+    /* Keeping your exact styling */
     .status-bar {
         padding: 12px 15px;
         border-radius: 6px;
@@ -120,7 +122,6 @@
         color: #e65100;
     }
 
-    /* Grid Layout */
     .privilege-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -163,38 +164,31 @@
     input[type="checkbox"]:disabled {
         cursor: not-allowed;
     }
-
-    .icon-btn-group {
-        display: flex;
-        gap: 8px;
-        justify-content: center;
-    }
-
-        .icon-btn-group button {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 4px 8px;
-            transition: 0.2s;
-        }
-
-            .icon-btn-group button:hover {
-                background: #f8f9fa;
-                border-color: #bbb;
-                transform: translateY(-1px);
-            }
 </style>
 
 @section scripts {
     <script>
 $(function () {
-    // 1. FORM CONTROL: Keeps things active
+    // 1. TOAST HELPER
+    function showToast(message, type = 'success') {
+        const id = 'toast-' + Date.now();
+        const icon = type === 'success' ? '✅' : '🗑️';
+        const toastClass = type === 'success' ? 'toast-success' : 'toast-error';
+        const html = `<div id="${id}" class="toast-msg ${toastClass}" style="display:none; position:relative; left:-40px; opacity:0;">
+                        <span style="margin-right:10px;">${icon}</span>
+                        <span>${message}</span>
+                      </div>`;
+        if ($('#notification-area').length === 0) $('body').append('<div id="notification-area"></div>');
+        $('#notification-area').append(html);
+        $(`#${id}`).show().animate({ left: "0px", opacity: "1" }, 300).delay(1000).fadeOut(function () { $(this).remove(); });
+    }
+
+    // 2. FORM CONTROL
     function resetForm(isUpdate = false, name = "") {
         const $status = $('#formStatus');
         const $addBtn = $('#addRoleBtn');
         const $checks = $('.priv-cb');
 
-        // Always ensure checkboxes are enabled
         $checks.prop('disabled', false);
         $addBtn.show();
 
@@ -202,79 +196,104 @@ $(function () {
             $status.addClass('status-editing');
             $status.find('.status-icon').text('📝');
             $status.find('.status-text').html(`Editing: <strong>${name}</strong>`);
-            $addBtn.text('💾 Update Role').removeClass('setup-btn-green').addClass('btn-warning');
+            $addBtn.text('💾 Update Role');
         } else {
             $status.removeClass('status-editing');
             $status.find('.status-icon').text('➕');
             $status.find('.status-text').text("Add New Role");
-
             $('#roleId').val('0');
             $('#roleName').val('');
             $checks.prop('checked', false);
-            $addBtn.text('➕ Add Role').addClass('setup-btn-green').removeClass('btn-warning');
+            $addBtn.text('➕ Add Role').addClass('setup-btn-green');
         }
     }
 
-    // 2. EDIT ACTION: Load and stay active
-    $(document).on('click', '.edit-role-btn', function () {
+    // 3. EDIT ACTION (Fixed selector to match your .edit-btn class)
+    $(document).on('click', '.edit-btn', function () {
         const id = $(this).closest('tr').data('id');
         $.get('@Url.Action("GetRoleDetails", "Role")', { id: id }, function (res) {
             if (res.success) {
                 $('#roleId').val(res.data.RoleId);
                 $('#roleName').val(res.data.RoleName);
-
-                // Map checkboxes
                 $('.priv-cb').each(function () {
                     $(this).prop('checked', res.data[this.id] === true);
                 });
-
                 resetForm(true, res.data.RoleName);
                 $("html, body").animate({ scrollTop: 0 }, "fast");
             }
         });
     });
 
-    // 3. SAVE / UPDATE
+   // 4. SAVE / UPDATE
     $('#addRoleBtn').click(function () {
         const name = $('#roleName').val().trim();
-        if (!name) { alert("Please enter a role name."); return; }
+        const id = $('#roleId').val(); // This is the hidden input
 
-        const formData = {
-            RoleId: $('#roleId').val(),
-            RoleName: name
-        };
+        if (!name) {
+            showToast("Please enter a role name.", "error");
+            return;
+        }
 
+        const formData = { RoleId: id, RoleName: name };
         $('.priv-cb').each(function () {
             formData[this.id] = $(this).is(':checked');
         });
 
         $.post('@Url.Action("SaveRole", "Role")', formData, function (res) {
             if (res.success) {
-                alert("Saved successfully!");
-                location.reload();
+                showToast(id == "0" ? "Role created!" : "Role updated!");
+
+                if (id == "0") {
+                    // NEW ROLE: Append a fresh row to the table
+                    const newRow = `
+                        <tr data-id="${res.role.RoleId}">
+                            <td>${res.role.RoleId}</td>
+                            <td class="role-name">${name}</td>
+                            <td>0</td>
+                            <td class="actions-cell">
+                                <div class="icon-btn-group">
+                                    <button class="edit-btn" title="Edit">✏️</button>
+                                    <button class="delete-btn" title="Delete">❌</button>
+                                </div>
+                            </td>
+                        </tr>`;
+
+                    const $nr = $(newRow);
+                    $('#roleTableBody').append($nr);
+                    $nr.css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
+                } else {
+                    // EDITING ROLE: Find the existing row by data-id and update the name cell
+                    const $row = $(`tr[data-id="${id}"]`);
+
+                    // We target .role-name specifically because that is what is in your <td>
+                    $row.find('.role-name').text(name);
+
+                    // Visual feedback that the row updated
+                    $row.css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
+                }
+
+                resetForm(false); // Clear the form back to "Add" mode
             } else {
-                alert(res.message);
+                showToast(res.message, "error");
             }
         });
     });
-
-    // 4. DELETE
-    $(document).on('click', '.delete-role-btn', function () {
+    // 5. DELETE
+    $(document).on('click', '.delete-btn', function () {
         const row = $(this).closest('tr');
         if (confirm('Delete this role?')) {
             $.post('@Url.Action("DeleteRole", "Role")', { id: row.data('id') }, function (res) {
-                if (res.success) row.fadeOut();
-                else alert(res.message);
+                if (res.success) {
+                    row.fadeOut(600, function() { $(this).remove(); });
+                    showToast("Role deleted", "error");
+                } else showToast(res.message, "error");
             });
         }
     });
 
-    // 5. RESET
-    $('#resetFormBtn').click(function() {
-        resetForm(false);
-    });
+    $('#resetFormBtn').click(function() { resetForm(false); });
 
-    // Initialize as a fresh, open form
+    // Set form to active on load as per your previous logic
     resetForm(false);
 });
     </script>

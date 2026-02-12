@@ -4,22 +4,23 @@
     ViewBag.Title = "Manage Programs";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<div class=" setup-container">
+
+<div id="notification-area"></div>
+
+<div class="setup-container">
     <div class="section-header">
         <h2>Manage Programs</h2>
-        @* Added action-row for consistent 38px height and spacing *@
         <div class="action-row">
-            <input type="text" id="newProgramName" placeholder="Enter program name" />
+            <input type="text" id="newProgramName" placeholder="Enter program name" class="form-control" />
             <button id="addProgramBtn" class="setup-btn-green">+ Add Program</button>
         </div>
     </div>
 
-    <table class="crud-table">
+    <table class="crud-table" id="programTable">
         <thead>
             <tr>
                 <th>Program Name</th>
-                @* Actions column width is now controlled by the CSS actions-cell class *@
-                <th>Actions</th>
+                <th style="width: 120px;">Actions</th>
             </tr>
         </thead>
         <tbody id="programTableBody">
@@ -31,123 +32,154 @@
                         <div class="icon-btn-group">
                             <button class="edit-btn" title="Edit">✏️</button>
                             <button class="delete-btn" title="Delete">❌</button>
-                            </div>
+                        </div>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 </div>
-    @section scripts {
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script>
-$(function() {
 
-    // ADD PROGRAM (With Duplication Handling)
-    $('#addProgramBtn').click(function() {
-        var name = $('#newProgramName').val().trim();
-        if (!name) {
-            alert('Enter program name');
-            return;
-        }
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            // 1. Initial Page Fade-In
+            $('.crud-table').animate({ opacity: 1 }, 800);
 
-        // Note: URL points to "Add" in "Program" controller
-        $.post('@Url.Action("Add", "Program")', { programName: name }, function(res) {
-            if (res.success) {
-                $('#programTableBody').append(`
-                    <tr data-id="${res.program.Program_Id}">
-                        <td class="program-name">${res.program.Program_Name}</td>
-                        <td class="actions-cell">
-                            <button class="edit-btn">✏️</button>
-                            <button class="delete-btn">❌</button>
-                        </td>
-                    </tr>
-                `);
-                $('#newProgramName').val('');
-                alert("Program added successfully!");
-            } else {
-                // This captures the "already exists" message from your C# logic
-                alert("Error: " + res.message);
+            function showToast(message, type = 'success') {
+                const id = 'toast-' + Date.now();
+                const icon = type === 'success' ? '✅' : '🗑️';
+                const toastClass = type === 'success' ? 'toast-success' : 'toast-error';
+
+                const html = `
+        <div id="${id}" class="toast-msg ${toastClass}">
+            <span style="margin-right:10px;">${icon}</span>
+            <span>${message}</span>
+        </div>`;
+
+                $('#notification-area').append(html);
+
+                // Slide and Fade In
+                $(`#${id}`).show().animate({ left: "0px", opacity: "1" }, 300)
+                    .delay(1000)
+                    .fadeOut(function () { $(this).remove(); });
             }
-        });
-    });
 
-    // DELETE PROGRAM
-    $(document).on('click', '.delete-btn', function() {
-        var row = $(this).closest('tr');
-        var id = row.data('id');
+            // ADD PROGRAM
+            $('#addProgramBtn').click(function () {
+                var btn = $(this);
+                var name = $('#newProgramName').val().trim();
 
-        if (confirm('Delete this program?')) {
-            $.post('@Url.Action("Delete", "Program")', { id: id }, function(res) {
-                if (res.success) {
-                    row.remove();
-                } else {
-                    alert(res.message);
+                if (!name) {
+                    showToast('Please enter a program name', 'error');
+                    return;
+                }
+
+                btn.addClass('loading-spinner').text('Saving...');
+
+                $.post('@Url.Action("Add", "Program")', { programName: name }, function (res) {
+                    btn.removeClass('loading-spinner').html('+ Add Program');
+
+                    if (res.success) {
+                        var newRow = $(`
+                            <tr data-id="${res.program.Program_Id}" style="display:none; background-color: #f0fff4;">
+                                <td class="program-name">${res.program.Program_Name}</td>
+                                <td class="actions-cell">
+                                    <div class="icon-btn-group">
+                                        <button class="edit-btn" title="Edit">✏️</button>
+                                        <button class="delete-btn" title="Delete">❌</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `);
+
+                        $('#programTableBody').append(newRow);
+                        newRow.fadeIn(1000, function() {
+                            $(this).css('background-color', 'transparent');
+                        });
+
+                        $('#newProgramName').val('');
+                        showToast("Program added successfully!");
+                    } else {
+                        showToast(res.message, 'error');
+                    }
+                });
+            });
+
+            // DELETE PROGRAM
+            // DELETE PROGRAM
+            $(document).on('click', '.delete-btn', function () {
+                var row = $(this).closest('tr');
+                var id = row.data('id');
+
+                if (confirm('Are you sure you want to delete this program?')) {
+                    $.post('@Url.Action("Delete", "Program")', { id: id }, function (res) {
+                        if (res.success) {
+                            // Highlight red then fade out
+                            row.css('background-color', '#fff5f5').fadeOut(600, function() {
+                                $(this).remove();
+                                // TRIGGER RED NOTIFICATION FOR DELETE
+                                showToast("Program deleted successfully.", "error");
+                            });
+                        } else {
+                            showToast(res.message, 'error');
+                        }
+                    });
                 }
             });
-        }
-    });
 
-    // EDIT PROGRAM
-    $(document).on('click', '.edit-btn', function() {
-        var row = $(this).closest('tr');
-        var nameCell = row.find('.program-name');
-        var oldName = nameCell.text().trim();
+            // EDIT PROGRAM
+            $(document).on('click', '.edit-btn', function () {
+                var row = $(this).closest('tr');
+                var nameCell = row.find('.program-name');
+                var oldName = nameCell.text().trim();
+                row.data('old-name', oldName);
 
-        // Store old name in data attribute in case user cancels or error occurs
-        row.data('old-name', oldName);
+                nameCell.html(`<input type="text" class="edit-input" value="${oldName}" style="width:100%; padding:5px; border:1px solid #4CAF50;" />`);
 
-        nameCell.html(`<input type="text" class="edit-input" value="${oldName}" style="width:100%" />`);
+                row.find('.actions-cell').html(`
+                    <div class="icon-btn-group">
+                        <button class="save-btn" title="Save">💾</button>
+                        <button class="cancel-btn" title="Cancel">🚫</button>
+                    </div>
+                `);
+            });
 
-        row.find('.actions-cell').html(`
-            <button class="save-btn">💾</button>
-            <button class="cancel-btn">🚫</button>
-        `);
-    });
+            // SAVE EDIT
+            $(document).on('click', '.save-btn', function () {
+                var row = $(this).closest('tr');
+                var id = row.data('id');
+                var newName = row.find('.edit-input').val().trim();
+                var oldName = row.data('old-name');
 
-    // SAVE EDITS (With Duplication Handling)
-    $(document).on('click', '.save-btn', function() {
-        var row = $(this).closest('tr');
-        var id = row.data('id');
-        var newName = row.find('.edit-input').val().trim();
-        var oldName = row.data('old-name');
+                if (!newName) { showToast('Name cannot be empty', 'error'); return; }
 
-        if (!newName) {
-            alert('Name cannot be empty');
-            return;
-        }
+                $.post('@Url.Action("Edit", "Program")', { id: id, programName: newName }, function (res) {
+                    if (res.success) {
+                        revertRow(row, res.program.Program_Name);
+                        showToast("Changes saved!");
+                        row.css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
+                    } else {
+                        showToast(res.message, 'error');
+                    }
+                });
+            });
 
-        // Optimization: If name hasn't changed, just revert to text view
-        if (newName.toLowerCase() === oldName.toLowerCase()) {
-            revertRow(row, oldName);
-            return;
-        }
+            // CANCEL EDIT
+            $(document).on('click', '.cancel-btn', function () {
+                var row = $(this).closest('tr');
+                revertRow(row, row.data('old-name'));
+            });
 
-        $.post('@Url.Action("Edit", "Program")', { id: id, programName: newName }, function(res) {
-            if (res.success) {
-                revertRow(row, res.program.Program_Name);
-            } else {
-                // This captures duplication errors during editing
-                alert("Error: " + res.message);
+            function revertRow(row, name) {
+                row.find('.program-name').text(name);
+                row.find('.actions-cell').html(`
+                    <div class="icon-btn-group">
+                        <button class="edit-btn" title="Edit">✏️</button>
+                        <button class="delete-btn" title="Delete">❌</button>
+                    </div>
+                `);
             }
         });
-    });
-
-    // CANCEL EDIT
-    $(document).on('click', '.cancel-btn', function() {
-        var row = $(this).closest('tr');
-        var oldName = row.data('old-name');
-        revertRow(row, oldName);
-    });
-
-    // Helper function to revert row to standard view
-    function revertRow(row, name) {
-        row.find('.program-name').text(name);
-        row.find('.actions-cell').html(`
-            <button class="edit-btn">✏️</button>
-            <button class="delete-btn">❌</button>
-        `);
-    }
-
-});        </script>
-    }
+    </script>
+}

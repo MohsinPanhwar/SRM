@@ -57,7 +57,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.35rem;
-    margin-left:-20px;
+    margin-left: -20px;
 }
 
 .dropdown {
@@ -256,6 +256,7 @@ footer {
     width: 100%;
     margin-top: auto;
 }
+
 /* ===== CENTRALIZED SECTION HEADER ===== */
 .section-header {
     display: flex;
@@ -303,37 +304,7 @@ footer {
         }
 
         /* THE ADD BUTTONS: Unified Green Gradient */
-        .section-header .action-row button,
-        .setup-btn-green,
-        #addGroupBtn,
-        #addLocationBtn,
-        #addProgramBtn {
-            height: 38px !important;
-            min-width: 160px !important;
-            padding: 0 20px !important;
-            background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important;
-            color: #ffffff !important;
-            border: none !important;
-            border-radius: 6px !important;
-            cursor: pointer !important;
-            font-size: 0.85rem !important;
-            font-weight: 600 !important;
-            display: inline-flex !important;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease !important;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
-            white-space: nowrap;
-        }
-
-            .section-header .action-row button:hover {
-                transform: translateY(-1px) !important;
-                box-shadow: 0 4px 12px rgba(27, 77, 62, 0.25) !important;
-                filter: brightness(1.1);
-            }
-
-/* THE BACK TO LIST BUTTON: Inheriting the Green Gradient Style */
-.Back-To-List {
+.setup-btn-green {
     height: 38px !important;
     min-width: 160px !important;
     padding: 0 20px !important;
@@ -344,8 +315,7 @@ footer {
     cursor: pointer !important;
     font-size: 0.85rem !important;
     font-weight: 600 !important;
-    /* Use 'none' by default so jQuery can toggle it */
-    display: none !important;
+    display: inline-flex !important;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease !important;
@@ -353,19 +323,17 @@ footer {
     white-space: nowrap;
 }
 
-    .Back-To-List:hover {
+    .setup-btn-green:hover {
         transform: translateY(-1px) !important;
         box-shadow: 0 4px 12px rgba(27, 77, 62, 0.25) !important;
         filter: brightness(1.1);
-        color: #ffffff !important;
     }
 
-/* This special rule allows jQuery's .show() to work despite the !important above */
-#btnBackToList[style*="display: block"],
-#btnBackToList[style*="display: inline-block"] {
-    display: inline-flex !important;
-}
+
 /* ===== CRUD TABLE & INLINE EDITING ===== */
+/* ==========================
+   CRUD Table Styling
+   ========================== */
 .crud-table {
     width: 100%;
     border-collapse: collapse;
@@ -373,7 +341,10 @@ footer {
     box-shadow: 0 6px 15px rgba(0,0,0,0.08);
     border-radius: 8px;
     overflow: hidden;
+    margin-top: 20px;
+
 }
+
     .crud-table thead {
         background-color: #f4f6f8;
         border-bottom: 2px solid #e0e0e0;
@@ -382,30 +353,24 @@ footer {
     .crud-table th, .crud-table td {
         padding: 12px 15px;
         border-bottom: 1px solid #e0e0e0;
-        text-align: left; /* Header and Data both start on the left */
         font-size: 0.9rem;
+        text-align: left;
     }
 
         .crud-table th:first-child,
         .crud-table td:first-child {
-            padding-left: 30px !important; /* Extra padding for the first column */
+            padding-left: 30px;
         }
 
-        /* TARGET ACTION COLUMN: Align text and buttons to the left */
+        /* Actions column */
         .crud-table th:last-child,
         .crud-table td:last-child,
         .actions-cell {
-            text-align: left !important;
-            width: 120px; /* Give just enough room for the two buttons */
-            white-space: nowrap; /* Prevent buttons from stacking vertically */
+            text-align: left;
+            width: 120px;
+            white-space: nowrap;
         }
 
-            /* Button Spacing */
-            .crud-table td:last-child button {
-                margin-right: 8px; /* Small gap after the first button */
-                margin-left: 0; /* No margin on the left so it starts flush */
-                display: inline-block;
-            }
 /* FIXED: Inline Edit Input now matches header height and style */
 .edit-input {
     width: 100% !important;
@@ -419,28 +384,57 @@ footer {
     background: #fff !important;
 }
 
-/* Action Buttons (✏️/💾 and ❌/🚫) */
-.edit-btn, .save-btn, .delete-btn, .cancel-btn {
-    padding: 6px 12px !important;
-    font-size: 0.9rem !important;
-    border-radius: 4px !important;
+
+
+/* Base style for all table action buttons - Icon Only */
+/* Override Bootstrap button styles */
+.edit-btn,
+.save-btn,
+.delete-btn,
+.cancel-btn {
+    background-color: transparent !important;
+    background: transparent !important;
+    color: inherit !important;
     border: none !important;
+    box-shadow: none !important;
+    padding: 4px 6px !important;
+    margin: 0 !important;
     cursor: pointer;
-    color: #fff !important;
-    transition: opacity 0.2s;
+    font-size: 1.3rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    outline: none !important;
 }
 
-.edit-btn, .save-btn {
-    background-color: #0e5dff !important;
-}
+    .edit-btn:hover,
+    .save-btn:hover,
+    .delete-btn:hover,
+    .cancel-btn:hover {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
 
-.delete-btn, .cancel-btn {
-    background-color: #f20101 !important;
-}
+ 
 
-.crud-table button:hover {
-    opacity: 0.8;
-}
+    /* Active state for buttons */
+    .edit-btn:active,
+    .save-btn:active,
+    .delete-btn:active,
+    .cancel-btn:active {
+        transform: scale(0.95);
+    }
+
+    /* Focus state - subtle outline */
+    .edit-btn:focus,
+    .save-btn:focus,
+    .delete-btn:focus,
+    .cancel-btn:focus {
+        outline: none !important;
+    }
+
 /* ===== PROFILE / MANAGE USER PAGE (Unified) ===== */
 .profile-container {
     max-width: 1200px;
@@ -584,31 +578,37 @@ footer {
         margin-bottom: 20px;
     }
 
-.table-responsive {
-    max-height: 400px; /* Limits height so it doesn't push the message too far down */
-    overflow-y: auto;
+/* Global Notification Container */
+#notification-area {
+    position: fixed;
+    top: 20px;
+    left: 20px; /* Moved to Left */
+    z-index: 9999;
+    display: flex;
+    flex-direction: column-reverse;
 }
 
-.table thead th {
-    position: sticky;
-    top: 0;
-    background-color: #343a40;
+.toast-msg {
+    min-width: 300px;
+    padding: 16px 20px;
+    margin-top: 10px;
+    border-radius: 8px;
     color: white;
-    z-index: 1;
+    font-weight: 500;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    display: none;
+    position: relative;
+    left: -40px; /* Starting position for slide-in */
+    transition: all 0.3s ease;
 }
 
-.badge-success {
-    background-color: #28a745;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8em;
+/* Professional colors with icons */
+.toast-success {
+    background: #2dce89;
+    border-left: 8px solid #28b87b;
 }
 
-.badge-danger {
-    background-color: #dc3545;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8em;
+.toast-error {
+    background: #f5365c;
+    border-left: 8px solid #d62f50;
 }
