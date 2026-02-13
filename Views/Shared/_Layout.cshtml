@@ -38,8 +38,8 @@
                 <div class="dropdown">
                     <button class="dropbtn">Service Request</button>
                     <div class="dropdown-content">
-                        <a href="@Url.Action("LogNew", "ServiceRequest")">Log new request</a>
-                        <a href="@Url.Action("Index", "ServiceRequest", new { status = "All" })">Show all requests</a>
+                        <a href="@Url.Action("LogNewRequest", "NewRequest")">Log new request</a>
+                        <a href="@Url.Action("ViewAllRequests", "ViewAllRequests", new { status = "All" })">Show all requests</a>
                         <a href="@Url.Action("SendSmsToEngineer", "ServiceRequest")">Send SMS</a>
                         <a href="@Url.Action("SendPasswordToAgents", "ServiceRequest")">Send Password to Agents</a>
                     </div>

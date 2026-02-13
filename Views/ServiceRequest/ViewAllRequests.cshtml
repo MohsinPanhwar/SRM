@@ -1,0 +1,178 @@
+﻿@model SRM.Models.AllRequestsViewModel
+@{
+    ViewBag.Title = "View All Requests";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Standard SRM Container */
+  
+    /* Clean Search Box */
+    .search-area {
+        background: #fdfdfd;
+        border: 1px solid #eee;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+
+    .filter-table td {
+        padding: 5px 10px;
+        font-size: 0.9em;
+    }
+
+    /* Dashboard Status Card */
+    .status-card {
+        border-collapse: collapse;
+        font-size: 12px;
+        width: 300px;
+        border: 1px solid #ddd;
+    }
+
+        .status-card th {
+            background: #f8f8f8;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .status-card td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+    /* Main Data Grid */
+    .main-grid {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        margin-top: 10px;
+    }
+
+        .main-grid th {
+            background: #1b4d3e;
+            color: white;
+            padding: 12px 10px;
+            text-align: left;
+            border: 1px solid #003322;
+        }
+
+        .main-grid td {
+            padding: 10px;
+            border: 1px solid #eee;
+        }
+
+        .main-grid tr:nth-child(even) {
+            background: #f9fbf9;
+        }
+
+        .main-grid tr:hover {
+            background: #f1f5f2;
+        }
+
+    .btn-search {
+        background: #2e7d57;
+        color: white;
+        border: none;
+        padding: 5px 20px;
+        cursor: pointer;
+        border-radius: 3px;
+    }
+</style>
+
+<div class="setup-container">
+    <div class="section-header">
+        <h2>View All Requests</h2>
+        <div class="record-count">
+            <strong>@Model.RequestList.Count</strong> record(s) found
+        </div>
+    </div>
+
+    <div class="search-area">
+        @using (Html.BeginForm("ViewAllRequests", "ServiceRequest", FormMethod.Get))
+        {
+            <div style="display:flex; justify-content: space-between; align-items: flex-start;">
+                <table class="filter-table">
+                    <tr>
+                        <td><strong>Search By</strong></td>
+                        <td>
+                            @Html.DropDownList("searchBy", new SelectList(new[] { "RequestID", "Summary" }), new { @class = "form-control" })
+                        </td>
+                        <td><input type="text" name="searchText" value="@Model.SearchText" placeholder="Enter keyword..." /></td>
+                    </tr>
+                    <tr>
+                        <td><strong>From</strong></td>
+                        <td><input type="date" name="fromDate" value="@Model.FromDate.ToString("yyyy-MM-dd")" /></td>
+                        <td rowspan="2" style="vertical-align:bottom;">
+                            <button type="submit" class="setup-btn-green">Search & Filter</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>To</strong></td>
+                        <td><input type="date" name="toDate" value="@Model.ToDate.ToString("yyyy-MM-dd")" /></td>
+                    </tr>
+                </table>
+
+                <table class="status-card">
+                    <thead><tr><th colspan="3">Overall Status Summary</th></tr></thead>
+                    <tbody>
+                        <tr><td>Queue</td><td align="center">👥</td><td>@Model.QueueCount</td></tr>
+                        <tr><td>Forwarded</td><td align="center">➡️</td><td>@Model.ForwardedCount</td></tr>
+                        <tr><td>Resolved</td><td align="center">✅</td><td>@Model.ResolvedCount</td></tr>
+                        <tr><td>Closed</td><td align="center">✔️</td><td>@Model.ClosedCount</td></tr>
+                        <tr style="font-weight:bold; background:#f9f9f9;"><td>Total</td><td></td><td>@Model.TotalCount</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <div style="text-align:center; margin-bottom:15px; color: #666;">
+        <small>Showing results from <strong>@Model.FromDate.ToString("dd-MMM-yyyy")</strong> to <strong>@Model.ToDate.ToString("dd-MMM-yyyy")</strong></small>
+    </div>
+
+    <table class="main-grid">
+        <thead>
+            <tr>
+                <th>Request ID</th>
+                <th>Subject</th>
+                <th>Request Date</th>
+                <th>Forward To</th>
+                <th>Site/Location</th>
+                <th style="text-align:center;">Status</th>
+                <th>Pending</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.RequestList)
+            {
+                <tr>
+                    <td><a href="#" style="color:#2e7d57; font-weight:bold;">@item.RequestID</a></td>
+                    <td>@item.ReqSummary</td>
+                    <td>@item.RequestDate.Value.ToString("dd-MMM-yyyy hh:mm tt")</td>
+                    <td>@(string.IsNullOrEmpty(item.Forward_To) ? "---" : item.Forward_To)</td>
+                    <td>@item.Location</td>
+                    <td align="center">
+                        @if (item.status == "Q")
+                        {<span title="Queue">👥</span> }
+                        else if (item.status == "F")
+                        { <span title="Forwarded">➡️</span> }
+                        else if (item.status == "R")
+                        { <span title="Resolved">✅</span> }
+                        else
+                        { <span title="Closed">✔️</span>}
+                    </td>
+                    <td>
+                        @{
+                            var diff = DateTime.Now - item.RequestDate.Value;
+                            if (item.status == "C" || item.status == "R")
+                            { <span>---</span> }
+                            else
+                            { @($"{diff.Days}d {diff.Hours}h");
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,217 @@
+﻿@model SRM.Models.EmployeeProfile
+@{
+    ViewBag.Title = "Log New Request";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .grid-container {
+        display: grid;
+        grid-template-columns: 140px 1fr 140px 1fr;
+        border-left: 1px solid #ccc;
+        border-top: 1px solid #ccc;
+        background: #f2f2f2;
+    }
+
+    .grid-label {
+        padding: 8px;
+        border-right: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+        font-weight: bold;
+        font-size: 0.85em;
+        display: flex;
+        align-items: center;
+    }
+
+    .grid-input {
+        padding: 4px;
+        border-right: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+        background: #fff;
+    }
+
+        .grid-input input, .grid-input select {
+            width: 100%;
+            border: 1px solid #aaa;
+            padding: 3px;
+            font-size: 0.9em;
+        }
+
+    .form-section-header {
+        background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
+        color: white;
+        padding: 8px 15px;
+        font-weight: bold;
+        font-size: 1em;
+        margin-top: 20px;
+        border-radius: 4px 4px 0 0;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .details-row {
+        display: flex;
+        border-bottom: 1px solid #ccc;
+        background: #f9f9f9;
+    }
+
+    .details-label {
+        width: 140px;
+        padding: 10px;
+        font-weight: bold;
+        font-size: 0.9em;
+        border-right: 1px solid #ccc;
+    }
+
+    .details-content {
+        flex: 1;
+        padding: 10px;
+    }
+
+    .details-box {
+        border: 1px solid #ccc;
+        border-top: none;
+        background: #fff;
+    }
+
+    .setup-btn-green {
+        background-color: #2e7d57;
+        color: white;
+        border: none;
+        padding: 6px 20px;
+        cursor: pointer;
+        border-radius: 2px;
+        font-weight: bold;
+    }
+
+        .setup-btn-green:hover {
+            background-color: #1b4d3e;
+        }
+</style>
+
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Log New Request</h2>
+    </div>
+
+    <div class="action-row-container">
+        @using (Html.BeginForm("LogNewRequest", "NewRequest", FormMethod.Get))
+        {
+            <label style="font-weight:bold; display: inline-block; margin-right: 10px;">Reported Employee ID:</label>
+            <input type="text" name="searchPno" value="@Model.Pno" style="width:180px; height:32px; border:1px solid #aaa; padding: 5px 8px; border-radius: 3px; font-size: 0.9em;" placeholder="Enter P-No..." required />
+            <button type="submit" class="setup-btn-green" style="padding: 8px 25px; font-size: 0.95em; border-radius: 3px;">🔍 Search & Load</button>
+        }
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div style="color: #a94442; background-color: #f2dede; border: 1px solid #ebccd1; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-weight: bold; text-align: center;">
+            @TempData["Error"]
+        </div>
+    }
+
+    @using (Html.BeginForm("SaveRequest", "NewRequest", FormMethod.Post, new { id = "logRequestForm" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-section-header">User Information</div>
+        <div class="grid-container">
+            <div class="grid-label">Reported P-no</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.Pno, new { @readonly = "readonly", @style = "background:#eee;" })
+            </div>
+
+            <div class="grid-label">Name</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.emp_name, new { @readonly = "readonly", @style = "background:#eee;" })
+            </div>
+
+            <div class="grid-label">Designation</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.Emp_designation, new { @readonly = "readonly", @style = "background:#eee;" })
+            </div>
+
+            <div class="grid-label">Department</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.ATTENDANCE_DEPT_CODE, new { @readonly = "readonly", @style = "background:#eee;" })
+            </div>
+
+            <div class="grid-label">Email</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.Email)
+            </div>
+
+            <div class="grid-label">MobileNo</div>
+            <div class="grid-input" style="display:flex; gap:5px;">
+                @Html.TextBoxFor(m => m.mobileno, new { @style = "width:68%;" })
+                @Html.TextBoxFor(m => m.MobileOperator, new { @readonly = "readonly", @style = "width:28%; background:#eee;" })
+            </div>
+
+            <div class="grid-label">Phone-Ext</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.Office_ext)
+            </div>
+
+            <div class="grid-label">Room No *</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.roomno, new { @required = "required" })
+            </div>
+
+            <div class="grid-label">IP-Address</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.ip_address)
+            </div>
+
+            <div class="grid-label">Location *</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.Location, new { @required = "required" })
+            </div>
+        </div>
+
+        <div class="form-section-header">Service Request Details</div>
+        <div class="details-box">
+            <div class="details-row">
+                <div class="details-label">Priority</div>
+                <div class="details-content">
+                    <label style="display:block; font-weight:normal; color:blue; font-size:0.85em;">
+                        <input type="radio" name="Priority" value="Critical" /> Critical (System related issue will be treated as critical)
+                    </label>
+                    <div style="display:flex; gap:20px;">
+                        <label style="font-weight:normal;"><input type="radio" name="Priority" value="Urgent" /> Urgent</label>
+                        <label style="font-weight:normal;"><input type="radio" name="Priority" value="Important" /> Important</label>
+                        <label style="font-weight:normal;"><input type="radio" name="Priority" value="Normal" checked /> Normal</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="details-row">
+                <div class="details-label">* Problem Area</div>
+                <div class="details-content">
+                    <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="Area" value="Hardware" /> Hardware</label>
+                    <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="Area" value="Software" /> Software</label>
+                    <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="Area" value="Internet" /> Internet</label>
+                    <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="Area" value="Network" /> Network</label>
+                    <label style="font-weight:normal;"><input type="checkbox" name="Area" value="Other" /> Other</label>
+                </div>
+            </div>
+
+            <div class="details-row">
+                <div class="details-label">* Request Summary</div>
+                <div class="details-content">
+                    <input type="text" name="Summary" style="width:100%; border:1px solid #aaa; padding:5px;" required />
+                </div>
+            </div>
+
+            <div class="details-row">
+                <div class="details-label">Request Details</div>
+                <div class="details-content">
+                    <textarea name="Details" style="width:100%; height:80px; border:1px solid #aaa; padding:5px;"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; text-align: right;">
+            <button type="submit" class="setup-btn-green" style="padding: 10px 50px; font-size: 1.1em; border-radius: 4px;">Save Request</button>
+        </div>
+    }
+</div>

@@ -5,21 +5,15 @@
     ViewBag.Title = "Manage User";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-
-<div class="profile-container">
-    <h2>Manage Users</h2>
-
-    <div class="form-row" style="background: #fdfdfd; padding: 15px; border: 1px solid #eee; border-radius: 8px;">
-        <div class="form-group" style="flex: 1 1 100%; margin-bottom: 0;">
-            <label for="Pno">Search User by PNo.</label>
-            <div class="action-row" style="display: flex; gap: 10px;">
-                <input type="text" id="PnoSearch" class="form-control" placeholder="Enter PNo (e.g. 10254)" />
-                <button type="button" id="btnLookup" class="setup-btn-green">🔍 Find Record</button>
-                <button type="button" id="btnToggleAction" class="setup-btn-green">Add New User</button>
-            </div>
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Manage Users</h2>
+        <div class="action-row">
+            <input type="text" id="PnoSearch" class="form-control" placeholder="Enter PNo (e.g. 10254)" />
+            <button type="button" id="btnLookup" class="setup-btn-green">🔍 Find Record</button>
+            <button type="button" id="btnToggleAction" class="setup-btn-green">Add New User</button>
         </div>
     </div>
-    <hr />
 
     <div id="userListSection">
         <table class="crud-table" id="allUsersTable">
@@ -84,7 +78,7 @@
                         @foreach (var op in ViewBag.Operators)
                         {
                             <option value="@op">@op</option>
-}
+                        }
                     </select>
                 </div>
             </div>
@@ -104,7 +98,7 @@
                         @foreach (var g in (List<SelectListItem>)ViewBag.GroupList)
                         {
                             <option value="@g.Value">@g.Text</option>
-}
+                        }
                     </select>
                 </div>
             </div>
@@ -117,7 +111,7 @@
                         @foreach (var wa in ViewBag.WorkAreas)
                         {
                             <option value="@wa">@wa</option>
-}
+                        }
                     </select>
                 </div>
                 <div class="form-group">
@@ -127,7 +121,7 @@
                         @foreach (var p in (List<SelectListItem>)ViewBag.Programs)
                         {
                             <option value="@p.Value">@p.Text</option>
-}
+                        }
                     </select>
                 </div>
             </div>
@@ -153,15 +147,23 @@
         </form>
     </div>
 
-    @* Password fields remain similar but use toast *@
-    <div id="passwordFields" style="display:none; margin-top: 20px; padding: 20px; border: 1px solid #ffeeba; background: #fffaf0;">
-        <h4>Reset Password</h4>
+    <div id="passwordFields" style="display:none; margin-top: 20px; padding: 20px; border: 1px solid #ffeeba; background: #fffaf0; border-radius: 8px;">
+        <h4 style="margin-bottom: 15px;">Reset Password</h4>
         <form id="changePassForm">
             @Html.AntiForgeryToken()
             <input type="hidden" name="Pno" id="PasswordResetPno" />
-            <input type="password" name="newPassword" placeholder="New Password" class="form-control" required /><br />
-            <input type="password" name="confirmPassword" placeholder="Confirm Password" class="form-control" required /><br />
-            <button type="submit" class="btn btn-primary">Update Password</button>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>New Password</label>
+                <input type="password" name="newPassword" placeholder="Enter new password" class="form-control" required />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Confirm Password</label>
+                <input type="password" name="confirmPassword" placeholder="Confirm new password" class="form-control" required />
+            </div>
+
+            <button type="submit" class="setup-btn-green" style="width: 100%;">Update Password</button>
         </form>
     </div>
 </div>
@@ -188,7 +190,7 @@ $(document).ready(function () {
         if (showForm) {
             $('#userListSection').hide();
             $('#userDetailsForm').fadeIn();
-            $('#btnToggleAction').text('Back to List').removeClass('setup-btn-green').addClass('btn-secondary');
+            $('#btnToggleAction').text('Back to List');
             $('#IsNewUserFlag').val(isNewUser ? "true" : "false");
 
             if (isNewUser) {

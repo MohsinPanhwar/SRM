@@ -346,10 +346,13 @@ footer {
 }
 
     .crud-table thead {
-        background-color: #f4f6f8;
+        background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important;
         border-bottom: 2px solid #e0e0e0;
     }
-
+        .crud-table thead th {
+            color: white !important;
+            font-weight: bold;
+        }
     .crud-table th, .crud-table td {
         padding: 12px 15px;
         border-bottom: 1px solid #e0e0e0;
@@ -436,7 +439,7 @@ footer {
     }
 
 /* ===== PROFILE / MANAGE USER PAGE (Unified) ===== */
-.profile-container {
+.setup-container {
     max-width: 1200px;
     width: 95%;
     margin: 30px auto;
@@ -448,7 +451,7 @@ footer {
     border: 1px solid #eef2f6;
 }
 
-    .profile-container h2 {
+    .setup-container h2 {
         color: #1B4D3E;
         font-size: 1.6rem;
         font-weight: 700;
@@ -458,7 +461,7 @@ footer {
         width: 100%;
     }
 
-    .profile-container h3 {
+    .setup-container h3 {
         color: #1B4D3E;
         margin-top: 20px;
         margin-bottom: 20px;
@@ -467,11 +470,11 @@ footer {
     }
 
     /* Form groups */
-    .profile-container .form-group {
+    .setup-container .form-group {
         margin-bottom: 20px;
     }
 
-    .profile-container label {
+    .setup-container label {
         font-weight: 600; /* Slightly bolder like table headers */
         margin-bottom: 8px;
         color: #444;
@@ -480,11 +483,11 @@ footer {
     }
 
     /* Inputs – Adjusted to be slightly more compact like management pages */
-    .profile-container input[type="text"],
-    .profile-container input[type="email"],
-    .profile-container input[type="password"],
-    .profile-container input[type="tel"],
-    .profile-container select {
+    .setup-container input[type="text"],
+    .setup-container input[type="email"],
+    .setup-container input[type="password"],
+    .setup-container input[type="tel"],
+    .setup-container select {
         width: 100%;
         height: 42px; /* Slightly taller than 38px for form comfort, but consistent */
         padding: 0 16px;
@@ -497,8 +500,8 @@ footer {
     }
 
         /* Focus state – same Green Glow as others */
-        .profile-container input:focus,
-        .profile-container select:focus {
+        .setup-container input:focus,
+        .setup-container select:focus {
             border-color: #1B4D3E;
             box-shadow: 0 0 0 3px rgba(27, 77, 62, 0.1);
             outline: none;
@@ -506,7 +509,7 @@ footer {
         }
 
     /* Readonly fields – subtle look */
-    .profile-container input[readonly] {
+    .setup-container input[readonly] {
         background-color: #f1f3f5 !important;
         color: #666;
         cursor: not-allowed;
@@ -514,19 +517,19 @@ footer {
     }
 
     /* Form rows */
-    .profile-container .form-row {
+    .setup-container .form-row {
         display: flex;
         flex-wrap: wrap;
         gap: 25px;
     }
 
-        .profile-container .form-row .form-group {
+        .setup-container .form-row .form-group {
             flex: 1 1 45%;
             min-width: 300px;
         }
 
     /* Buttons – Styled exactly like the "Add" buttons */
-    .profile-container .btn-success {
+    .setup-container .btn-success {
         height: 42px;
         min-width: 180px;
         background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important;
@@ -538,7 +541,7 @@ footer {
         transition: all 0.2s ease;
     }
 
-    .profile-container .btn-warning {
+    .setup-container .btn-warning {
         height: 42px;
         min-width: 180px;
         background: #6c757d !important; /* Changed to neutral grey to not clash with green theme */
@@ -549,8 +552,8 @@ footer {
         cursor: pointer;
     }
 
-        .profile-container .btn-success:hover,
-        .profile-container .btn-warning:hover {
+        .setup-container .btn-success:hover,
+        .setup-container .btn-warning:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             opacity: 0.9;
@@ -612,3 +615,5 @@ footer {
     background: #f5365c;
     border-left: 8px solid #d62f50;
 }
+
+
