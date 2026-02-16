@@ -1,4 +1,24 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var privs = Session["UserPrivileges"] as SRM.Models.Privilege;
+    bool isAdmin = false;
+
+    // 1. Check Super Admin Status
+    if (Session["IsAdmin"] != null)
+    {
+        var adminSession = Session["IsAdmin"].ToString();
+        isAdmin = (adminSession == "Y" || adminSession == "True" || adminSession == "true");
+    }
+
+    // 2. STRICTOR CHECK: Check the specific Privilege table flag
+    // We check if privs is not null AND the boolean column 'CanAddEditGroups' is true
+    bool canLogRequest = isAdmin || (privs != null && privs.CanLogNewRequest == true);
+    bool canViewRequest = isAdmin||(privs != null && privs.CanOnlyViewAny == true);
+    bool canSendSms = isAdmin || (privs != null && privs.CanSendSMS == true);
+    bool canSendPassword = isAdmin || (privs != null && privs.CanSendPassword == true);
+
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -38,10 +58,22 @@
                 <div class="dropdown">
                     <button class="dropbtn">Service Request</button>
                     <div class="dropdown-content">
-                        <a href="@Url.Action("LogNewRequest", "NewRequest")">Log new request</a>
-                        <a href="@Url.Action("ViewAllRequests", "ViewAllRequests", new { status = "All" })">Show all requests</a>
-                        <a href="@Url.Action("SendSmsToEngineer", "ServiceRequest")">Send SMS</a>
-                        <a href="@Url.Action("SendPasswordToAgents", "ServiceRequest")">Send Password to Agents</a>
+                        @if (canLogRequest)
+                        {
+                            <a href="@Url.Action("LogNewRequest", "NewRequest")">Log new request</a>
+                        }
+                        @if (canViewRequest)
+                        {
+                            <a href="@Url.Action("ViewAllRequests", "ViewAllRequests", new { status = "All" })">Show all requests</a>
+                        }
+                        @if (canSendSms)
+                        {
+                            <a href="@Url.Action("SendSmsToEngineer", "ServiceRequest")">Send SMS</a>
+                        }
+                        @if (canSendPassword)
+                        {
+                            <a href="@Url.Action("SendPasswordToAgents", "ServiceRequest")">Send Password to Agents</a>
+                        }
                     </div>
                 </div>
 

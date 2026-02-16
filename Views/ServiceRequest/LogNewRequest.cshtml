@@ -2,6 +2,7 @@
 @{
     ViewBag.Title = "Log New Request";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
 }
 
 <style>
@@ -120,9 +121,8 @@
             <div class="grid-input">
                 @Html.TextBoxFor(m => m.Pno, new { @readonly = "readonly", @style = "background:#eee;" })
             </div>
-
-            <div class="grid-label">Name</div>
-            <div class="grid-input">
+            
+                <div class="grid-input">
                 @Html.TextBoxFor(m => m.emp_name, new { @readonly = "readonly", @style = "background:#eee;" })
             </div>
 
