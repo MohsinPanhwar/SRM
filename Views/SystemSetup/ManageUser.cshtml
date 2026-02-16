@@ -4,17 +4,36 @@
 @{
     ViewBag.Title = "Manage User";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var privs = Session["UserPrivileges"] as SRM.Models.Privilege;
+    bool isAdmin = false;
+
+    // 1. Check Super Admin Status
+    if (Session["IsAdmin"] != null)
+    {
+        var adminSession = Session["IsAdmin"].ToString();
+        isAdmin = (adminSession == "Y" || adminSession == "True" || adminSession == "true");
+    }
+
+    // 2. STRICTOR CHECK: Check the specific Privilege table flag
+    // We check if privs is not null AND the boolean column 'CanAddEditGroups' is true
+    bool hasUserPrivilege = privs != null && privs.CanAddEditEngineer == true;
+
+    // 3. Final Permission
+    bool canModify = isAdmin || hasUserPrivilege;
 }
 <div class="setup-container">
     <div class="section-header">
         <h2>Manage Users</h2>
-        <div class="action-row">
-            <input type="text" id="PnoSearch" class="form-control" placeholder="Enter PNo (e.g. 10254)" />
-            <button type="button" id="btnLookup" class="setup-btn-green">🔍 Find Record</button>
-            <button type="button" id="btnToggleAction" class="setup-btn-green">Add New User</button>
+        @if (canModify)
+        {
+            <div class="action-row">
+                <input type="text" id="PnoSearch" class="form-control" placeholder="Enter PNo (e.g. 10254)" />
+                <button type="button" id="btnLookup" class="setup-btn-green">🔍 Find Record</button>
+                <button type="button" id="btnToggleAction" class="setup-btn-green">Add New User</button>
+            </div>
+        }
         </div>
-    </div>
-
+        
     <div id="userListSection">
         <table class="crud-table" id="allUsersTable">
             <thead>
@@ -24,24 +43,30 @@
                     <th>Last Login</th>
                     <th>Email / Mobile</th>
                     <th style="text-align:center;">Status</th>
-                    <th>Actions</th>
-                </tr>
+                    @if (canModify)
+                    {
+                        <th>Actions</th>
+                    }
+                    </tr>
             </thead>
             <tbody id="allUsersTableBody">
                 @foreach (var u in Model)
                 {
                     var statusColor = (u.Status == "A" || u.Status == "Y") ? "#28a745" : "#dc3545";
                     var statusText = (u.Status == "A" || u.Status == "Y") ? "Active" : "Inactive";
-                    <tr data-pno="@u.Pno">
-                        <td><img src="/images/default.png" width="40" height="40" style="border-radius:50%;" /></td>
-                        <td class="td-name-pno"><strong>@u.Name</strong><br /><span class="pno-text">@u.Pno</span></td>
-                        <td>@(u.LastLoginDateTime?.ToString("g") ?? "-")</td>
-                        <td class="td-email-mobile"><span class="email-text">@u.Email</span><br /><span class="mobile-text">@u.Mobile</span></td>
-                        <td class="td-status" style="text-align:center; color:@statusColor; font-weight:bold;">@statusText</td>
+                <tr data-pno="@u.Pno">
+                    <td><img src="/images/default.png" width="40" height="40" style="border-radius:50%;" /></td>
+                    <td class="td-name-pno"><strong>@u.Name</strong><br /><span class="pno-text">@u.Pno</span></td>
+                    <td>@(u.LastLoginDateTime?.ToString("g") ?? "-")</td>
+                    <td class="td-email-mobile"><span class="email-text">@u.Email</span><br /><span class="mobile-text">@u.Mobile</span></td>
+                    <td class="td-status" style="text-align:center; color:@statusColor; font-weight:bold;">@statusText</td>
+                    @if (canModify)
+                    {
                         <td>
                             <button type="button" class="btn-select-user edit-btn" data-pno="@u.Pno">✏️</button>
                             <button type="button" class="btn-delete-user delete-btn" data-pno="@u.Pno">❌</button>
                         </td>
+                    }
                     </tr>
                 }
             </tbody>
@@ -54,6 +79,7 @@
             @Html.AntiForgeryToken()
             <input type="hidden" name="Pno" id="MainHiddenPno" />
             <input type="hidden" id="IsNewUserFlag" name="IsNewUser" value="false" />
+            <input type="hidden" name="IsAdministrator" id="HiddenIsAdministrator" value="N" />
 
             <div class="form-row">
                 <div class="form-group">
@@ -205,9 +231,25 @@ $(document).ready(function () {
         }
     }
 
-    // 3. Save / Add User Submission
+    // 3. Check if role is "Admin" and set IsAdministrator accordingly
+    function updateAdminStatus() {
+        var selectedRoleText = $('#EditRoleId option:selected').text().trim().toLowerCase();
+        if (selectedRoleText.includes('admin')) {
+            $('#HiddenIsAdministrator').val('Y');
+        } else {
+            $('#HiddenIsAdministrator').val('N');
+        }
+    }
+
+    // 4. Listen for role dropdown changes
+    $(document).on('change', '#EditRoleId', function() {
+        updateAdminStatus();
+    });
+
+    // 5. Save / Add User Submission
     $('#manageUserForm').submit(function (e) {
         e.preventDefault();
+        updateAdminStatus();
         const formData = $(this).serialize();
         const isNew = $('#IsNewUserFlag').val() === "true";
         const pno = $('#MainHiddenPno').val();
@@ -217,6 +259,9 @@ $(document).ready(function () {
         const status = $('input[name="Status"]:checked').val();
         const statusText = (status === "A" || status === "Y") ? "Active" : "Inactive";
         const statusColor = (status === "A" || status === "Y") ? "#28a745" : "#dc3545";
+        const isAdmin = $('#HiddenIsAdministrator').val();
+        const adminBadge = isAdmin === "Y" ? "✅ Yes" : "❌ No";
+        const adminColor = isAdmin === "Y" ? "#28a745" : "#dc3545";
 
         $.post('@Url.Action("ManageUser", "User")', formData, function (res) {
             if (res.success) {
@@ -230,6 +275,7 @@ $(document).ready(function () {
                         <td>Just now</td>
                         <td class="td-email-mobile">${email}<br />${mobile}</td>
                         <td class="td-status" style="text-align:center; color:${statusColor}; font-weight:bold;">${statusText}</td>
+                        <td class="td-admin" style="text-align:center; color:${adminColor}; font-weight:bold;">${adminBadge}</td>
                         <td>
                             <button type="button" class="btn-select-user edit-btn" data-pno="${pno}">✏️</button>
                             <button type="button" class="btn-delete-user delete-btn" data-pno="${pno}">❌</button>
@@ -242,6 +288,7 @@ $(document).ready(function () {
                     $row.find('.td-name-pno strong').text(name);
                     $row.find('.td-email-mobile').html(`${email}<br />${mobile}`);
                     $row.find('.td-status').text(statusText).css('color', statusColor);
+                    $row.find('.td-admin').text(adminBadge).css('color', adminColor);
                     $row.css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
                 }
                 toggleView(false);
@@ -251,7 +298,7 @@ $(document).ready(function () {
         });
     });
 
-    // 4. Reset Password AJAX
+    // 6. Reset Password AJAX
     $('#changePassForm').submit(function(e){
         e.preventDefault();
         $.post('@Url.Action("ChangePassword", "User")', $(this).serialize(), function(res){
@@ -262,7 +309,7 @@ $(document).ready(function () {
         });
     });
 
-    // 5. Duplicate Check & Toggle
+    // 7. Duplicate Check & Toggle
     $('#btnToggleAction').click(function () {
         if ($('#userDetailsForm').is(':visible')) {
             toggleView(false);
@@ -277,7 +324,7 @@ $(document).ready(function () {
         }
     });
 
-    // 6. Delete Logic
+    // 8. Delete Logic
     $(document).on('click', '.btn-delete-user', function() {
         var pno = $(this).data('pno');
         var $row = $(this).closest('tr');
@@ -315,6 +362,7 @@ $(document).ready(function () {
                 $('#EditWorkArea').val(res.data.WorkArea);
                 $('#EditRoleId').val(res.data.RoleId);
                 $('#EditProgramId').val(res.data.ProgramId);
+                $('#HiddenIsAdministrator').val(res.data.IsAdministrator);
                 if (res.data.UserType === "G") {
                     $('#typeGroup').prop('checked', true);
                     $('#GroupDropdown').prop('disabled', false).val(res.data.Gid).css('background-color', '#fff');

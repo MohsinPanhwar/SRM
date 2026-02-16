@@ -1,8 +1,24 @@
 ﻿@model SRM.Models.ViewModels.ManageGroupVM
 
-@{
-    ViewBag.Title = "Manage Groups";
+@{ ViewBag.Title = "Manage Groups";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var privs = Session["UserPrivileges"] as SRM.Models.Privilege;
+    bool isAdmin = false;
+
+    // 1. Check Super Admin Status
+    if (Session["IsAdmin"] != null)
+    {
+        var adminSession = Session["IsAdmin"].ToString();
+        isAdmin = (adminSession == "Y" || adminSession == "True" || adminSession == "true");
+    }
+
+    // 2. STRICTOR CHECK: Check the specific Privilege table flag
+    // We check if privs is not null AND the boolean column 'CanAddEditGroups' is true
+    bool hasGroupPrivilege = privs != null && privs.CanAddEditGroups == true;
+
+    // 3. Final Permission
+    bool canModify = isAdmin || hasGroupPrivilege;
 }
 
 <div id="notification-area"></div>
@@ -11,15 +27,17 @@
 <div class=" setup-container">
     <div class="section-header">
         <h2>Manage Groups</h2>
+        S
         @* Replaced inline styles with action-row class *@
-        <div class="action-row">
-            <input type="text" id="newGroupName" placeholder="Enter Group Name" required />
-            @Html.DropDownList("newManagerName", Model.AgentList, "-- Select Manager --", new { @id = "newManagerName" })
-            @Html.DropDownList("newProgramName", Model.ProgramList, "-- Select Program --", new { @id = "newProgramName" })
-            <button id="addGroupBtn" class="setup-btn-green">+ Add Group</button>
-        </div>
+        @if (canModify)
+        {
+    <div class="action-row">
+        <input type="text" id="newGroupName" placeholder="Enter Group Name" required />
+        @Html.DropDownList("newManagerName", Model.AgentList, "-- Select Manager --", new { @id = "newManagerName" })
+        @Html.DropDownList("newProgramName", Model.ProgramList, "-- Select Program --", new { @id = "newProgramName" })
+        <button id="addGroupBtn" class="setup-btn-green">+ Add Group</button>
+    </div>}
     </div>
-
     <table class="crud-table">
         <thead>
             <tr>
@@ -27,7 +45,10 @@
                 <th>Group Name</th>
                 <th>Manager PNo</th>
                 <th>No. of Members</th>
-                <th>Actions</th>
+                @if (canModify)
+                {
+                    <th>Actions</th>
+                }
             </tr>
         </thead>
         <tbody id="groupTableBody">
@@ -38,12 +59,15 @@
                     <td class="group-name">@grp.GroupName</td>
                     <td class="manager-name">@grp.Manager</td>
                     <td class="members-count">@grp.MembersCount</td>
-                    <td class="actions-cell">
-                        <div class="icon-btn-group">
-                            <button class="edit-btn" title="Edit">✏️</button>
-                            <button class="delete-btn" title="Delete">❌</button>
-                        </div>
-                    </td>
+                    @if (canModify)
+                    {
+                        <td class="actions-cell">
+                            <div class="icon-btn-group">
+                                <button class="edit-btn" title="Edit">✏️</button>
+                                <button class="delete-btn" title="Delete">❌</button>
+                            </div>
+                        </td>
+                    }
                 </tr>
             }
         </tbody>
@@ -75,7 +99,7 @@
                            .fadeOut(function () { $(this).remove(); });
             }
 
-           
+
 
             // 3. ADD NEW GROUP (Instant Table Update)
             $('#addGroupBtn').click(function () {

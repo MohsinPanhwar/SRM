@@ -1,45 +1,58 @@
-﻿using System.Web.Mvc;
+﻿using System;
+using System.Web.Mvc;
+using System.Web.Routing; // Required for RedirectToRouteResult
 using SRM.Models;
-
 
 namespace SRM.Controllers
 {
     public class BaseController : Controller
     {
-        // A helper property to quickly get permissions in any Controller
-        public Privilege CurrentPrivileges => Session["UserPrivileges"] as Privilege;
+        // Access the privilege object stored in Session
+        public Privilege UserPrivileges => Session["UserPrivileges"] as Privilege;
 
-        // A helper to check if the user is a Super Admin (if applicable)
+        // Check if the user is a Super Admin
         public bool IsAdmin => Session["IsAdmin"] != null && (bool)Session["IsAdmin"];
 
-        protected override void OnActionExecuting(ActionExecutingContext filterContext)
+        /// <summary>
+        /// Logic to check if user has a specific boolean permission.
+        /// Usage: if (!HasAccess(p => p.CanHardware)) { ... }
+        /// </summary>
+        public bool HasAccess(Func<Privilege, bool> permissionCheck)
         {
-            // Basic check: If session is lost, send them to login
-            if (Session["AgentPno"] == null)
+            if (Session["AgentPno"] == null) return false;
+            if (IsAdmin) return true; // Admins bypass all checks
+
+            if (UserPrivileges != null)
             {
-                // For MVC 5, we use RedirectToRouteResult
-                filterContext.Result = new RedirectToRouteResult(
-                    new System.Web.Routing.RouteValueDictionary(
-                        new { controller = "Account", action = "Login" }));
+                return permissionCheck(UserPrivileges);
             }
-            base.OnActionExecuting(filterContext);
+            return false;
         }
 
-        // Shared method to check a specific permission
-        public bool HasPermission(string permissionName)
+        /// <summary>
+        /// This runs before every action in any Controller that inherits from BaseController.
+        /// It acts as a global "Logged-In" check.
+        /// </summary>
+        protected override void OnActionExecuting(ActionExecutingContext filterContext)
         {
-            // STAGE 1: Get the privilege object from Session
-            var privs = Session["UserPrivileges"] as SRM.Models.Privilege;
+            // If session is empty and we aren't already on the Login page, send them to Login
+            if (Session["AgentPno"] == null)
+            {
+                string controller = filterContext.ActionDescriptor.ControllerDescriptor.ControllerName;
+                string action = filterContext.ActionDescriptor.ActionName;
 
-            // If session is lost or object is null, deny everything
-            if (privs == null) return false;
+                // Don't redirect if we are already trying to Login or Register
+                if (!(controller == "Account" && (action == "Login" || action == "Register")))
+                {
+                    filterContext.Result = new RedirectToRouteResult(
+                        new RouteValueDictionary {
+                            { "controller", "Account" },
+                            { "action", "Login" }
+                        });
+                }
+            }
 
-            // STAGE 2: Use Reflection to find the property (checkbox) by name
-            var prop = privs.GetType().GetProperty(permissionName);
-            if (prop == null) return false;
-
-            // STAGE 3: Return the actual value of the database column (true/false)
-            return (bool)(prop.GetValue(privs, null) ?? false);
+            base.OnActionExecuting(filterContext);
         }
     }
 }

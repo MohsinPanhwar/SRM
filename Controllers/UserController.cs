@@ -64,11 +64,11 @@ namespace SRM.Controllers
                     isNewRecord = true;
                 }
 
-                // Mapping fields
+                // 1. Basic Mapping
                 agent.Name = model.Name;
                 agent.Email = model.Email;
                 agent.Mobile = model.Mobile;
-                agent.RoleId = model.RoleId;
+                agent.RoleId = model.RoleId; // Saves the Role ID
                 agent.ProgramId = model.ProgramId;
                 agent.MobileOperator = model.MobileOperator;
                 agent.WorkArea = model.WorkArea;
@@ -76,6 +76,24 @@ namespace SRM.Controllers
                 agent.Status = Request.Form["Status"];
                 agent.LastUpdate = DateTime.Now;
 
+                // 2. PRIVILEGE FIX: Lookup privilege_id from Roles table
+                if (model.RoleId != null)
+                {
+                    // We find the role to get its associated privilege_id
+                    var selectedRole = _db.Roles.FirstOrDefault(r => r.Role_Id == model.RoleId);
+                    if (selectedRole != null)
+                    {
+                        // Save the role's privilege_id into the Agent's Privilege column
+                        // Convert the integer ID to a string to match the Agent model property type
+                        agent.Privilege = selectedRole.Privilege_Id.ToString();
+                    }
+                }
+
+                // 3. Set IsAdministrator based on form value
+                string isAdminValue = Request.Form["IsAdministrator"];
+                agent.IsAdministrator = isAdminValue ?? "N";
+
+                // 4. Group ID Logic
                 if (agent.UserType == "U")
                 {
                     agent.Gid = null;
@@ -90,7 +108,6 @@ namespace SRM.Controllers
 
                 _db.SaveChanges();
 
-                // Return JSON success instead of Redirect
                 return Json(new { success = true, isNew = isNewRecord });
             }
             catch (Exception ex)
@@ -120,6 +137,7 @@ namespace SRM.Controllers
                         agent.ProgramId,
                         agent.Status,
                         agent.UserType,
+                        agent.IsAdministrator,
                         Gid = agent.Gid,
                         LastUpdate = agent.LastUpdate?.ToString("g")
                     }
@@ -147,8 +165,31 @@ namespace SRM.Controllers
         [ValidateAntiForgeryToken]
         public JsonResult ChangePassword(string Pno, string newPassword, string confirmPassword)
         {
-            var adminClaim = (User.Identity as ClaimsIdentity)?.FindFirst("IsAdmin")?.Value;
-            bool isAuthorized = (adminClaim == "Y" || adminClaim == "True") || (Session["IsAdmin"]?.ToString() == "Y");
+            // ===== AUTHORIZATION CHECK: Verify current user is admin in database =====
+            bool isAuthorized = false;
+
+            // Get the current logged-in user's Pno from session
+            var currentUserPno = Session["AgentPno"] as string;
+
+            if (string.IsNullOrEmpty(currentUserPno))
+            {
+                return Json(new { success = false, message = "Session expired. Please log in again." });
+            }
+
+            // Check if current user is an admin in the database (IsAdministrator column)
+            var currentUser = _db.agent.FirstOrDefault(a => a.Pno == currentUserPno);
+
+            if (currentUser != null && currentUser.IsAdministrator == "Y")
+            {
+                isAuthorized = true;
+            }
+
+            // Fallback to Session if database check fails
+            if (!isAuthorized && Session["IsAdmin"] != null)
+            {
+                var sessionValue = Session["IsAdmin"].ToString();
+                isAuthorized = (sessionValue == "Y");
+            }
 
             if (!isAuthorized)
                 return Json(new { success = false, message = "Unauthorized. Admin access required." });
@@ -161,12 +202,32 @@ namespace SRM.Controllers
                 return Json(new { success = false, message = "User not found." });
 
             agent.Password = HashPassword(newPassword);
+            agent.LastUpdate = DateTime.Now;
             _db.SaveChanges();
 
             return Json(new { success = true, message = "Password updated successfully." });
         }
 
-        // Include your HashPassword helper here...
-        private string HashPassword(string password) { /* your existing code */ return "hashed..."; }
+        // Password hashing using PBKDF2
+        private string HashPassword(string password)
+        {
+            using (var sha256 = new System.Security.Cryptography.SHA256Managed())
+            {
+                var salt = new byte[16];
+                using (var rng = new System.Security.Cryptography.RNGCryptoServiceProvider())
+                {
+                    rng.GetBytes(salt);
+                }
+
+                var pbkdf2 = new System.Security.Cryptography.Rfc2898DeriveBytes(password, salt, 10000);
+                byte[] hash = pbkdf2.GetBytes(20);
+
+                byte[] hashBytes = new byte[36];
+                Array.Copy(salt, 0, hashBytes, 0, 16);
+                Array.Copy(hash, 0, hashBytes, 16, 20);
+
+                return Convert.ToBase64String(hashBytes);
+            }
+        }
     }
 }

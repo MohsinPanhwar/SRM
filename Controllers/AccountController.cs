@@ -38,7 +38,6 @@ namespace SRM.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Login(string pno, string password, bool? rememberMe, string returnUrl)
         {
-
             if (string.IsNullOrEmpty(pno) || string.IsNullOrEmpty(password))
             {
                 ModelState.AddModelError("", "Personnel number and password are required.");
@@ -47,7 +46,7 @@ namespace SRM.Controllers
 
             try
             {
-                // Find agent by Pno or Email
+                // 1. Find agent by Pno or Email and ensure they are Active
                 var agent = _context.agent.FirstOrDefault(a =>
                     (a.Pno == pno || a.Email == pno) && a.Status == "A");
 
@@ -57,7 +56,18 @@ namespace SRM.Controllers
                     return View();
                 }
 
-                // Generate JWT Token
+                // 2. Fetch the full Privilege object based on the agent's Privilege ID
+                // .AsNoTracking() is used to prevent EF proxy issues when casting in the View
+                // Use int.Parse if agent.Privilege is a string, 
+                // or simply ensure we are comparing apples to apples.
+                string pID = agent.Privilege?.ToString();
+
+                var privilegeSettings = _context.Privileges.AsNoTracking()
+                    .ToList() // Pull to memory briefly to avoid SQL translation issues
+                    .FirstOrDefault(p => p.privilege_id.ToString() == pID);
+
+                
+                // 3. Generate JWT Token
                 bool isAdmin = agent.IsAdministrator == "Y";
                 string jwtToken = _tokenService.GenerateToken(
                     agent.Sno,
@@ -72,9 +82,9 @@ namespace SRM.Controllers
                     ModelState.AddModelError("", "Failed to generate authentication token.");
                     return View();
                 }
-                bool remember = rememberMe ?? false;
 
-                // Store JWT in secure cookie
+                // 4. Set up Cookies
+                bool remember = rememberMe ?? false;
                 var cookie = new HttpCookie(JWT_COOKIE_NAME, jwtToken)
                 {
                     HttpOnly = true,
@@ -86,20 +96,25 @@ namespace SRM.Controllers
                 Response.Cookies.Add(cookie);
                 System.Web.Security.FormsAuthentication.SetAuthCookie(agent.Pno, remember);
 
-                // Update last login
+                // 5. Update last login audit fields
                 agent.LastLoginDateTime = DateTime.UtcNow;
                 agent.LastLoginIp = GetClientIpAddress();
                 agent.LastUpdate = DateTime.UtcNow;
                 _context.SaveChanges();
 
-                // Store user info in session for quick access
+                // 6. Store User info and the PRIVILEGE OBJECT in Session
                 Session["AgentId"] = agent.Sno;
                 Session["AgentName"] = agent.Name;
                 Session["AgentPno"] = agent.Pno;
-                Session["IsAdmin"] = isAdmin;
+                Session["IsAdmin"] = isAdmin ? "Y" : "N";
+
+                // This is the key line for your permission buttons to show/hide:
+                Session["UserPrivileges"] = privilegeSettings;
+
+                // Also keep the ID if needed elsewhere
                 Session["Privilege"] = agent.Privilege;
 
-                // Redirect to return URL or dashboard
+                // 7. Redirect
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 {
                     return Redirect(returnUrl);
@@ -110,12 +125,10 @@ namespace SRM.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Login error: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 ModelState.AddModelError("", "An error occurred during login. Please try again.");
                 return View();
             }
         }
-
         // GET: Account/Register
         [HttpGet]
         [AllowAnonymous]
@@ -213,7 +226,7 @@ namespace SRM.Controllers
             }
         }
 
- 
+
         [Authorize]
         [HttpGet]
         public ActionResult Logout()
@@ -389,6 +402,6 @@ namespace SRM.Controllers
             }
             base.Dispose(disposing);
         }
-    
+
     }
 }
