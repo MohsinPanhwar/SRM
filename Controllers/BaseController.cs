@@ -1,47 +1,60 @@
 ﻿using System;
+using System.Linq;
 using System.Web.Mvc;
-using System.Web.Routing; // Required for RedirectToRouteResult
+using System.Web.Routing;
 using SRM.Models;
 
 namespace SRM.Controllers
 {
     public class BaseController : Controller
     {
-        // Access the privilege object stored in Session
-        public Privilege UserPrivileges => Session["UserPrivileges"] as Privilege;
+        /// <summary>
+        /// Retrieves the comma-separated privilege string from the Session.
+        /// Example value: "LNR,FQR,SMS,SPWD"
+        /// </summary>
+        public string UserPrivilegeString => Session["UserPrivileges"]?.ToString() ?? string.Empty;
 
-        // Check if the user is a Super Admin
+        /// <summary>
+        /// Checks if the current user is flagged as a Super Admin in the Session.
+        /// </summary>
         public bool IsAdmin => Session["IsAdmin"] != null && (bool)Session["IsAdmin"];
 
         /// <summary>
-        /// Logic to check if user has a specific boolean permission.
-        /// Usage: if (!HasAccess(p => p.CanHardware)) { ... }
+        /// Core logic to check if a user has a specific permission code.
+        /// Usage: if (HasAccess("FOR")) { ... }
         /// </summary>
-        public bool HasAccess(Func<Privilege, bool> permissionCheck)
+        /// <param name="code">The short code (e.g., "AFE", "LNR", "FOR")</param>
+        /// <returns>True if the user is Admin or has the code in their string</returns>
+        public bool HasAccess(string code)
         {
+            // 1. If not logged in, no access
             if (Session["AgentPno"] == null) return false;
-            if (IsAdmin) return true; // Admins bypass all checks
 
-            if (UserPrivileges != null)
-            {
-                return permissionCheck(UserPrivileges);
-            }
-            return false;
+            // 2. Admins bypass all specific code checks
+            if (IsAdmin) return true;
+
+            // 3. If the privilege string is empty, no access
+            if (string.IsNullOrEmpty(UserPrivilegeString)) return false;
+
+            // 4. Split the string by comma and check for the specific code (case-insensitive)
+            return UserPrivilegeString.Split(',')
+                                      .Select(p => p.Trim())
+                                      .Contains(code, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
-        /// This runs before every action in any Controller that inherits from BaseController.
-        /// It acts as a global "Logged-In" check.
+        /// Global filter that runs before every Action.
+        /// Ensures the user is logged in before allowing access to any controller inheriting BaseController.
         /// </summary>
         protected override void OnActionExecuting(ActionExecutingContext filterContext)
         {
-            // If session is empty and we aren't already on the Login page, send them to Login
+            // Verify if the session key for the user exists
             if (Session["AgentPno"] == null)
             {
                 string controller = filterContext.ActionDescriptor.ControllerDescriptor.ControllerName;
                 string action = filterContext.ActionDescriptor.ActionName;
 
-                // Don't redirect if we are already trying to Login or Register
+                // Allow access to Login and Register actions without redirecting
                 if (!(controller == "Account" && (action == "Login" || action == "Register")))
                 {
                     filterContext.Result = new RedirectToRouteResult(

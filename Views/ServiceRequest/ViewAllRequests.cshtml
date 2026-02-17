@@ -4,80 +4,6 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<style>
-    /* Standard SRM Container */
-  
-    /* Clean Search Box */
-    .search-area {
-        background: #fdfdfd;
-        border: 1px solid #eee;
-        padding: 15px;
-        border-radius: 4px;
-        margin-bottom: 20px;
-    }
-
-    .filter-table td {
-        padding: 5px 10px;
-        font-size: 0.9em;
-    }
-
-    /* Dashboard Status Card */
-    .status-card {
-        border-collapse: collapse;
-        font-size: 12px;
-        width: 300px;
-        border: 1px solid #ddd;
-    }
-
-        .status-card th {
-            background: #f8f8f8;
-            padding: 8px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .status-card td {
-            padding: 6px 10px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-    /* Main Data Grid */
-    .main-grid {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 12px;
-        margin-top: 10px;
-    }
-
-        .main-grid th {
-            background: #1b4d3e;
-            color: white;
-            padding: 12px 10px;
-            text-align: left;
-            border: 1px solid #003322;
-        }
-
-        .main-grid td {
-            padding: 10px;
-            border: 1px solid #eee;
-        }
-
-        .main-grid tr:nth-child(even) {
-            background: #f9fbf9;
-        }
-
-        .main-grid tr:hover {
-            background: #f1f5f2;
-        }
-
-    .btn-search {
-        background: #2e7d57;
-        color: white;
-        border: none;
-        padding: 5px 20px;
-        cursor: pointer;
-        border-radius: 3px;
-    }
-</style>
 
 <div class="setup-container">
     <div class="section-header">
@@ -88,7 +14,7 @@
     </div>
 
     <div class="search-area">
-        @using (Html.BeginForm("ViewAllRequests", "ServiceRequest", FormMethod.Get))
+        @using (Html.BeginForm("ViewAllRequests", "ViewAllRequests", FormMethod.Get))
         {
             <div style="display:flex; justify-content: space-between; align-items: flex-start;">
                 <table class="filter-table">
@@ -146,8 +72,12 @@
             @foreach (var item in Model.RequestList)
             {
                 <tr>
-                    <td><a href="#" style="color:#2e7d57; font-weight:bold;">@item.RequestID</a></td>
-                    <td>@item.ReqSummary</td>
+                    <td>
+                        <a href="@Url.Action("Details", "ViewAllRequests", new { id = item.RequestID })"
+                           style="color:#2e7d57; font-weight:bold;">
+                            @item.RequestID
+                        </a>
+                    </td>                    <td>@item.ReqSummary</td>
                     <td>@item.RequestDate.Value.ToString("dd-MMM-yyyy hh:mm tt")</td>
                     <td>@(string.IsNullOrEmpty(item.Forward_To) ? "---" : item.Forward_To)</td>
                     <td>@item.Location</td>

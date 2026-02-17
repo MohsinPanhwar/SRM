@@ -4,36 +4,42 @@
 @{
     ViewBag.Title = "Manage User";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var privs = Session["UserPrivileges"] as SRM.Models.Privilege;
-    bool isAdmin = false;
-
-    // 1. Check Super Admin Status
-    if (Session["IsAdmin"] != null)
-    {
-        var adminSession = Session["IsAdmin"].ToString();
-        isAdmin = (adminSession == "Y" || adminSession == "True" || adminSession == "true");
+}
+<style>
+    .fade-in-up {
+        animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
 
-    // 2. STRICTOR CHECK: Check the specific Privilege table flag
-    // We check if privs is not null AND the boolean column 'CanAddEditGroups' is true
-    bool hasUserPrivilege = privs != null && privs.CanAddEditEngineer == true;
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+        }
 
-    // 3. Final Permission
-    bool canModify = isAdmin || hasUserPrivilege;
-}
-<div class="setup-container">
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .role-group-header {
+        transition: background-color 0.3s ease;
+        background-color: #f0f0f0;
+        font-weight: bold;
+        padding: 10px !important;
+    }
+</style>
+
+<div class="setup-container fade-in-up">
     <div class="section-header">
         <h2>Manage Users</h2>
-        @if (canModify)
-        {
-            <div class="action-row">
-                <input type="text" id="PnoSearch" class="form-control" placeholder="Enter PNo (e.g. 10254)" />
-                <button type="button" id="btnLookup" class="setup-btn-green">🔍 Find Record</button>
-                <button type="button" id="btnToggleAction" class="setup-btn-green">Add New User</button>
-            </div>
-        }
+        <div class="action-row">
+            <input type="text" id="PnoSearch" class="form-control" placeholder="Enter PNo (e.g. 10254)" />
+            <button type="button" id="btnLookup" class="setup-btn-green">🔍 Find Record</button>
+            <button type="button" id="btnToggleAction" class="setup-btn-green">Add New User</button>
         </div>
-        
+    </div>
+
     <div id="userListSection">
         <table class="crud-table" id="allUsersTable">
             <thead>
@@ -43,37 +49,55 @@
                     <th>Last Login</th>
                     <th>Email / Mobile</th>
                     <th style="text-align:center;">Status</th>
-                    @if (canModify)
-                    {
-                        <th>Actions</th>
-                    }
-                    </tr>
+                    <th>Actions</th>
+                </tr>
             </thead>
             <tbody id="allUsersTableBody">
+                @{
+                    int currentRoleId = -1;
+                    var rolesSource = (IEnumerable<SRM.Models.Role>)ViewBag.RoleListSource;
+                }
                 @foreach (var u in Model)
                 {
+                    // Check if we have entered a new Role group
+                    if (u.RoleId != currentRoleId)
+                    {
+                        currentRoleId = u.RoleId ?? 0;
+                        // Find the Role Name from the lookup list
+                        var roleDisplayName = rolesSource.FirstOrDefault(r => r.Role_Id == currentRoleId)?.Role_Name ?? "General Users";
+
+                        <tr class="role-group-header">
+                            <td colspan="6" style="text-align:center;">
+                                👤 @roleDisplayName
+                            </td>
+                        </tr>
+                    }
+
                     var statusColor = (u.Status == "A" || u.Status == "Y") ? "#28a745" : "#dc3545";
                     var statusText = (u.Status == "A" || u.Status == "Y") ? "Active" : "Inactive";
-                <tr data-pno="@u.Pno">
-                    <td><img src="/images/default.png" width="40" height="40" style="border-radius:50%;" /></td>
-                    <td class="td-name-pno"><strong>@u.Name</strong><br /><span class="pno-text">@u.Pno</span></td>
-                    <td>@(u.LastLoginDateTime?.ToString("g") ?? "-")</td>
-                    <td class="td-email-mobile"><span class="email-text">@u.Email</span><br /><span class="mobile-text">@u.Mobile</span></td>
-                    <td class="td-status" style="text-align:center; color:@statusColor; font-weight:bold;">@statusText</td>
-                    @if (canModify)
-                    {
+
+                    <tr data-pno="@u.Pno">
+                        <td><img src="/images/default.png" width="35" height="35" style="border-radius:50%; border: 1px solid #ddd;" /></td>
+                        <td class="td-name-pno"><strong>@u.Name</strong><br /><small class="text-muted">@u.Pno</small></td>
+                        <td>
+                            <span style="font-size: 0.85rem;">@(u.LastLoginDateTime?.ToString("g") ?? "-")</span><br />
+                            <small class="text-muted" style="font-size: 0.75rem;">@u.LastLoginIp</small>
+                        </td>
+                        <td class="td-email-mobile">
+                            <span style="font-size: 0.85rem;">@u.Email</span><br />
+                            <span style="font-size: 0.85rem;">@u.Mobile</span>
+                        </td>
+                        <td class="td-status" style="text-align:center; color:@statusColor; font-weight:bold;">@statusText</td>
                         <td>
                             <button type="button" class="btn-select-user edit-btn" data-pno="@u.Pno">✏️</button>
                             <button type="button" class="btn-delete-user delete-btn" data-pno="@u.Pno">❌</button>
                         </td>
-                    }
                     </tr>
                 }
             </tbody>
         </table>
     </div>
 
-    @* Form Submission now handled via AJAX in Scripts *@
     <div id="userDetailsForm" style="display:none; margin-top: 20px;">
         <form id="manageUserForm">
             @Html.AntiForgeryToken()
@@ -198,7 +222,6 @@
     <script>
 $(document).ready(function () {
 
-    // 1. Toast Helper
     function showToast(message, type = 'success') {
         const id = 'toast-' + Date.now();
         const icon = type === 'success' ? '✅' : '🗑️';
@@ -208,21 +231,27 @@ $(document).ready(function () {
                       </div>`;
         if ($('#notification-area').length === 0) $('body').append('<div id="notification-area"></div>');
         $('#notification-area').append(html);
-        $(`#${id}`).show().animate({ left: "0px", opacity: "1" }, 300).delay(1000).fadeOut(function () { $(this).remove(); });
+        $(`#${id}`).show().animate({ left: "0px", opacity: "1" }, 300).delay(2000).fadeOut(function () { $(this).remove(); });
     }
 
-    // 2. Centralized Toggle Function
+    const pendingToast = sessionStorage.getItem("pendingToast");
+    if (pendingToast) {
+        const toastData = JSON.parse(pendingToast);
+        showToast(toastData.message, toastData.type);
+        sessionStorage.removeItem("pendingToast");
+    }
+
     function toggleView(showForm, isNewUser = false) {
         if (showForm) {
             $('#userListSection').hide();
             $('#userDetailsForm').fadeIn();
             $('#btnToggleAction').text('Back to List');
             $('#IsNewUserFlag').val(isNewUser ? "true" : "false");
-
             if (isNewUser) {
                 $('#manageUserForm')[0].reset();
                 $('#MainHiddenPno').val($('#PnoSearch').val().trim());
                 $('#typeIndiv').prop('checked', true).trigger('change');
+                $('#passwordFields').hide();
             }
         } else {
             $('#userDetailsForm, #passwordFields').hide();
@@ -231,85 +260,46 @@ $(document).ready(function () {
         }
     }
 
-    // 3. Check if role is "Admin" and set IsAdministrator accordingly
     function updateAdminStatus() {
         var selectedRoleText = $('#EditRoleId option:selected').text().trim().toLowerCase();
-        if (selectedRoleText.includes('admin')) {
-            $('#HiddenIsAdministrator').val('Y');
-        } else {
-            $('#HiddenIsAdministrator').val('N');
-        }
+        $('#HiddenIsAdministrator').val(selectedRoleText.includes('admin') ? 'Y' : 'N');
     }
 
-    // 4. Listen for role dropdown changes
-    $(document).on('change', '#EditRoleId', function() {
-        updateAdminStatus();
-    });
+    $(document).on('change', '#EditRoleId', updateAdminStatus);
 
-    // 5. Save / Add User Submission
     $('#manageUserForm').submit(function (e) {
         e.preventDefault();
         updateAdminStatus();
-        const formData = $(this).serialize();
-        const isNew = $('#IsNewUserFlag').val() === "true";
-        const pno = $('#MainHiddenPno').val();
-        const name = $('#EditName').val();
-        const email = $('#EditEmail').val();
-        const mobile = $('#EditMobile').val();
-        const status = $('input[name="Status"]:checked').val();
-        const statusText = (status === "A" || status === "Y") ? "Active" : "Inactive";
-        const statusColor = (status === "A" || status === "Y") ? "#28a745" : "#dc3545";
-        const isAdmin = $('#HiddenIsAdministrator').val();
-        const adminBadge = isAdmin === "Y" ? "✅ Yes" : "❌ No";
-        const adminColor = isAdmin === "Y" ? "#28a745" : "#dc3545";
 
-        $.post('@Url.Action("ManageUser", "User")', formData, function (res) {
+        const $submitBtn = $(this).find('button[type="submit"]');
+        $submitBtn.prop('disabled', true).text('Processing...');
+
+        $.post('@Url.Action("ManageUser", "User")', $(this).serialize(), function (res) {
             if (res.success) {
-                showToast(isNew ? "User Created!" : "User Updated!");
-
-                if (isNew) {
-                    // Create New Row
-                    const newRow = `<tr data-pno="${pno}">
-                        <td><img src="/images/default.png" width="40" height="40" style="border-radius:50%;" /></td>
-                        <td class="td-name-pno"><strong>${name}</strong><br />${pno}</td>
-                        <td>Just now</td>
-                        <td class="td-email-mobile">${email}<br />${mobile}</td>
-                        <td class="td-status" style="text-align:center; color:${statusColor}; font-weight:bold;">${statusText}</td>
-                        <td class="td-admin" style="text-align:center; color:${adminColor}; font-weight:bold;">${adminBadge}</td>
-                        <td>
-                            <button type="button" class="btn-select-user edit-btn" data-pno="${pno}">✏️</button>
-                            <button type="button" class="btn-delete-user delete-btn" data-pno="${pno}">❌</button>
-                        </td>
-                    </tr>`;
-                    $('#allUsersTableBody').prepend(newRow);
-                } else {
-                    // Update Existing Row
-                    const $row = $(`tr[data-pno="${pno}"]`);
-                    $row.find('.td-name-pno strong').text(name);
-                    $row.find('.td-email-mobile').html(`${email}<br />${mobile}`);
-                    $row.find('.td-status').text(statusText).css('color', statusColor);
-                    $row.find('.td-admin').text(adminBadge).css('color', adminColor);
-                    $row.css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
-                }
-                toggleView(false);
+                const toastData = {
+                    message: $('#IsNewUserFlag').val() === "true" ? "User Created!" : "Changes Saved!",
+                    type: "success"
+                };
+                sessionStorage.setItem("pendingToast", JSON.stringify(toastData));
+                location.reload();
             } else {
                 showToast(res.message, "error");
+                $submitBtn.prop('disabled', false).text('💾 Save Changes');
             }
         });
     });
 
-    // 6. Reset Password AJAX
     $('#changePassForm').submit(function(e){
         e.preventDefault();
         $.post('@Url.Action("ChangePassword", "User")', $(this).serialize(), function(res){
             if(res.success) {
                 showToast("Password Updated!");
                 $('#passwordFields').slideUp();
+                $('#changePassForm')[0].reset();
             } else showToast(res.message, "error");
         });
     });
 
-    // 7. Duplicate Check & Toggle
     $('#btnToggleAction').click(function () {
         if ($('#userDetailsForm').is(':visible')) {
             toggleView(false);
@@ -317,28 +307,25 @@ $(document).ready(function () {
             var pVal = $('#PnoSearch').val().trim();
             if (!pVal) { alert("Enter PNo first."); return; }
             if ($(`tr[data-pno="${pVal}"]`).length > 0) {
-                alert("User with PNo " + pVal + " already exists.");
+                alert("User already exists.");
                 return;
             }
             toggleView(true, true);
         }
     });
 
-    // 8. Delete Logic
     $(document).on('click', '.btn-delete-user', function() {
         var pno = $(this).data('pno');
-        var $row = $(this).closest('tr');
-        if (confirm("Confirm deletion of user " + pno + "?")) {
+        if (confirm("Delete user " + pno + "?")) {
             $.post('@Url.Action("DeleteUser", "User")', { pno: pno }, function(res) {
                 if(res.success) {
-                    $row.fadeOut(function() { $(this).remove(); });
-                    showToast("User deleted", "error");
+                    sessionStorage.setItem("pendingToast", JSON.stringify({ message: "User Deleted", type: "error" }));
+                    location.reload();
                 } else alert(res.message);
             });
         }
     });
 
-    // Other UI Hooks
     $(document).on('change', 'input[name="UserType"]', function () {
         const isGroup = $('#typeGroup').is(':checked');
         $('#GroupDropdown').prop('disabled', !isGroup).css('background-color', isGroup ? '#fff' : '#eee');
@@ -372,7 +359,6 @@ $(document).ready(function () {
                 }
                 if (res.data.Status === "A" || res.data.Status === "Y") $('#statusActive').prop('checked', true);
                 else $('#statusInactive').prop('checked', true);
-
                 toggleView(true, false);
             } else alert(res.message);
         });

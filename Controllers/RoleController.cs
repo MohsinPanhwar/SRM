@@ -18,79 +18,163 @@ namespace SRM.Controllers
         {
             var vm = new ManageRoleVM();
 
-            // Initial load of existing roles for the table
-            vm.ExistingRoles = _db.Roles.Select(r => new ManageRoleVM
+            // Get program filter from session
+            int? agentProgramId = Session["AgentProgramId"] as int?;
+
+            if (!agentProgramId.HasValue)
             {
-                RoleId = r.Role_Id,
-                RoleName = r.Role_Name,
-                UserCount = _db.agent.Count(a => a.RoleId == r.Role_Id)
-            }).ToList();
+                // No program assigned - show no roles
+                vm.ExistingRoles = new List<ManageRoleVM>();
+            }
+            else
+            {
+                // Show ONLY roles for this program
+                vm.ExistingRoles = _db.Role
+                    .Where(r => r.program_Id == agentProgramId)  // ONLY this program
+                    .ToList()
+                    .Select(r => new ManageRoleVM
+                    {
+                        RoleId = r.Role_Id,
+                        RoleName = r.Role_Name,
+                        program_Id = r.program_Id,
+                        ProgramName = _db.Programs.FirstOrDefault(p => p.Program_Id == r.program_Id)?.Program_Name ?? "Unknown",
+                        UserCount = _db.agent.Count(a => a.RoleId == r.Role_Id && a.ProgramId == agentProgramId)
+                    }).ToList();
+            }
+
+            // Show ONLY the user's program in dropdown
+            var programs = agentProgramId.HasValue
+                ? _db.Programs.Where(p => p.Program_Id == agentProgramId).ToList()
+                : new List<Program_Setup>();
+
+            ViewBag.Programs = new SelectList(programs, "Program_Id", "Program_Name");
+            ViewBag.ProgramId = agentProgramId;
+            ViewBag.ProgramName = programs.FirstOrDefault()?.Program_Name ?? "No Program";
 
             return View("~/Views/SystemSetup/ManageRole.cshtml", vm);
         }
 
-        // 2. AJAX: Fetch All Roles (for refreshing the table)
+        // 2. AJAX: Get Specific Details
         [HttpGet]
-        public JsonResult GetAllRoles()
+        public JsonResult GetRoleDetails(int id)
         {
-            var roles = _db.Roles.Select(r => new {
-                role_id = r.Role_Id,
-                role_name = r.Role_Name,
-                UserCount = _db.agent.Count(a => a.RoleId == r.Role_Id)
-            }).OrderByDescending(r => r.role_id).ToList();
+            int? agentProgramId = Session["AgentProgramId"] as int?;
 
-            return Json(roles, JsonRequestBehavior.AllowGet);
+            var role = _db.Role.FirstOrDefault(r => r.Role_Id == id);
+            if (role == null)
+                return Json(new { success = false, message = "Not found" }, JsonRequestBehavior.AllowGet);
+
+            // User can ONLY view roles from their program
+            if (!agentProgramId.HasValue || role.program_Id != agentProgramId)
+                return Json(new { success = false, message = "Access denied" }, JsonRequestBehavior.AllowGet);
+
+            string programName = _db.Programs.FirstOrDefault(p => p.Program_Id == role.program_Id)?.Program_Name ?? "Unknown";
+
+            var privilegeList = (role.Privilege ?? "")
+                .Split(',')
+                .Select(p => p.Trim())
+                .Where(p => !string.IsNullOrEmpty(p))
+                .ToList();
+
+            var data = new
+            {
+                RoleId = role.Role_Id,
+                RoleName = role.Role_Name,
+                program_Id = role.program_Id,
+                ProgramName = programName,
+                CanAddEditEngineer = privilegeList.Contains("AFE"),
+                CanLogNewRequest = privilegeList.Contains("LNR"),
+                CanViewForwardAny = privilegeList.Contains("FQR"),
+                CanOnlyViewAny = privilegeList.Contains("VR"),
+                CanViewForwardOwn = privilegeList.Contains("FOR"),
+                CanAddEditGroups = privilegeList.Contains("MG"),
+                CanAddNewIncident = privilegeList.Contains("IMA"),
+                CanViewIncident = privilegeList.Contains("IMV"),
+                CanLogNOC = privilegeList.Contains("LR"),
+                CanViewOwnGroup = privilegeList.Contains("VOR"),
+                CanReopenAny = privilegeList.Contains("URO"),
+                CanViewEditMessage = privilegeList.Contains("MSG"),
+                CanSendSMS = privilegeList.Contains("SMS"),
+                CanHardware = privilegeList.Contains("RHR"),
+                CanSendPassword = privilegeList.Contains("SPWD"),
+                CanViewReports = privilegeList.Contains("VRPT"),
+                CanAddEditAsset = privilegeList.Contains("ASS")
+            };
+
+            return Json(new { success = true, data = data }, JsonRequestBehavior.AllowGet);
         }
 
+        // 3. AJAX: Save Role (Unified Create/Edit)
         [HttpPost]
         public JsonResult SaveRole(ManageRoleVM vm)
         {
             if (vm == null || string.IsNullOrWhiteSpace(vm.RoleName))
                 return Json(new { success = false, message = "Invalid data" });
 
+            int? agentProgramId = Session["AgentProgramId"] as int?;
+            if (!agentProgramId.HasValue)
+                return Json(new { success = false, message = "No program assigned" });
+
             try
             {
-                bool exists = _db.Roles.Any(r => r.Role_Name.Trim().ToLower() == vm.RoleName.Trim().ToLower() && r.Role_Id != vm.RoleId);
-                if (exists) return Json(new { success = false, message = "Role name already exists" });
+                // Force program to user's program
+                vm.program_Id = agentProgramId.Value;
 
-                Roles role;
-                Privilege priv;
+                bool exists = _db.Role.Any(r =>
+                    r.Role_Name.Trim().ToLower() == vm.RoleName.Trim().ToLower()
+                    && r.Role_Id != vm.RoleId
+                    && r.program_Id == agentProgramId);
+
+                if (exists)
+                    return Json(new { success = false, message = "Role name already exists in this program" });
+
+                var privileges = new List<string>();
+                if (vm.CanAddEditEngineer) privileges.Add("AFE");
+                if (vm.CanLogNewRequest) privileges.Add("LNR");
+                if (vm.CanViewForwardAny) privileges.Add("FQR");
+                if (vm.CanOnlyViewAny) privileges.Add("VR");
+                if (vm.CanViewForwardOwn) privileges.Add("FOR");
+                if (vm.CanAddEditGroups) privileges.Add("MG");
+                if (vm.CanAddNewIncident) privileges.Add("IMA");
+                if (vm.CanViewIncident) privileges.Add("IMV");
+                if (vm.CanLogNOC) privileges.Add("LR");
+                if (vm.CanViewOwnGroup) privileges.Add("VOR");
+                if (vm.CanReopenAny) privileges.Add("URO");
+                if (vm.CanViewEditMessage) privileges.Add("MSG");
+                if (vm.CanSendSMS) privileges.Add("SMS");
+                if (vm.CanHardware) privileges.Add("RHR");
+                if (vm.CanSendPassword) privileges.Add("SPWD");
+                if (vm.CanViewReports) privileges.Add("VRPT");
+                if (vm.CanAddEditAsset) privileges.Add("ASS");
+
+                string privilegeCsv = string.Join(",", privileges);
+
+                Role role;
 
                 if (vm.RoleId == 0)
                 {
-                    // CREATE MODE
-                    priv = new Privilege();
-                    MapPrivilegesFromVM(vm, priv);
-                    _db.Privileges.Add(priv);
-                    _db.SaveChanges();
-
-                    role = new Roles
+                    role = new Role
                     {
                         Role_Name = vm.RoleName.Trim(),
-                        Privilege_Id = priv.privilege_id
+                        Privilege = privilegeCsv,
+                        program_Id = vm.program_Id
                     };
-                    _db.Roles.Add(role);
+                    _db.Role.Add(role);
                 }
                 else
                 {
-                    // EDIT MODE
-                    role = _db.Roles.Find(vm.RoleId);
-                    if (role == null) return Json(new { success = false, message = "Role not found" });
+                    role = _db.Role.Find(vm.RoleId);
+                    if (role == null || role.program_Id != agentProgramId)
+                        return Json(new { success = false, message = "Access denied" });
 
                     role.Role_Name = vm.RoleName.Trim();
-                    priv = _db.Privileges.Find(role.Privilege_Id);
-                    if (priv != null) MapPrivilegesFromVM(vm, priv);
+                    role.Privilege = privilegeCsv;
+                    role.program_Id = vm.program_Id;
                 }
 
                 _db.SaveChanges();
 
-                // --- THE FIX IS HERE ---
-                // We return the RoleId so the JS knows which row to update or create
-                return Json(new
-                {
-                    success = true,
-                    role = new { RoleId = role.Role_Id }
-                });
+                return Json(new { success = true, role = new { RoleId = role.Role_Id, RoleName = role.Role_Name } });
             }
             catch (Exception ex)
             {
@@ -98,84 +182,29 @@ namespace SRM.Controllers
             }
         }
 
-        // 4. AJAX: Get Specific Details (Populate form for Edit)
-        [HttpGet]
-        public JsonResult GetRoleDetails(int id)
-        {
-            var role = _db.Roles.Find(id);
-            if (role == null) return Json(new { success = false, message = "Not found" }, JsonRequestBehavior.AllowGet);
-
-            var priv = _db.Privileges.FirstOrDefault(p => p.privilege_id == role.Privilege_Id);
-
-            // Return an object that JS can easily loop through
-            return Json(new
-            {
-                success = true,
-                data = new
-                {
-                    RoleId = role.Role_Id,
-                    RoleName = role.Role_Name,
-                    // Mapping every privilege explicitly for the AJAX result
-                    CanAddEditEngineer = priv?.CanAddEditEngineer ?? false,
-                    CanLogNewRequest = priv?.CanLogNewRequest ?? false,
-                    CanViewForwardAny = priv?.CanViewForwardAny ?? false,
-                    CanOnlyViewAny = priv?.CanOnlyViewAny ?? false,
-                    CanViewForwardOwn = priv?.CanViewForwardOwn ?? false,
-                    CanAddEditGroups = priv?.CanAddEditGroups ?? false,
-                    CanAddNewIncident = priv?.CanAddNewIncident ?? false,
-                    CanViewIncident = priv?.CanViewIncident ?? false,
-                    CanLogNOC = priv?.CanLogNOC ?? false,
-                    CanViewOwnGroup = priv?.CanViewOwnGroup ?? false,
-                    CanReopenAny = priv?.CanReopenAny ?? false,
-                    CanViewEditMessage = priv?.CanViewEditMessage ?? false,
-                    CanSendSMS = priv?.CanSendSMS ?? false,
-                    CanHardware = priv?.CanHardware ?? false,
-                    CanSendPassword = priv?.CanSendPassword ?? false,
-                    CanViewReports = priv?.CanViewReports ?? false,
-                    CanAddEditAsset = priv?.CanAddEditAsset ?? false
-                }
-            }, JsonRequestBehavior.AllowGet);
-        }
-
-        // 5. AJAX: Delete Role
+        // 4. AJAX: Delete Role
         [HttpPost]
         public JsonResult DeleteRole(int id)
         {
-            var role = _db.Roles.Find(id);
-            if (role == null) return Json(new { success = false, message = "Role not found." });
+            int? agentProgramId = Session["AgentProgramId"] as int?;
+            if (!agentProgramId.HasValue)
+                return Json(new { success = false, message = "Access denied" });
 
-            if (_db.agent.Any(a => a.RoleId == id))
+            var role = _db.Role.Find(id);
+            if (role == null)
+                return Json(new { success = false, message = "Role not found." });
+
+            // User can ONLY delete roles from their program
+            if (role.program_Id != agentProgramId)
+                return Json(new { success = false, message = "Access denied" });
+
+            if (_db.agent.Any(a => a.RoleId == id && a.ProgramId == agentProgramId))
                 return Json(new { success = false, message = "Cannot delete: Users are assigned to this role." });
 
-            var priv = _db.Privileges.Find(role.Privilege_Id);
-            if (priv != null) _db.Privileges.Remove(priv);
-
-            _db.Roles.Remove(role);
+            _db.Role.Remove(role);
             _db.SaveChanges();
 
             return Json(new { success = true });
-        }
-
-        // Helper Method
-        private void MapPrivilegesFromVM(ManageRoleVM vm, Privilege priv)
-        {
-            priv.CanAddEditEngineer = vm.CanAddEditEngineer;
-            priv.CanLogNewRequest = vm.CanLogNewRequest;
-            priv.CanViewForwardAny = vm.CanViewForwardAny;
-            priv.CanOnlyViewAny = vm.CanOnlyViewAny;
-            priv.CanViewForwardOwn = vm.CanViewForwardOwn;
-            priv.CanAddEditGroups = vm.CanAddEditGroups;
-            priv.CanAddNewIncident = vm.CanAddNewIncident;
-            priv.CanViewIncident = vm.CanViewIncident;
-            priv.CanLogNOC = vm.CanLogNOC;
-            priv.CanViewOwnGroup = vm.CanViewOwnGroup;
-            priv.CanReopenAny = vm.CanReopenAny;
-            priv.CanViewEditMessage = vm.CanViewEditMessage;
-            priv.CanSendSMS = vm.CanSendSMS;
-            priv.CanHardware = vm.CanHardware;
-            priv.CanSendPassword = vm.CanSendPassword;
-            priv.CanViewReports = vm.CanViewReports;
-            priv.CanAddEditAsset = vm.CanAddEditAsset;
         }
 
         protected override void Dispose(bool disposing)

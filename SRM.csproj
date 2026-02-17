@@ -156,15 +156,16 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\PrivilegeHelper.cs" />
     <Compile Include="Models\Agent.cs" />
     <Compile Include="Models\AllRequestViewModel.cs" />
     <Compile Include="Models\EmployeeProfile.cs" />
-    <Compile Include="Models\Privilege.cs" />
     <Compile Include="Models\Groups.cs" />
     <Compile Include="Models\Locations.cs" />
+    <Compile Include="Models\Privilege.cs" />
     <Compile Include="Models\Program_Setup.cs" />
     <Compile Include="Models\Request_Master.cs" />
-    <Compile Include="Models\Roles.cs" />
+    <Compile Include="Models\Role.cs" />
     <Compile Include="Models\ViewModels\ManageGroupVM.cs" />
     <Compile Include="Models\ViewModels\ManageRoleVM.cs" />
     <Compile Include="Models\ViewModels\ManageUserVM.cs" />
@@ -218,6 +219,7 @@
     <Content Include="Views\SystemSetup\ManageRole.cshtml" />
     <Content Include="Views\ServiceRequest\LogNewRequest.cshtml" />
     <Content Include="Views\ServiceRequest\ViewAllRequests.cshtml" />
+    <Content Include="Views\ServiceRequest\Details.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Web.Mvc;
 using System.Web;
+using System.Data.Entity;
 using System.Security.Cryptography;
 using SRM.Models;
 using SRM.Data;
@@ -18,12 +19,10 @@ namespace SRM.Controllers
         public AccountController()
         {
             _context = new AppDbContext();
-            // Initialize JWT Service with a secret key
             string secretKey = System.Configuration.ConfigurationManager.AppSettings["JwtSecretKey"] ?? "YourSuperSecretKeyThatShouldBeAt32Characters!";
-            _tokenService = new JwtTokenService(secretKey, 24); // 24 hours
+            _tokenService = new JwtTokenService(secretKey, 24);
         }
 
-        // GET: Account/Login
         [HttpGet]
         [AllowAnonymous]
         public ActionResult Login(string returnUrl)
@@ -32,7 +31,6 @@ namespace SRM.Controllers
             return View();
         }
 
-        // POST: Account/Login
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -46,9 +44,10 @@ namespace SRM.Controllers
 
             try
             {
-                // 1. Find agent by Pno or Email and ensure they are Active
-                var agent = _context.agent.FirstOrDefault(a =>
-                    (a.Pno == pno || a.Email == pno) && a.Status == "A");
+                // Find agent - simple query, no includes needed
+                var agent = _context.agent
+                    .FirstOrDefault(a =>
+                        (a.Pno == pno || a.Email == pno) && a.Status == "A");
 
                 if (agent == null || !VerifyPassword(password, agent.Password))
                 {
@@ -56,24 +55,13 @@ namespace SRM.Controllers
                     return View();
                 }
 
-                // 2. Fetch the full Privilege object based on the agent's Privilege ID
-                // .AsNoTracking() is used to prevent EF proxy issues when casting in the View
-                // Use int.Parse if agent.Privilege is a string, 
-                // or simply ensure we are comparing apples to apples.
-                string pID = agent.Privilege?.ToString();
-
-                var privilegeSettings = _context.Privileges.AsNoTracking()
-                    .ToList() // Pull to memory briefly to avoid SQL translation issues
-                    .FirstOrDefault(p => p.privilege_id.ToString() == pID);
-
-                
-                // 3. Generate JWT Token
+                // Generate JWT Token
                 bool isAdmin = agent.IsAdministrator == "Y";
                 string jwtToken = _tokenService.GenerateToken(
                     agent.Sno,
                     agent.Pno,
                     agent.Email,
-                    agent.Privilege,
+                    agent.Privilege ?? string.Empty,
                     isAdmin
                 );
 
@@ -83,12 +71,11 @@ namespace SRM.Controllers
                     return View();
                 }
 
-                // 4. Set up Cookies
                 bool remember = rememberMe ?? false;
                 var cookie = new HttpCookie(JWT_COOKIE_NAME, jwtToken)
                 {
                     HttpOnly = true,
-                    Secure = false, // Set to true in production with HTTPS
+                    Secure = false,
                     Path = "/",
                     Expires = remember ? DateTime.Now.AddDays(30) : DateTime.Now.AddHours(24)
                 };
@@ -96,25 +83,32 @@ namespace SRM.Controllers
                 Response.Cookies.Add(cookie);
                 System.Web.Security.FormsAuthentication.SetAuthCookie(agent.Pno, remember);
 
-                // 5. Update last login audit fields
+                // Update audit fields
                 agent.LastLoginDateTime = DateTime.UtcNow;
                 agent.LastLoginIp = GetClientIpAddress();
                 agent.LastUpdate = DateTime.UtcNow;
                 _context.SaveChanges();
 
-                // 6. Store User info and the PRIVILEGE OBJECT in Session
+                // Store in session
                 Session["AgentId"] = agent.Sno;
                 Session["AgentName"] = agent.Name;
                 Session["AgentPno"] = agent.Pno;
                 Session["IsAdmin"] = isAdmin ? "Y" : "N";
+                Session["UserPrivileges"] = agent.Privilege ?? string.Empty;
+                Session["AgentProgramId"] = agent.ProgramId;
+                string userPrivileges = string.Empty;
+                if (agent.RoleId.HasValue)
+                {
+                    var role = _context.Role.FirstOrDefault(r => r.Role_Id == agent.RoleId.Value);
+                    if (role != null)
+                    {
+                        userPrivileges = role.Privilege ?? string.Empty;
+                    }
+                }
+                Session["UserPrivileges"] = userPrivileges;
 
-                // This is the key line for your permission buttons to show/hide:
-                Session["UserPrivileges"] = privilegeSettings;
 
-                // Also keep the ID if needed elsewhere
-                Session["Privilege"] = agent.Privilege;
 
-                // 7. Redirect
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 {
                     return Redirect(returnUrl);
@@ -125,11 +119,12 @@ namespace SRM.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Login error: {ex.Message}");
-                ModelState.AddModelError("", "An error occurred during login. Please try again.");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                ModelState.AddModelError("", "An error occurred during login. " + ex.Message);
                 return View();
             }
         }
-        // GET: Account/Register
+
         [HttpGet]
         [AllowAnonymous]
         public ActionResult Register()
@@ -137,7 +132,6 @@ namespace SRM.Controllers
             return View();
         }
 
-        // POST: Account/Register
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -145,7 +139,6 @@ namespace SRM.Controllers
         {
             try
             {
-                // Validation
                 if (string.IsNullOrWhiteSpace(pno))
                 {
                     ModelState.AddModelError("pno", "Personnel number is required.");
@@ -171,25 +164,21 @@ namespace SRM.Controllers
                     ModelState.AddModelError("password", "Password must be at least 6 characters.");
                 }
 
-                // Check if Pno already exists
                 if (!string.IsNullOrWhiteSpace(pno) && _context.agent.Any(a => a.Pno == pno))
                 {
                     ModelState.AddModelError("pno", "Personnel number already exists.");
                 }
 
-                // Check if email already registered
                 if (!string.IsNullOrEmpty(email) && _context.agent.Any(a => a.Email == email))
                 {
                     ModelState.AddModelError("email", "Email already registered.");
                 }
 
-                // If there are validation errors, return to view
                 if (!ModelState.IsValid)
                 {
                     return View();
                 }
 
-                // Create new agent
                 var agent = new Agent
                 {
                     Pno = pno.Trim(),
@@ -214,28 +203,18 @@ namespace SRM.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Register error: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-
-                if (ex.InnerException != null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
-                }
-
                 ModelState.AddModelError("", $"An error occurred during registration: {ex.Message}");
                 return View();
             }
         }
 
-
         [Authorize]
         [HttpGet]
         public ActionResult Logout()
         {
-            // Clear session
             Session.Clear();
             Session.Abandon();
 
-            // Remove authentication cookie if using FormsAuthentication
             if (System.Web.Security.FormsAuthentication.CookiesSupported)
             {
                 var cookie = new HttpCookie(System.Web.Security.FormsAuthentication.FormsCookieName, "")
@@ -246,7 +225,6 @@ namespace SRM.Controllers
                 Response.Cookies.Add(cookie);
             }
 
-            // Clear all cookies
             foreach (var key in Request.Cookies.AllKeys)
             {
                 var c = new HttpCookie(key) { Expires = DateTime.Now.AddDays(-1) };
@@ -256,7 +234,6 @@ namespace SRM.Controllers
             return RedirectToAction("Login", "Account");
         }
 
-        // POST: Account/ChangePassword
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
@@ -282,7 +259,6 @@ namespace SRM.Controllers
 
             try
             {
-                // Get logged-in user's Pno from Session
                 var userPno = Session["AgentPno"] as string;
 
                 if (string.IsNullOrEmpty(userPno))
@@ -291,7 +267,6 @@ namespace SRM.Controllers
                     return RedirectToAction("Login");
                 }
 
-                // Find agent
                 var agent = _context.agent.FirstOrDefault(a => a.Pno == userPno);
 
                 if (agent == null)
@@ -300,14 +275,12 @@ namespace SRM.Controllers
                     return View();
                 }
 
-                // Verify current password
                 if (!VerifyPassword(currentPassword, agent.Password))
                 {
                     ModelState.AddModelError("", "Current password is incorrect.");
                     return View();
                 }
 
-                // Update password
                 agent.Password = HashPassword(newPassword);
                 agent.LastUpdate = DateTime.UtcNow;
                 _context.SaveChanges();
@@ -323,7 +296,6 @@ namespace SRM.Controllers
             }
         }
 
-        // Helper: Check if user is authenticated via JWT
         private bool IsJwtAuthenticated()
         {
             if (Request.Cookies[JWT_COOKIE_NAME] == null)
@@ -333,7 +305,6 @@ namespace SRM.Controllers
             return _tokenService.IsTokenValid(token);
         }
 
-        // Password hashing using PBKDF2
         private string HashPassword(string password)
         {
             using (var sha256 = new SHA256Managed())
@@ -355,7 +326,6 @@ namespace SRM.Controllers
             }
         }
 
-        // Password verification
         private bool VerifyPassword(string password, string hash)
         {
             try
@@ -383,7 +353,6 @@ namespace SRM.Controllers
             }
         }
 
-        // Get client IP address
         private string GetClientIpAddress()
         {
             var ipAddress = HttpContext.Request.UserHostAddress;
@@ -402,6 +371,5 @@ namespace SRM.Controllers
             }
             base.Dispose(disposing);
         }
-
     }
 }

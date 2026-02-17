@@ -5,91 +5,6 @@
 
 }
 
-<style>
-    .grid-container {
-        display: grid;
-        grid-template-columns: 140px 1fr 140px 1fr;
-        border-left: 1px solid #ccc;
-        border-top: 1px solid #ccc;
-        background: #f2f2f2;
-    }
-
-    .grid-label {
-        padding: 8px;
-        border-right: 1px solid #ccc;
-        border-bottom: 1px solid #ccc;
-        font-weight: bold;
-        font-size: 0.85em;
-        display: flex;
-        align-items: center;
-    }
-
-    .grid-input {
-        padding: 4px;
-        border-right: 1px solid #ccc;
-        border-bottom: 1px solid #ccc;
-        background: #fff;
-    }
-
-        .grid-input input, .grid-input select {
-            width: 100%;
-            border: 1px solid #aaa;
-            padding: 3px;
-            font-size: 0.9em;
-        }
-
-    .form-section-header {
-        background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
-        color: white;
-        padding: 8px 15px;
-        font-weight: bold;
-        font-size: 1em;
-        margin-top: 20px;
-        border-radius: 4px 4px 0 0;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-    }
-
-    .details-row {
-        display: flex;
-        border-bottom: 1px solid #ccc;
-        background: #f9f9f9;
-    }
-
-    .details-label {
-        width: 140px;
-        padding: 10px;
-        font-weight: bold;
-        font-size: 0.9em;
-        border-right: 1px solid #ccc;
-    }
-
-    .details-content {
-        flex: 1;
-        padding: 10px;
-    }
-
-    .details-box {
-        border: 1px solid #ccc;
-        border-top: none;
-        background: #fff;
-    }
-
-    .setup-btn-green {
-        background-color: #2e7d57;
-        color: white;
-        border: none;
-        padding: 6px 20px;
-        cursor: pointer;
-        border-radius: 2px;
-        font-weight: bold;
-    }
-
-        .setup-btn-green:hover {
-            background-color: #1b4d3e;
-        }
-</style>
-
 <div class="setup-container">
     <div class="section-header">
         <h2>Log New Request</h2>
@@ -121,8 +36,8 @@
             <div class="grid-input">
                 @Html.TextBoxFor(m => m.Pno, new { @readonly = "readonly", @style = "background:#eee;" })
             </div>
-            
-                <div class="grid-input">
+
+            <div class="grid-label">Employee Name</div> <div class="grid-input">
                 @Html.TextBoxFor(m => m.emp_name, new { @readonly = "readonly", @style = "background:#eee;" })
             </div>
 
@@ -141,7 +56,7 @@
                 @Html.TextBoxFor(m => m.Email)
             </div>
 
-            <div class="grid-label">MobileNo</div>
+            <div class="grid-label">Mobile No</div>
             <div class="grid-input" style="display:flex; gap:5px;">
                 @Html.TextBoxFor(m => m.mobileno, new { @style = "width:68%;" })
                 @Html.TextBoxFor(m => m.MobileOperator, new { @readonly = "readonly", @style = "width:28%; background:#eee;" })

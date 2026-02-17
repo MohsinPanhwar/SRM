@@ -19,26 +19,59 @@ namespace SRM.Controllers
             if (string.IsNullOrEmpty(pno))
                 return RedirectToAction("Login", "Account");
 
-            // 1. Fetch ALL users for the server-side table
-            var allUsers = _db.agent.ToList();
+            // Get program filter from session
+            int? agentProgramId = Session["AgentProgramId"] as int?;
 
-            // 2. Populate ViewBags for Dropdowns (Instantly available on load)
-            ViewBag.RoleList = new SelectList(_db.Roles.ToList(), "Role_Id", "Role_Name");
+            // Get all filtered users first
+            var filteredUsers = _db.agent
+                .Where(a => !agentProgramId.HasValue || a.ProgramId == agentProgramId)
+                .ToList();
+
+            // Get all roles for this program
+            var rolesInProgram = agentProgramId.HasValue
+                ? _db.Role.Where(r => r.program_Id == agentProgramId).ToList()
+                : _db.Role.ToList();
+
+            // Sort roles: Admin first, then alphabetically
+            var sortedRoles = rolesInProgram
+                .OrderByDescending(r => r.Role_Name.Contains("Admin"))
+                .ThenBy(r => r.Role_Name)
+                .ToList();
+
+            // Sort users by sorted role order, then by name
+            var allUsers = filteredUsers
+                .OrderBy(a => sortedRoles.FindIndex(r => r.Role_Id == a.RoleId))
+                .ThenBy(a => a.Name)
+                .ToList();
+
+            // 2. Fetch Roles for the Grouping Lookup
+            ViewBag.RoleListSource = sortedRoles;
+            ViewBag.RoleList = new SelectList(sortedRoles, "Role_Id", "Role_Name");
+
             ViewBag.GroupList = _db.groups
-          .Select(g => new SelectListItem { Value = g.gid.ToString(), Text = g.gname })
-          .ToList();
+                .Select(g => new SelectListItem { Value = g.gid.ToString(), Text = g.gname })
+                .ToList();
 
-            ViewBag.Programs = _db.Programs
+            // Filter programs - show only user's program if assigned
+            var programs = agentProgramId.HasValue
+                ? _db.Programs.Where(p => p.Program_Id == agentProgramId).ToList()
+                : _db.Programs.ToList();
+
+            ViewBag.Programs = programs
                 .Select(p => new SelectListItem { Value = p.Program_Id.ToString(), Text = p.Program_Name })
                 .ToList();
+
             ViewBag.WorkAreas = _db.Locations.Select(l => l.Location_Description).Distinct().OrderBy(x => x).ToList();
 
-            // Logic from your GetMobileOperators function
             ViewBag.Operators = _db.agent
-                                .Where(a => a.MobileOperator != null && a.MobileOperator != "")
-                                .Select(a => a.MobileOperator)
-                                .Distinct()
-                                .ToList();
+                                    .Where(a => a.MobileOperator != null && a.MobileOperator != "")
+                                    .Select(a => a.MobileOperator)
+                                    .Distinct()
+                                    .ToList();
+
+            ViewBag.ProgramName = agentProgramId.HasValue
+                ? _db.Programs.FirstOrDefault(p => p.Program_Id == agentProgramId)?.Program_Name ?? "Program"
+                : "All Programs";
 
             return View("~/Views/SystemSetup/ManageUser.cshtml", allUsers);
         }
@@ -80,12 +113,12 @@ namespace SRM.Controllers
                 if (model.RoleId != null)
                 {
                     // We find the role to get its associated privilege_id
-                    var selectedRole = _db.Roles.FirstOrDefault(r => r.Role_Id == model.RoleId);
+                    var selectedRole = _db.Role.FirstOrDefault(r => r.Role_Id == model.RoleId);
                     if (selectedRole != null)
                     {
                         // Save the role's privilege_id into the Agent's Privilege column
                         // Convert the integer ID to a string to match the Agent model property type
-                        agent.Privilege = selectedRole.Privilege_Id.ToString();
+                        agent.Privilege = selectedRole.Privilege.ToString();
                     }
                 }
 

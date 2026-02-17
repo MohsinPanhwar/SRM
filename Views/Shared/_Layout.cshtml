@@ -1,4 +1,5 @@
-﻿@{
+﻿@using SRM.Helpers
+@{/*
     var privs = Session["UserPrivileges"] as SRM.Models.Privilege;
     bool isAdmin = false;
 
@@ -12,10 +13,11 @@
     // 2. STRICTOR CHECK: Check the specific Privilege table flag
     // We check if privs is not null AND the boolean column 'CanAddEditGroups' is true
     bool canLogRequest = isAdmin || (privs != null && privs.CanLogNewRequest == true);
-    bool canViewRequest = isAdmin||(privs != null && privs.CanOnlyViewAny == true);
+    bool canViewRequest = isAdmin || (privs != null && privs.CanOnlyViewAny == true);
     bool canSendSms = isAdmin || (privs != null && privs.CanSendSMS == true);
     bool canSendPassword = isAdmin || (privs != null && privs.CanSendPassword == true);
-
+    bool canManage = isAdmin || (privs != null && privs.CanAddEditGroups == true);
+  */
 }
 
 <!DOCTYPE html>
@@ -33,16 +35,20 @@
             <a href="/Home/home" class="logo">SRM</a>
             <div class="nav-items">
 
+
                 <div class="dropdown">
-                    <button class="dropbtn">System Setup</button>
-                    <div class="dropdown-content">
-                        <a href="@Url.Action("ManagePrograms", "Program")">Manage Program</a>
-                        <a href="@Url.Action("ManageUser", "User")">Manage User</a>
-                        <a href="@Url.Action("ManageGroup", "Group")">Manage Group</a>
-                        <a href="@Url.Action("ManageLocation", "Location")">Manage Work Area</a>
-                        <a href="@Url.Action("ManageRole", "Role")">Manage Role</a>
-                        <a href="@Url.Action("MessageBoard", "Message")">Message Board</a>
-                    </div>
+                    @if (PrivilegeHelper.HasPrivilege("MG"))
+                    {
+                        <button class="dropbtn">System Setup</button>
+                        <div class="dropdown-content">
+                            <a href="@Url.Action("ManagePrograms", "Program")">Manage Program</a>
+                            <a href="@Url.Action("ManageUser", "User")">Manage User</a>
+                            <a href="@Url.Action("ManageGroup", "Group")">Manage Group</a>
+                            <a href="@Url.Action("ManageLocation", "Location")">Manage Work Area</a>
+                            <a href="@Url.Action("ManageRole", "Role")">Manage Role</a>
+                            <a href="@Url.Action("MessageBoard", "Message")">Message Board</a>
+                        </div>
+                    }
                 </div>
 
                 <div class="dropdown">
@@ -58,19 +64,19 @@
                 <div class="dropdown">
                     <button class="dropbtn">Service Request</button>
                     <div class="dropdown-content">
-                        @if (canLogRequest)
+                        @if (PrivilegeHelper.HasPrivilege("LNR"))
                         {
                             <a href="@Url.Action("LogNewRequest", "NewRequest")">Log new request</a>
                         }
-                        @if (canViewRequest)
+                        @if (PrivilegeHelper.HasPrivilege("VR"))
                         {
                             <a href="@Url.Action("ViewAllRequests", "ViewAllRequests", new { status = "All" })">Show all requests</a>
                         }
-                        @if (canSendSms)
+                        @if (PrivilegeHelper.HasPrivilege("SMS"))
                         {
                             <a href="@Url.Action("SendSmsToEngineer", "ServiceRequest")">Send SMS</a>
                         }
-                        @if (canSendPassword)
+                        @if (PrivilegeHelper.HasPrivilege("SPWD"))
                         {
                             <a href="@Url.Action("SendPasswordToAgents", "ServiceRequest")">Send Password to Agents</a>
                         }
