@@ -142,11 +142,13 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\GroupController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\LocationController.cs" />
+    <Compile Include="Controllers\MessageController.cs" />
     <Compile Include="Controllers\NewRequestController.cs" />
     <Compile Include="Controllers\ProgramController.cs" />
     <Compile Include="Controllers\RoleController.cs" />
@@ -162,7 +164,6 @@
     <Compile Include="Models\EmployeeProfile.cs" />
     <Compile Include="Models\Groups.cs" />
     <Compile Include="Models\Locations.cs" />
-    <Compile Include="Models\Privilege.cs" />
     <Compile Include="Models\Program_Setup.cs" />
     <Compile Include="Models\Request_Master.cs" />
     <Compile Include="Models\Role.cs" />
@@ -220,10 +221,13 @@
     <Content Include="Views\ServiceRequest\LogNewRequest.cshtml" />
     <Content Include="Views\ServiceRequest\ViewAllRequests.cshtml" />
     <Content Include="Views\ServiceRequest\Details.cshtml" />
+    <Content Include="Views\SystemSetup\MessageBoard.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Views\Admin\" />
     <Folder Include="Views\Base\" />
+    <Folder Include="Views\MessageBoard\" />
     <Folder Include="Views\NewRequest\" />
     <Folder Include="Views\User\" />
     <Folder Include="Views\ViewAllRequests\" />

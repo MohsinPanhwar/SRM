@@ -37,7 +37,7 @@
 
 
                 <div class="dropdown">
-                    @if (PrivilegeHelper.HasPrivilege("MG"))
+                    @if (PrivilegeHelper.HasPrivilege("MG") || PrivilegeHelper.IsSuperAdmin())
                     {
                         <button class="dropbtn">System Setup</button>
                         <div class="dropdown-content">
@@ -129,9 +129,43 @@
 
         <button class="logout-button" onclick="window.location.href='@Url.Action("Logout","Account")'">Logout</button>
 
-
     </nav>
 
+    @* --- SUPER ADMIN PROGRAM SWITCHER (OVERLAYING HERO BANNER) --- *@
+    @if (SRM.Helpers.PrivilegeHelper.IsSuperAdmin())
+    {
+        using (var db = new SRM.Data.AppDbContext())
+        {
+            var programsList = db.Programs
+                                 .Select(p => new { p.Program_Id, p.Program_Name })
+                                 .OrderBy(p => p.Program_Id)
+                                 .ToList();
+
+            <div class="program-switcher-wrapper"
+                 style="position: absolute; right: 20px; top: 62px; z-index: 999; height: 0; width: auto;">
+                @* top: 70px assumes your navbar is roughly 60-70px high. Adjust this to match your navbar height. *@
+
+                @using (Html.BeginForm("SetGlobalProgram", "Admin", FormMethod.Post, new { id = "globalProgramForm", style = "margin: 0;" }))
+                {
+                    <div class="switcher-container" style="display: flex; align-items: center; background: #1b4d3e; border: 1px solid #ffd700; border-radius: 4px; padding: 4px 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
+                        <span class="switcher-label" style="color: #ffd700; font-size: 10px; font-weight: bold; margin-right: 8px; white-space: nowrap;">VIEWING AS:</span>
+                        <select name="programId" onchange="document.getElementById('globalProgramForm').submit();"
+                                style="background: transparent; color: white; border: none; font-size: 12px; outline: none; cursor: pointer; padding: 2px 0;">
+                            <option value="" style="background: #1b4d3e;">-- All Programs --</option>
+                            @foreach (var p in programsList)
+                            {
+                                <option value="@p.Program_Id"
+                                        style="background: #1b4d3e;"
+                                        @(Session["AgentProgramId"]?.ToString() == p.Program_Id.ToString() ? "selected" : "")>
+                                    @p.Program_Name
+                                </option>
+                            }
+                        </select>
+                    </div>
+                }
+            </div>
+        }
+    }
     <!-- Body placeholder -->
     <div class="main-container">
         @RenderBody()
@@ -146,4 +180,41 @@
 
     @RenderSection("scripts", required: false)
 </body>
+<script>
+    // 1. Define the function in the global scope so ALL pages can see it
+    function showGlobalToast(message, type = 'success') {
+        const icon = type === 'success' ? '✅' : '❌';
+        const toastClass = type === 'success' ? 'toast-success' : 'toast-error';
+
+        const html = `<div class="toast-msg ${toastClass}">
+                        <span style="margin-right:10px;">${icon}</span>
+                        <span>${message}</span>
+                      </div>`;
+
+        // Ensure container exists
+        if ($('#notification-area').length === 0) {
+            $('body').append('<div id="notification-area"></div>');
+        }
+
+        const $toast = $(html);
+        $('#notification-area').append($toast);
+
+        // Slide In -> Wait -> Slide Out
+        $toast.show().animate({ left: "0px", opacity: "1" }, 300)
+              .delay(1000) // 5 seconds is much more user-friendly
+              .animate({ left: "-40px", opacity: "0" }, 300, function () {
+                  $(this).remove();
+              });
+    }
+
+    $(document).ready(function () {
+        // 2. Listen for Server-Side messages (TempData)
+        @if (TempData["Success"] != null) {
+            <text>showGlobalToast("@TempData["Success"]", "success");</text>
+        }
+        @if (TempData["Error"] != null) {
+            <text>showGlobalToast("@TempData["Error"]", "error");</text>
+        }
+    });
+</script>
 </html>

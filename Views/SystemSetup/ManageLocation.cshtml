@@ -3,15 +3,21 @@
 @{
     ViewBag.Title = "Manage Locations";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    // We removed 'var programs' because we are getting the ID from the switcher session.
 }
 
 <div class="setup-container">
     <div class="section-header">
         <h2>Manage Work Areas</h2>
+
         <div class="action-row">
             <input type="text" id="newLocationName" placeholder="Enter work area name" />
             <button id="addLocationBtn" class="setup-btn-green">+ Add Work Area</button>
         </div>
+
+        <p style="font-size: 11px; color: #666; margin-top: 5px;">
+            Adding to: <strong>@(Session["AgentProgramName"] ?? "Global / All Programs")</strong>
+        </p>
     </div>
 
     <table class="crud-table">
@@ -36,7 +42,7 @@
             }
         </tbody>
     </table>
-</div>
+</div> @* Closed the container properly here *@
 
 @section scripts {
     <script>
@@ -72,27 +78,13 @@
                     return;
                 }
 
+                // Controller will grab Program_id from Session["AgentProgramId"]
                 $.post('@Url.Action("SaveLocation", "Location")', { Location_Description: name }, function(res) {
                     if (res.success) {
                         showToast("Work Area added!", "success");
 
-                        var newRow = `
-                            <tr data-id="${res.location.sno}" style="display:none;">
-                                <td class="location-name">${res.location.Location_Description}</td>
-                                <td class="actions-cell">
-                                    <div class="icon-btn-group">
-                                        <button class="edit-btn">✏️</button>
-                                        <button class="delete-btn">❌</button>
-                                    </div>
-                                </td>
-                            </tr>`;
-
-                        var $nr = $(newRow);
-                        $('#locationTableBody').append($nr);
-                        // Row still fades in smoothly when added
-                        $nr.fadeIn(800).css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
-
-                        $('#newLocationName').val('');
+                        // Reloading is best practice here to ensure the list matches the current Switcher context
+                        setTimeout(function() { location.reload(); }, 800);
                     } else {
                         showToast(res.message, "error");
                     }

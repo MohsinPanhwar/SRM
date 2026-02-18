@@ -39,7 +39,15 @@
             <button type="button" id="btnToggleAction" class="setup-btn-green">Add New User</button>
         </div>
     </div>
-
+    <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <label class="switch" style="margin:0;">
+                <input type="checkbox" id="toggleActiveOnly" checked>
+                <span class="slider round"></span>
+            </label>
+            <span style="font-size:0.9rem; font-weight:500;">Show active users only</span>
+        </div>
+    </div>
     <div id="userListSection">
         <table class="crud-table" id="allUsersTable">
             <thead>
@@ -366,5 +374,30 @@ $(document).ready(function () {
 
     $('#btnShowPass').click(function () { $('#passwordFields').slideToggle(); });
 });
+        $('#toggleActiveOnly').on('change', function () {
+            const activeOnly = $(this).is(':checked');
+            $('#allUsersTableBody tr').each(function () {
+                const $row = $(this);
+                if ($row.hasClass('role-group-header')) return; // skip group headers
+                if (activeOnly) {
+                    const statusText = $row.find('.td-status').text().trim();
+                    $row.toggle(statusText === 'Active');
+                } else {
+                    $row.show();
+                }
+            });
+
+            // Hide role group headers if all sibling rows are hidden
+            $('#allUsersTableBody tr.role-group-header').each(function () {
+                const $header = $(this);
+                let hasVisible = false;
+                $header.nextUntil('.role-group-header').each(function () {
+                    if ($(this).is(':visible')) hasVisible = true;
+                });
+                $header.toggle(hasVisible);
+            });
+        });
+        $('#toggleActiveOnly').trigger('change');
+
     </script>
 }

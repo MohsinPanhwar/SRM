@@ -1,4 +1,5 @@
-﻿@model SRM.Models.Request_Master
+﻿@using SRM.Helpers
+@model SRM.Models.Request_Master
 @{
     ViewBag.Title = "Service Request Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -16,11 +17,11 @@
 }
 
 <div class="setup-container fade-in-up">
-    <!--    <div class="section-header">
-            <h2>Service Request Details: #@Model.RequestID</h2>
-        </div> -->
+    <div class="section-header">
+        <h2>Service Request Details: #@Model.RequestID</h2>
+    </div>
 
-        @* Top bar for quick status check *@
+    @* Top bar for quick status check *@
     <div class="action-row-container" style="display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
         <span><strong>Location:</strong> @Model.Location</span>
         <span><strong>Current Status:</strong> <span style="color:#2e7d57; font-weight:bold;">@Model.status</span></span>
@@ -32,8 +33,15 @@
         }
         else
         {
-            <span style="color:gray; font-weight:bold;">COMPLETED / CLOSED</span>
-        }
+            using (Html.BeginForm("ReopenRequest", "ViewAllRequests", FormMethod.Post, new { style = "display:inline;" }))
+            {
+@Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.RequestID" />
+                                        <button type="submit" class="btn-link" style="color:green; border:none; background:none; cursor:pointer; font-weight:bold;" onclick="return confirm('Are you sure you want to Re-Open this request?')">
+                                            [Re-Open Request]
+                                        </button>}
+
+                                                    }
 
         <div id="closeModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
             <div style="background:white; width:400px; margin:100px auto; padding:20px; border-radius:5px; box-shadow:0 2px 10px rgba(0,0,0,0.3);">
@@ -56,151 +64,208 @@
             </div>
         </div>
     </div>
+    <div style="margin-bottom: 15px; display: flex; justify-content: flex-end;">
+        <a href="@Url.Action("ViewAllRequests", "ViewAllRequests")" class="setup-btn-green">
+            Back to Lists
+        </a>
+    </div>
+    @* Section 1: User Info (Grid Match) *@
+    <div class="form-section-header">Request Origin Information</div>
+    <div class="grid-container">
+        <div class="grid-label">Request ID</div>
+        <div class="grid-input">
+            <input type="text" value="@Model.RequestID" readonly style="background:#eee;" />
+        </div>
 
-        @* Section 1: User Info (Grid Match) *@
-        <div class="form-section-header">Request Origin Information</div>
-        <div class="grid-container">
-            <div class="grid-label">Request ID</div>
-            <div class="grid-input">
-                <input type="text" value="@Model.RequestID" readonly style="background:#eee;" />
-            </div>
+        <div class="grid-label">Log Date</div>
+        <div class="grid-input">
+            <input type="text" value="@(Model.RequestDate.HasValue ? Model.RequestDate.Value.ToString("dd-MMM-yyyy hh:mm tt") : "---")" readonly style="background:#eee;" />
+        </div>
 
-            <div class="grid-label">Log Date</div>
-            <div class="grid-input">
-                <input type="text" value="@(Model.RequestDate.HasValue ? Model.RequestDate.Value.ToString("dd-MMM-yyyy hh:mm tt") : "---")" readonly style="background:#eee;" />
-            </div>
+        <div class="grid-label">Requested By</div>
+        <div class="grid-input">
+            <input type="text" value="@Model.RequestLogBy" readonly style="background:#eee;" />
+        </div>
 
-            <div class="grid-label">Requested By</div>
-            <div class="grid-input">
-                <input type="text" value="@Model.RequestLogBy" readonly style="background:#eee;" />
-            </div>
+        <div class="grid-label">IP Address</div>
+        <div class="grid-input">
+            <input type="text" value="@Model.RequestedIPAddress" readonly style="background:#eee;" />
+        </div>
+    </div>
 
-            <div class="grid-label">IP Address</div>
-            <div class="grid-input">
-                <input type="text" value="@Model.RequestedIPAddress" readonly style="background:#eee;" />
+    @* Section 2: Request Details (Box Match) *@
+    <div class="form-section-header">Service Request Details</div>
+    <div class="details-box">
+        <div class="details-row">
+            <div class="details-label">Priority</div>
+            <div class="details-content">
+                <strong style="color: @priorityColor;">@displayPriority</strong>
             </div>
         </div>
 
-        @* Section 2: Request Details (Box Match) *@
-        <div class="form-section-header">Service Request Details</div>
-        <div class="details-box">
-            <div class="details-row">
-                <div class="details-label">Priority</div>
-                <div class="details-content">
-                    <strong style="color: @priorityColor;">@displayPriority</strong>
-                </div>
-            </div>
+        <div class="details-row">
+            <div class="details-label">Problem Area</div>
+            <div class="details-content">@Model.parea</div>
+        </div>
 
-            <div class="details-row">
-                <div class="details-label">Problem Area</div>
-                <div class="details-content">@Model.parea</div>
-            </div>
+        <div class="details-row">
+            <div class="details-label">Request Summary</div>
+            <div class="details-content">@Model.ReqSummary</div>
+        </div>
 
-            <div class="details-row">
-                <div class="details-label">Request Summary</div>
-                <div class="details-content">@Model.ReqSummary</div>
-            </div>
+        <div class="details-row">
+            <div class="details-label">Request Details</div>
+        </div>
 
-            <div class="details-row">
-                <div class="details-label">Request Details</div>
-            </div>
+        <div class="details-row" style="background:#fffbe6;">
+            <div class="details-label">Communication Log</div>
+            <div class="details-content">
+                <div class="communication-log-wrapper">
+                    @* This is the critical part: it renders the HTML stored in the DB *@
+                    @Html.Raw(Model.ReqDetails)
 
-            <div class="details-row" style="background:#fffbe6;">
-                <div class="details-label">Communication Log</div>
-                <div class="details-content">
-                    <div class="communication-log-wrapper">
-                        @* This is the critical part: it renders the HTML stored in the DB *@
-                        @Html.Raw(Model.ReqDetails)
-
-                        <div class="log-link" style="margin-top:10px;">
-                            <a href="#" style="color: #2e7d57; font-weight: bold;">Click here to Send Reminder to Field Engineer</a>
-                        </div>
+                    <div class="log-link" style="margin-top:10px;">
+                        <a href="#" style="color: #2e7d57; font-weight: bold;">Click here to Send Reminder to Field Engineer</a>
                     </div>
                 </div>
             </div>
+        </div>
 
-            @* Section 3: Forwarding (Using Log style headers) *@
-            @* Section 3: Forwarding (Using Log style headers) *@
-            <div class="form-section-header" style="background: linear-gradient(135deg, #1b4d3e 0%, #2e7d57 100%);">Service Request Forwarding</div>
-            <div class="details-box" style="padding: 20px;">
-                @using (Html.BeginForm("ForwardRequest", "ViewAllRequests", FormMethod.Post, new { id = "forwardForm" }))
+        @* Section 3: Forwarding (Using Log style headers) *@
+        @* Section 3: Forwarding (Using Log style headers) *@
+        <div class="form-section-header">Service Request Forwarding</div>
+        <div class="details-box" style="padding: 20px;">
+            @using (Html.BeginForm("ForwardRequest", "ViewAllRequests", FormMethod.Post, new { id = "forwardForm" }))
+            {
+                @Html.AntiForgeryToken()
+
+                @* CHANGE: Name changed from RequestID to id to match Controller parameter *@
+                <input type="hidden" name="id" value="@Model.RequestID" />
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight:bold; width: 160px; display:inline-block;">Forward to:</label>
+                    <label><input type="radio" name="FType" value="I" checked /> Individual</label>
+                    <label style="margin-left:15px;"><input type="radio" name="FType" value="G" /> Group</label>
+                    <input type="hidden" name="Forward_To_Type" id="Forward_To_Type" value="I" />
+                </div>
+
+                @* Individual Dropdown Row *@
+                <div id="empRow" style="margin-bottom: 15px;">
+                    <label style="font-weight:bold; width: 160px; display:inline-block;">Select Agent:</label>
+                    @Html.DropDownList("Forward_To_Agent", (SelectList)ViewBag.EmployeeList, "Select Employee", new { @class = "forward-select", @style = "width:300px; padding:5px;" })
+                </div>
+
+                @* Group Dropdown Row (Hidden by default) *@
+                <div id="groupRow" style="margin-bottom: 15px; display:none;">
+                    <label style="font-weight:bold; width: 160px; display:inline-block;">Select Group:</label>
+                    @Html.DropDownList("Forward_To_Group", (SelectList)ViewBag.GroupList, "Select Group", new { @class = "forward-select", @style = "width:300px; padding:5px;" })
+                </div>
+
+                @* Hidden field to hold the final selected Pno or Gid for the Controller *@
+                <input type="hidden" name="Forward_To" id="final_forward_to" required />
+
+                @* Added hidden field for remarks if your method expects it *@
+                <input type="hidden" name="ForwardedRemarks" value="" />
+                if (Model.status != "C")
                 {
-                    @Html.AntiForgeryToken()
-
-                    @* CHANGE: Name changed from RequestID to id to match Controller parameter *@
-                    <input type="hidden" name="id" value="@Model.RequestID" />
-
-                    <div style="margin-bottom: 15px;">
-                        <label style="font-weight:bold; width: 160px; display:inline-block;">Forward to:</label>
-                        <label><input type="radio" name="FType" value="I" checked /> Individual</label>
-                        <label style="margin-left:15px;"><input type="radio" name="FType" value="G" /> Group</label>
-                        <input type="hidden" name="Forward_To_Type" id="Forward_To_Type" value="I" />
-                    </div>
-
-                    @* Individual Dropdown Row *@
-                    <div id="empRow" style="margin-bottom: 15px;">
-                        <label style="font-weight:bold; width: 160px; display:inline-block;">Select Agent:</label>
-                        @Html.DropDownList("Forward_To_Agent", (SelectList)ViewBag.EmployeeList, "Select Employee", new { @class = "forward-select", @style = "width:300px; padding:5px;" })
-                    </div>
-
-                    @* Group Dropdown Row (Hidden by default) *@
-                    <div id="groupRow" style="margin-bottom: 15px; display:none;">
-                        <label style="font-weight:bold; width: 160px; display:inline-block;">Select Group:</label>
-                        @Html.DropDownList("Forward_To_Group", (SelectList)ViewBag.GroupList, "Select Group", new { @class = "forward-select", @style = "width:300px; padding:5px;" })
-                    </div>
-
-                    @* Hidden field to hold the final selected Pno or Gid for the Controller *@
-                    <input type="hidden" name="Forward_To" id="final_forward_to" required />
-
-                    @* Added hidden field for remarks if your method expects it *@
-                    <input type="hidden" name="ForwardedRemarks" value="" />
-
                     <div style="text-align: right; border-top: 1px dotted #ccc; padding-top: 15px;">
                         <button type="submit" class="setup-btn-green">FORWARD</button>
                         <button type="button" onclick="submitOwnership()" class="setup-btn-green" style="margin-left:10px;">TAKE OWNERSHIP</button>
                     </div>
                 }
-            </div>
+            }
         </div>
-    </div>
+        @if (Model.status != "C" && Model.status != "R")
+        {
+            <div class="form-section-header">
+                Resolve Service Request
+            </div>
+            <div class="details-box" style="padding: 20px; border: 1px solid #004e92;">
+                @using (Html.BeginForm("ResolveRequest", "ViewAllRequests", FormMethod.Post, new { id = "resolveForm" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.RequestID" />
 
-    @section scripts {
-        <script>
-            $(document).ready(function () {
-                // Handle Radio Button Change
-                $('input[name="FType"]').change(function () {
-                    const val = $(this).val();
-                    $('#Forward_To_Type').val(val); // Sync hidden type field
+                    <div class="details-row">
+                        <div class="details-label">* Actual Problem Area</div>
+                        <div class="details-content">
+                            <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="ActualPArea" value="Hardware" /> Hardware</label>
+                            <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="ActualPArea" value="Software" /> Software</label>
+                            <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="ActualPArea" value="Internet" /> Internet</label>
+                            <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="ActualPArea" value="Network" /> Network</label>
+                            <label style="font-weight:normal;"><input type="checkbox" name="ActualPArea" value="Other" /> Other</label>
+                        </div>
+                    </div>
 
-                    if (val === "G") {
-                        $('#empRow').hide();
-                        $('#groupRow').fadeIn();
-                    } else {
-                        $('#groupRow').hide();
-                        $('#empRow').fadeIn();
-                    }
-                    updateFinalValue();
-                });
-
-                // Update hidden ID when dropdowns change
-                $('.forward-select').change(function() {
-                    updateFinalValue();
-                });
-
-                function updateFinalValue() {
-                    const type = $('input[name="FType"]:checked').val();
-                    const selectedVal = (type === "I") ? $('#Forward_To_Agent').val() : $('#Forward_To_Group').val();
-                    $('#final_forward_to').val(selectedVal);
+                    <div style="text-align: right; border-top: 1px dotted #ccc; padding-top: 15px; margin-top:10px;">
+                        <button type="submit" class="setup-btn-green" style="background:#004e92; border-color:#004e92;">
+                            RESOLVE REQUEST
+                        </button>
+                    </div>
                 }
+            </div>
+        }
+    </div>
+</div>
 
-                // Set initial value for Forward_To in case page loads with selection
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            // 1. Handle Radio Button Change (Individual vs Group)
+            $('input[name="FType"]').change(function () {
+                const val = $(this).val();
+                $('#Forward_To_Type').val(val);
+
+                if (val === "G") {
+                    $('#empRow').hide();
+                    $('#groupRow').fadeIn();
+                } else {
+                    $('#groupRow').hide();
+                    $('#empRow').fadeIn();
+                }
                 updateFinalValue();
             });
 
-            function submitOwnership() {
-                var form = document.getElementById('forwardForm');
-                form.action = '@Url.Action("TakeOwnership", "ViewAllRequests")';
-                form.submit();
+            // 2. Update hidden ID when dropdowns change
+            $('.forward-select').change(function() {
+                updateFinalValue();
+            });
+
+            function updateFinalValue() {
+                const type = $('input[name="FType"]:checked').val();
+                const selectedVal = (type === "I") ? $('#Forward_To_Agent').val() : $('#Forward_To_Group').val();
+                $('#final_forward_to').val(selectedVal);
             }
-        </script>
-    }
+
+            // 3. VALIDATION: Forward Form
+            $('#forwardForm').on('submit', function (e) {
+                // If we are currently on the "Forward" action (not Take Ownership)
+                if ($(this).attr('action').indexOf('ForwardRequest') > -1) {
+                    if (!$('#final_forward_to').val()) {
+                        e.preventDefault();
+                        // Call the global toast from _Layout
+                        showGlobalToast("Please select an Agent or Group to forward this request.", "error");
+                    }
+                }
+            });
+
+            // 4. VALIDATION: Resolve Form
+            $('#resolveForm').on('submit', function (e) {
+                if ($('input[name="ActualPArea"]:checked').length === 0) {
+                    e.preventDefault();
+                    showGlobalToast("Please select at least one Actual Problem Area.", "error");
+                }
+            });
+
+            updateFinalValue();
+        });
+
+        // 5. Take Ownership Action
+        function submitOwnership() {
+            var form = document.getElementById('forwardForm');
+            // Change action and submit
+            form.action = '@Url.Action("TakeOwnership", "ViewAllRequests")';
+            form.submit();
+        }
+    </script>
+}

@@ -16,22 +16,32 @@ namespace SRM.Controllers
         {
             var vm = new ManageGroupVM();
 
-            // 1. Populate Programs Dropdown
-            vm.ProgramList = db.Programs.Select(p => new SelectListItem
-            {
-                Text = p.Program_Name,
-                Value = p.Program_Name
-            }).ToList();
+            // --- NEW: Get the Global Filter from Session ---
+            int? globalProgramId = Session["AgentProgramId"] as int?;
 
-            // 2. Populate agents Dropdown
-            vm.AgentList = db.agent.Select(a => new SelectListItem
-            {
-                Text = a.Pno + " - " + a.Name,
-                Value = a.Pno
-            }).ToList();
+            // 1. Populate Programs Dropdown 
+            // (If filtered, you might only want to show the selected program in the "Add New" dropdown)
+            vm.ProgramList = db.Programs
+                .Where(p => !globalProgramId.HasValue || p.Program_Id == globalProgramId)
+                .Select(p => new SelectListItem
+                {
+                    Text = p.Program_Name,
+                    Value = p.Program_Name // Note: Usually Value should be p.Program_Id.ToString()
+        }).ToList();
 
-            // 3. Fetch existing groups
-            var groupData = db.groups.ToList();
+            // 2. Populate agents Dropdown (Filtered by Global Program)
+            vm.AgentList = db.agent
+                .Where(a => !globalProgramId.HasValue || a.ProgramId == globalProgramId)
+                .Select(a => new SelectListItem
+                {
+                    Text = a.Pno + " - " + a.Name,
+                    Value = a.Pno
+                }).ToList();
+
+            // 3. Fetch existing groups (Filtered by Global Program)
+            var groupData = db.groups
+                .Where(g => !globalProgramId.HasValue || g.program_id == globalProgramId)
+                .ToList();
 
             vm.ExistingGroups = groupData.Select(g => new ManageGroupVM
             {

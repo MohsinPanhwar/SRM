@@ -72,12 +72,29 @@
             @foreach (var item in Model.RequestList)
             {
                 <tr>
-                    <td>
-                        <a href="@Url.Action("Details", "ViewAllRequests", new { id = item.RequestID })"
-                           style="color:#2e7d57; font-weight:bold;">
-                            @item.RequestID
-                        </a>
-                    </td>                    <td>@item.ReqSummary</td>
+                    <td style="text-align:left; padding-left: 15px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <a href="@Url.Action("Details", new { id = item.RequestID })"
+                               style="color: #2e7d57; font-weight: bold; font-size: 1.05em;">
+                                @item.RequestID
+                            </a>
+                            @if (item.Priority == 1)
+                            {
+                                <div style="display: flex; align-items: center; justify-content: center;
+                        background-color: #ff0000; color: white;
+                        width: 20px; height: 20px; border-radius: 50%;
+                        font-weight: bold; font-size: 14px; flex-shrink: 0;"
+                                     title="Critical Priority!">
+                                    !
+                                </div>
+                            }
+                            else
+                            {
+                                <div style="width: 20px;"></div>
+                            }
+                        </div>
+                    </td>
+                    <td>@item.ReqSummary</td>
                     <td>@item.RequestDate.Value.ToString("dd-MMM-yyyy hh:mm tt")</td>
                     <td>@(string.IsNullOrEmpty(item.Forward_To) ? "---" : item.Forward_To)</td>
                     <td>@item.Location</td>
@@ -106,3 +123,18 @@
         </tbody>
     </table>
 </div>
+@section scripts {
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                // This calls the GLOBAL function in your _Layout
+                showGlobalToast("Request ID " + text + " copied to clipboard!", "success");
+            });
+        }
+
+        $(document).ready(function() {
+            // If the user arrived here with 0 results, the Layout toast will
+            // already handle the TempData["Error"] from the controller.
+        });
+    </script>
+}

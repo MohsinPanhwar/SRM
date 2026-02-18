@@ -137,7 +137,10 @@ namespace SRM.Controllers
         {
             try
             {
-                // 1. Update Employee Contact Info (Syncing changes made on the form)
+                // 1. Get Program ID from Session (Set by Switcher for SuperAdmin or Login for Agents)
+                int? sessionProgramId = Session["AgentProgramId"] as int?;
+
+                // 2. Update Employee Contact Info (Syncing changes made on the form)
                 var existingEmp = _db.EmployeeProfiles.FirstOrDefault(e => e.Pno == model.Pno);
                 if (existingEmp != null)
                 {
@@ -145,18 +148,21 @@ namespace SRM.Controllers
                     existingEmp.mobileno = model.mobileno;
                     existingEmp.roomno = model.roomno;
                     existingEmp.Location = model.Location;
-                    existingEmp.ip_address = model.ip_address; // Added to capture IP
-                                                               // Note: _db.Entry(existingEmp).State = EntityState.Modified; // If using EF Core/Standard
+                    existingEmp.ip_address = model.ip_address;
                 }
 
-                // 2. Create the New Service Request
+                // 3. Create the New Service Request
                 var newRequest = new Request_Master
                 {
                     RequestDate = DateTime.Now,
-                    RequestLogBy = "ADMIN", // Replace with actual logged-in user ID
+                    RequestLogBy = Session["AgentPno"]?.ToString() ?? "ADMIN",
                     RequestFor = model.Pno,
-                    Priority = MapPriority(Priority), // Helper to convert "Critical" to 1, etc.
-                    parea = Area != null ? string.Join(", ", Area) : "Other", // Combines checkboxes
+
+                    // --- CRITICAL CHANGE: Assign the Program ID from Session ---
+                    program_id = sessionProgramId,
+
+                    Priority = MapPriority(Priority),
+                    parea = Area != null ? string.Join(", ", Area) : "Other",
                     status = "Q", // Default status: Queue
                     ReqSummary = Summary,
                     ReqDetails = Details,
@@ -167,10 +173,10 @@ namespace SRM.Controllers
 
                 _db.Request_Master.Add(newRequest);
 
-                // 3. Save Everything to DB
+                // 4. Save Everything to DB
                 await _db.SaveChangesAsync();
 
-                TempData["Success"] = $"Request #{newRequest.RequestID} logged successfully!";
+                TempData["Success"] = $"Request #{newRequest.RequestID} logged successfully for Program ID: {sessionProgramId}!";
                 return RedirectToAction("ViewAllRequests", "ViewAllRequests");
             }
             catch (Exception ex)

@@ -16,12 +16,13 @@ namespace SRM.Controllers
         // GET: ViewAllRequests
         public async Task<ActionResult> ViewAllRequests(string searchBy, string searchText, DateTime? fromDate, DateTime? toDate, string statusFilter)
         {
-            // 1. Initialize ViewModel with Defaults
+            // 1. Get the Global Filter from Session set by the Layout Switcher
+            int? globalProgramId = Session["AgentProgramId"] as int?;
+
+            // 2. Initialize ViewModel with Defaults
             var vm = new AllRequestsViewModel
             {
-                // Default to last 365 days if no date is picked
                 FromDate = fromDate ?? DateTime.Now.AddDays(-365),
-                // Default to today (+1 day buffer to include all of today's timestamps)
                 ToDate = toDate ?? DateTime.Now.Date,
                 StatusFilter = statusFilter ?? "All",
                 SearchText = searchText
@@ -29,20 +30,25 @@ namespace SRM.Controllers
 
             var query = _db.Request_Master.AsQueryable();
 
-            // 2. Apply Date Filtering Logic
-            // We use the start of the FromDate and the very end of the ToDate
+            // 3. APPLY GLOBAL PROGRAM FILTER
+            // If a specific program is selected, restrict all data to that program
+            if (globalProgramId.HasValue)
+            {
+                query = query.Where(r => r.program_id == globalProgramId);
+            }
+
+            // 4. Apply Date Filtering Logic
             DateTime startDate = vm.FromDate.Date;
             DateTime endDate = vm.ToDate.Date.AddDays(1).AddTicks(-1);
-
             query = query.Where(r => r.RequestDate >= startDate && r.RequestDate <= endDate);
 
-            // 3. Status Filtering
+            // 5. Status Filtering
             if (vm.StatusFilter != "All")
             {
                 query = query.Where(r => r.status == vm.StatusFilter);
             }
 
-            // 4. Text Search Logic
+            // 6. Text Search Logic
             if (!string.IsNullOrEmpty(searchText))
             {
                 if (searchBy == "RequestID")
@@ -58,17 +64,21 @@ namespace SRM.Controllers
                 }
             }
 
-            // 5. Execute search and assign to the list
+            // 7. Execute search and assign to the list
             vm.RequestList = query.OrderByDescending(r => r.RequestID).ToList();
 
-            // 6. Summary Statistics (Calculated for the sidebar)
-            vm.QueueCount = _db.Request_Master.Count(r => r.status == "Q");
-            vm.ForwardedCount = _db.Request_Master.Count(r => r.status == "F");
-            vm.ResolvedCount = _db.Request_Master.Count(r => r.status == "R");
-            vm.ClosedCount = _db.Request_Master.Count(r => r.status == "C");
+            // 8. Summary Statistics (Filtered by Global Program)
+            // We apply the program filter to the counts so the Sidebar cards match the Table
+            var statsQuery = _db.Request_Master.AsQueryable();
+            if (globalProgramId.HasValue)
+            {
+                statsQuery = statsQuery.Where(r => r.program_id == globalProgramId);
+            }
 
-            // TotalCount is NOT assigned here to avoid the CS0200 error. 
-            // Your Model already handles this or calculates it automatically.
+            vm.QueueCount = statsQuery.Count(r => r.status == "Q");
+            vm.ForwardedCount = statsQuery.Count(r => r.status == "F");
+            vm.ResolvedCount = statsQuery.Count(r => r.status == "R");
+            vm.ClosedCount = statsQuery.Count(r => r.status == "C");
 
             return View("~/Views/ServiceRequest/ViewAllRequests.cshtml", vm);
         }
@@ -78,9 +88,24 @@ namespace SRM.Controllers
             var request = _db.Request_Master.FirstOrDefault(r => r.RequestID == id);
             if (request == null) return HttpNotFound();
 
-            // Populate dropdowns for the "Forwarding" section
-            ViewBag.EmployeeList = new SelectList(_db.agent.ToList(), "Pno", "Name");
-            ViewBag.GroupList = new SelectList(_db.groups.ToList(), "gid", "gname");
+            // 1. Get the Global Filter from Session
+            int? globalProgramId = Session["AgentProgramId"] as int?;
+
+            // 2. Filter the Employee List (Agents) by the selected program
+            var filteredAgents = _db.agent
+                .Where(a => !globalProgramId.HasValue || a.ProgramId == globalProgramId)
+                .OrderBy(a => a.Name)
+                .ToList();
+
+            // 3. Filter the Group List by the selected program
+            var filteredGroups = _db.groups
+                .Where(g => !globalProgramId.HasValue || g.program_id == globalProgramId)
+                .OrderBy(g => g.gname)
+                .ToList();
+
+            // 4. Assign to ViewBag for the dropdowns in the View
+            ViewBag.EmployeeList = new SelectList(filteredAgents, "Pno", "Name");
+            ViewBag.GroupList = new SelectList(filteredGroups, "gid", "gname");
 
             return View("~/Views/ServiceRequest/Details.cshtml", request);
         }
@@ -92,25 +117,28 @@ namespace SRM.Controllers
             var req = _db.Request_Master.Find(id);
             if (req == null) return HttpNotFound();
 
-            string senderPno = "ADMIN";
+            string senderName = Session["AgentName"]?.ToString() ?? "Unknown User";
+            string senderPno = Session["AgentPno"]?.ToString() ?? "SYSTEM";
             string targetName = Forward_To;
 
             if (Forward_To_Type == "I")
             {
                 var targetEmp = _db.agent.FirstOrDefault(e => e.Pno == Forward_To);
-                targetName = targetEmp != null ? targetEmp.Name : Forward_To;
+                targetName = targetEmp?.Name ?? Forward_To;
             }
             else if (Forward_To_Type == "G")
             {
                 if (int.TryParse(Forward_To, out int gid))
                 {
                     var targetGroup = _db.groups.FirstOrDefault(g => g.gid == gid);
-                    targetName = targetGroup != null ? targetGroup.gname : "Group " + Forward_To;
+                    targetName = targetGroup?.gname ?? "Group " + Forward_To;
                 }
             }
 
             string timestamp = DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt");
-            string newEntry = $"<div class='log-entry'>{timestamp} forward to {targetName} by {senderPno}</div>";
+            string newEntry = $"<div class='log-entry' style='border-left:3px solid #3498db; padding-left:10px; margin-bottom:5px;'>" +
+                              $"{timestamp} forwarded to <strong>{targetName}</strong> by <strong>{senderName}</strong>" +
+                              $"</div>";
 
             req.Forward_By = senderPno;
             req.Forward_To = Forward_To;
@@ -118,7 +146,6 @@ namespace SRM.Controllers
             req.ForwardedDate = DateTime.Now;
             req.ForwardedRemarks = ForwardedRemarks;
             req.status = "F";
-
             req.ReqDetails = (req.ReqDetails ?? "") + newEntry;
 
             await _db.SaveChangesAsync();
@@ -126,35 +153,30 @@ namespace SRM.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken] // Added for security since it's a POST
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult> TakeOwnership(int id)
         {
             var req = _db.Request_Master.Find(id);
             if (req == null) return HttpNotFound();
 
-            // Replace this with your session-based user or actual login name
-            string currentUser = "SAJJAD ALI SHAH";
+            string agentName = Session["AgentName"]?.ToString() ?? "Unknown Agent";
+            string agentPno = Session["AgentPno"]?.ToString() ?? "";
+
             string timestamp = DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt");
+            string logEntry = $"<div class='log-entry' style='background:#f0fff4; border-left:3px solid #2e7d57; padding:5px; margin-top:5px;'>" +
+                              $"{timestamp} ,ownership taken by {agentName}</div>";
 
-            // Create the log entry to show in the Communication Log box
-            string newLogEntry = $@"<div class='log-entry' style='border-left: 4px solid #2e7d57; background: #f0fff4; padding: 10px; margin-top: 10px;'>
-                                <strong>{timestamp} - OWNERSHIP TAKEN</strong> by {currentUser}
-                             </div>";
+            req.ownership = agentPno;
+            req.status = "O";
+            req.ReqDetails = (req.ReqDetails ?? "") + logEntry;
 
-            // Update the database fields
-            req.status = "F"; // Typically 'F' (Forwarded/In Progress) or 'O' (Owned)
-            req.Forward_To = currentUser;
-            req.Forward_To_Type = "I";
-            req.ForwardedDate = DateTime.Now;
-
-            // Append to the HTML communication log
-            req.ReqDetails = (req.ReqDetails ?? "") + newLogEntry;
-
+            _db.Configuration.ValidateOnSaveEnabled = false;
             await _db.SaveChangesAsync();
+            _db.Configuration.ValidateOnSaveEnabled = true;
 
-            // Redirect back to see the updated log and status
             return RedirectToAction("Details", new { id = id });
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> CloseRequest(int id, string ClosingRemarks)
@@ -162,28 +184,77 @@ namespace SRM.Controllers
             var req = _db.Request_Master.Find(id);
             if (req == null) return HttpNotFound();
 
-            // Replace with actual user context if available (e.g., User.Identity.Name)
-            string currentUser = "ADMIN";
             string timestamp = DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt");
+            string agentName = Session["AgentName"]?.ToString() ?? "Admin";
 
-            // Format the closing entry for the Communication Log
-            string closeEntry = $@"<div class='log-entry' style='border-left: 4px solid #d9534f; background: #fff5f5; padding: 10px; margin-top: 10px;'>
-                            <strong>{timestamp} - REQUEST CLOSED</strong> by {currentUser}<br/>
-                            <strong>Resolution:</strong> {ClosingRemarks}
-                          </div>";
+            string log = $"<div class='log-entry' style='background:#fff5f5; color:red; border-left:3px solid red; padding:5px;'>{timestamp} CLOSED by {agentName}. Remarks: {ClosingRemarks}</div>";
 
-            // Update DB fields
             req.status = "C";
-            req.ReqDetails = (req.ReqDetails ?? "") + closeEntry;
+            req.ReqDetails = (req.ReqDetails ?? "") + log;
 
-            // If your table has specific closing columns, update them here:
-            // req.ClosedDate = DateTime.Now;
-
+            _db.Configuration.ValidateOnSaveEnabled = false;
             await _db.SaveChangesAsync();
+            _db.Configuration.ValidateOnSaveEnabled = true;
 
-            // Redirect back to details to see the closed status
+            return RedirectToAction("ViewAllRequests");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> ResolveRequest(int id, string ActualPArea)
+        {
+            var req = _db.Request_Master.Find(id);
+            if (req == null) return HttpNotFound();
+
+            if (string.IsNullOrEmpty(ActualPArea)) return RedirectToAction("Details", new { id = id });
+
+            string resolverName = Session["AgentName"]?.ToString() ?? "Unknown Agent";
+            string resolverPno = Session["AgentPno"]?.ToString() ?? "";
+
+            string timestamp = DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt");
+            string logEntry = $"<div class='log-entry' style='background:#e6f7ff; border-left:3px solid #1890ff; padding:5px; margin-top:5px;'>" +
+                              $"{timestamp} ,resolved by {resolverName}. <strong>Actual Problem Area: {ActualPArea}</strong></div>";
+
+            req.status = "R";
+            req.ActualPArea = ActualPArea;
+            req.ReqResolveDate = DateTime.Now;
+            req.ReqResolveBy = resolverPno;
+            req.ReqDetails = (req.ReqDetails ?? "") + logEntry;
+
+            _db.Configuration.ValidateOnSaveEnabled = false;
+            await _db.SaveChangesAsync();
+            _db.Configuration.ValidateOnSaveEnabled = true;
+
             return RedirectToAction("Details", new { id = id });
         }
-    }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> ReopenRequest(int id)
+        {
+            var req = _db.Request_Master.Find(id);
+            if (req == null) return HttpNotFound();
+
+            string agentName = Session["AgentName"]?.ToString() ?? "Admin";
+            string timestamp = DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt");
+
+            string logEntry = $"<div class='log-entry' style='background:#fff0f6; border-left:3px solid #eb2f96; padding:5px; margin-top:5px;'>" +
+                              $"{timestamp} ,REOPENED by {agentName}</div>";
+
+            req.status = "F";
+            req.ReqDetails = (req.ReqDetails ?? "") + logEntry;
+
+            _db.Configuration.ValidateOnSaveEnabled = false;
+            await _db.SaveChangesAsync();
+            _db.Configuration.ValidateOnSaveEnabled = true;
+
+            return RedirectToAction("Details", new { id = id });
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) _db.Dispose();
+            base.Dispose(disposing);
+        }
+    }
 }

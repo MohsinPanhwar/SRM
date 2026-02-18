@@ -1,24 +1,5 @@
 ﻿@model SRM.Models.ViewModels.ManageGroupVM
 
-@{ ViewBag.Title = "Manage Groups";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-
-    var privs = Session["UserPrivileges"] as SRM.Models.Privilege;
-    bool isAdmin = false;
-
-    // 1. Check Super Admin Status
-    if (Session["IsAdmin"] != null)
-    {
-        var adminSession = Session["IsAdmin"].ToString();
-        isAdmin = (adminSession == "Y" || adminSession == "True" || adminSession == "true");
-    }
-
-    // 2. STRICTOR CHECK: Check the specific Privilege table flag
-    // We check if privs is not null AND the boolean column 'CanAddEditGroups' is true
-    bool hasGroupPrivilege = isAdmin || (privs != null && privs.CanAddEditGroups == true);
-
-}
-
 <div id="notification-area"></div>
 
 

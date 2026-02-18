@@ -39,31 +39,14 @@
         </tbody>
     </table>
 </div>
-
 @section scripts {
     <script>
         $(document).ready(function () {
             // 1. Initial Page Fade-In
             $('.crud-table').animate({ opacity: 1 }, 800);
 
-            function showToast(message, type = 'success') {
-                const id = 'toast-' + Date.now();
-                const icon = type === 'success' ? '✅' : '🗑️';
-                const toastClass = type === 'success' ? 'toast-success' : 'toast-error';
-
-                const html = `
-        <div id="${id}" class="toast-msg ${toastClass}">
-            <span style="margin-right:10px;">${icon}</span>
-            <span>${message}</span>
-        </div>`;
-
-                $('#notification-area').append(html);
-
-                // Slide and Fade In
-                $(`#${id}`).show().animate({ left: "0px", opacity: "1" }, 300)
-                    .delay(1000)
-                    .fadeOut(function () { $(this).remove(); });
-            }
+            // Note: Local showToast function REMOVED.
+            // We now call showGlobalToast() which is defined in _Layout.cshtml.
 
             // ADD PROGRAM
             $('#addProgramBtn').click(function () {
@@ -71,7 +54,7 @@
                 var name = $('#newProgramName').val().trim();
 
                 if (!name) {
-                    showToast('Please enter a program name', 'error');
+                    showGlobalToast('Please enter a program name', 'error');
                     return;
                 }
 
@@ -99,14 +82,13 @@
                         });
 
                         $('#newProgramName').val('');
-                        showToast("Program added successfully!");
+                        showGlobalToast("Program added successfully!", "success");
                     } else {
-                        showToast(res.message, 'error');
+                        showGlobalToast(res.message, 'error');
                     }
                 });
             });
 
-            // DELETE PROGRAM
             // DELETE PROGRAM
             $(document).on('click', '.delete-btn', function () {
                 var row = $(this).closest('tr');
@@ -115,28 +97,45 @@
                 if (confirm('Are you sure you want to delete this program?')) {
                     $.post('@Url.Action("Delete", "Program")', { id: id }, function (res) {
                         if (res.success) {
-                            // Highlight red then fade out
                             row.css('background-color', '#fff5f5').fadeOut(600, function() {
                                 $(this).remove();
-                                // TRIGGER RED NOTIFICATION FOR DELETE
-                                showToast("Program deleted successfully.", "error");
+                                showGlobalToast("Program deleted successfully.", "error");
                             });
                         } else {
-                            showToast(res.message, 'error');
+                            showGlobalToast(res.message, 'error');
                         }
                     });
                 }
             });
 
-            // EDIT PROGRAM
+            // SAVE EDIT
+            $(document).on('click', '.save-btn', function () {
+                var row = $(this).closest('tr');
+                var id = row.data('id');
+                var newName = row.find('.edit-input').val().trim();
+
+                if (!newName) {
+                    showGlobalToast('Name cannot be empty', 'error');
+                    return;
+                }
+
+                $.post('@Url.Action("Edit", "Program")', { id: id, programName: newName }, function (res) {
+                    if (res.success) {
+                        revertRow(row, res.program.Program_Name);
+                        showGlobalToast("Changes saved successfully!", "success");
+                    } else {
+                        showGlobalToast(res.message, 'error');
+                    }
+                });
+            });
+
+            // (Edit and Cancel functions remain the same...)
             $(document).on('click', '.edit-btn', function () {
                 var row = $(this).closest('tr');
                 var nameCell = row.find('.program-name');
                 var oldName = nameCell.text().trim();
                 row.data('old-name', oldName);
-
                 nameCell.html(`<input type="text" class="edit-input" value="${oldName}" style="width:100%; padding:5px; border:1px solid #4CAF50;" />`);
-
                 row.find('.actions-cell').html(`
                     <div class="icon-btn-group">
                         <button class="save-btn" title="Save">💾</button>
@@ -145,27 +144,6 @@
                 `);
             });
 
-            // SAVE EDIT
-            $(document).on('click', '.save-btn', function () {
-                var row = $(this).closest('tr');
-                var id = row.data('id');
-                var newName = row.find('.edit-input').val().trim();
-                var oldName = row.data('old-name');
-
-                if (!newName) { showToast('Name cannot be empty', 'error'); return; }
-
-                $.post('@Url.Action("Edit", "Program")', { id: id, programName: newName }, function (res) {
-                    if (res.success) {
-                        revertRow(row, res.program.Program_Name);
-                        showToast("Changes saved!");
-                        row.css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
-                    } else {
-                        showToast(res.message, 'error');
-                    }
-                });
-            });
-
-            // CANCEL EDIT
             $(document).on('click', '.cancel-btn', function () {
                 var row = $(this).closest('tr');
                 revertRow(row, row.data('old-name'));
@@ -182,4 +160,4 @@
             }
         });
     </script>
-}
+}}
