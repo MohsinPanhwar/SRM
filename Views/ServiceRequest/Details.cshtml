@@ -210,6 +210,33 @@
 
 @section scripts {
     <script>
+        // 0. INTERCEPT GLOBAL PROGRAM SWITCHER (Details Page Context)
+$(document).on('change', 'select[name="programId"]', function (e) {
+    // Stop the Layout's auto-submit
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    var selectedProg = $(this).val();
+
+    // Perform an AJAX call to update the Session without reloading the Details page
+    $.ajax({
+        url: '/Admin/SetGlobalProgram', // Ensure this matches your Controller/Action path
+        type: 'POST',
+        data: {
+            programId: selectedProg,
+            // Capture token if available in the layout form
+            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+        },
+        success: function () {
+            // Once session is updated, redirect to the ViewAllRequests page
+            window.location.href = '@Url.Action("ViewAllRequests", "ViewAllRequests")';
+        },
+        error: function () {
+            // If AJAX fails, fallback to standard form submission
+            $(e.target).closest('form').submit();
+        }
+    });
+});
         $(document).ready(function () {
             // 1. Handle Radio Button Change (Individual vs Group)
             $('input[name="FType"]').change(function () {

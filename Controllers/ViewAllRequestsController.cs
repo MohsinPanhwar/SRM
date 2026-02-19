@@ -85,25 +85,39 @@ namespace SRM.Controllers
 
         public ActionResult Details(int id)
         {
+            // 1. Fetch the request
             var request = _db.Request_Master.FirstOrDefault(r => r.RequestID == id);
             if (request == null) return HttpNotFound();
 
-            // 1. Get the Global Filter from Session
+            // 2. Get the Global Filter from Session and Admin status
             int? globalProgramId = Session["AgentProgramId"] as int?;
+            bool isSuperAdmin = Session["IsAdmin"]?.ToString() == "Y";
 
-            // 2. Filter the Employee List (Agents) by the selected program
+            // --- SECURITY & CONTEXT CHECK ---
+            // If a specific program is selected (not "All") and the user isn't a SuperAdmin,
+            // ensure the request actually belongs to that program.
+            if (globalProgramId.HasValue && !isSuperAdmin)
+            {
+                if (request.program_id != globalProgramId)
+                {
+                    TempData["Error"] = "Context Mismatch: This request belongs to a different program.";
+                    return RedirectToAction("ViewAllRequests");
+                }
+            }
+
+            // 3. Filter the Employee List (Agents) by the selected program
             var filteredAgents = _db.agent
                 .Where(a => !globalProgramId.HasValue || a.ProgramId == globalProgramId)
                 .OrderBy(a => a.Name)
                 .ToList();
 
-            // 3. Filter the Group List by the selected program
+            // 4. Filter the Group List by the selected program
             var filteredGroups = _db.groups
                 .Where(g => !globalProgramId.HasValue || g.program_id == globalProgramId)
                 .OrderBy(g => g.gname)
                 .ToList();
 
-            // 4. Assign to ViewBag for the dropdowns in the View
+            // 5. Assign to ViewBag for the dropdowns
             ViewBag.EmployeeList = new SelectList(filteredAgents, "Pno", "Name");
             ViewBag.GroupList = new SelectList(filteredGroups, "gid", "gname");
 

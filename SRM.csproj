@@ -161,6 +161,7 @@
     <Compile Include="Helpers\PrivilegeHelper.cs" />
     <Compile Include="Models\Agent.cs" />
     <Compile Include="Models\AllRequestViewModel.cs" />
+    <Compile Include="Models\NewIncoming.cs" />
     <Compile Include="Models\EmployeeProfile.cs" />
     <Compile Include="Models\Groups.cs" />
     <Compile Include="Models\Locations.cs" />
@@ -181,8 +182,6 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\Images\Banner.jpeg" />
     <Content Include="Content\Images\BG.jpg" />
-    <Content Include="Content\Images\image.jpg" />
-    <Content Include="Content\Images\PIA_SRM.jpg" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />

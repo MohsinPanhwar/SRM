@@ -20,6 +20,7 @@ namespace SRM.Data
 
         public System.Data.Entity.DbSet<SRM.Models.EmployeeProfile> EmployeeProfiles { get; set; }
         public System.Data.Entity.DbSet<SRM.Models.Request_Master> Request_Master { get; set; }
+        public System.Data.Entity.DbSet<SRM.Models.NewIncoming> NewIncomings { get; set; }
 
 
     }

@@ -5,130 +5,106 @@
     ViewBag.Title = "Home";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+
 <style>
-    .user-info-section {
-        padding: 1.5rem 1rem;
-        max-width: 90%;
+    .welcome-container {
+        padding: 4rem 2rem;
+        max-width: 800px;
         margin: 0 auto;
-    }
-
-    .user-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-        max-width: 60%;
-        margin: 0 auto;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-        .user-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
-        }
-
-    .card-header {
-        background: linear-gradient(135deg, #56e678 0%, #2e7d57 50%, #56e678 100%);
-        color: white;
-        padding: 2rem 1.5rem;
         text-align: center;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
+
+    .welcome-text {
+        margin-bottom: 0.5rem;
+    }
+
 
     .welcome-emoji {
-        font-size: 3.2rem;
+        font-size: 3rem;
         display: block;
-        margin-bottom: 0.8rem;
+        margin-bottom: 1rem;
+        /* Changed 'infinite' to '1' and added 'forwards' */
+        animation: wave 1.5s ease-in-out 1 forwards;
+        transform-origin: 70% 70%;
     }
 
-    .card-header h2 {
+    @@keyframes wave {
+        0% {transform: rotate(0deg)} 
+        20% {transform: rotate(7deg)} 
+        40% {transform: rotate(-4deg)} 
+        60% {transform: rotate(7deg)}
+        80% {transform: rotate(-2deg)}
+        100% {transform: rotate(0deg)}
+
+    }
+    .user-name {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1a1a1a;
         margin: 0;
-        font-size: 1.9rem;
+        letter-spacing: -0.5px;
+    }
+
+    .admin-badge {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 4px 12px;
+        background: #ecfdf5;
+        color: #059669;
+        border-radius: 20px;
+        font-size: 0.9rem;
         font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
 
-    .card-body {
-        padding: 1.8rem 1.5rem;
-    }
-
-    .info-row {
+    .action-links {
+        margin-top: 2.5rem;
         display: flex;
-        justify-content: space-between;
-        padding: 1rem 20px;
-        border-bottom: 1px solid #f0f0f0;
-    }
-
-        .info-row:last-child {
-            border-bottom: none;
-        }
-
-    .info-label {
-        font-weight: 500;
-        color: #555;
-        min-width: 110px;
-    }
-
-    .info-value {
-        font-weight: 500;
-        color: #222;
-        text-align: right;
-        flex: 1;
-    }
-
-        .info-value a {
-            color: #4f46e5;
-            text-decoration: none;
-        }
-
-            .info-value a:hover {
-                text-decoration: underline;
-            }
-
-    .operator {
-        color: #666;
-        font-size: 0.92em;
-    }
-
-    .card-footer {
-        padding: 1.2rem 1.5rem;
-        background: #f8f9fa;
-        text-align: center;
-        display: flex;
-        gap: 1rem;
         justify-content: center;
-        flex-wrap: wrap;
+        gap: 2rem;
     }
 
-    .btn {
-        padding: 0.65rem 1.4rem;
-        border-radius: 8px;
-        font-weight: 500;
+    .minimal-link {
+        color: #6366f1;
         text-decoration: none;
-        transition: all 0.2s;
+        font-weight: 500;
+        font-size: 1.1rem;
+        position: relative;
+        transition: color 0.2s;
     }
 
-    .btn-primary {
-        background: #4f46e5;
-        color: white;
-        border: none;
+    .minimal-link:after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        display: block;
+        margin-top: 5px;
+        right: 0;
+        background: #6366f1;
+        transition: width 0.3s ease;
+        -webkit-transition: width 0.3s ease;
     }
 
-        .btn-primary:hover {
-            background: #4338ca;
-        }
-
-    .btn-outline {
-        border: 1px solid #cbd5e1;
-        color: #334155;
-        background: white;
+    .minimal-link:hover:after {
+        width: 100%;
+        left: 0;
+        background: #4338ca;
     }
 
-        .btn-outline:hover {
-            background: #f1f5f9;
-            border-color: #94a3b8;
-        }
+    .minimal-link:hover {
+        color: #4338ca;
+    }
+
+    .banner-image {
+        width: 100%;
+        max-height: 300px;
+        object-fit: cover;
+    }
 </style>
 
-<!-- Banner -->
 <section class="home-banner">
     <img src="~/Content/images/Banner.jpeg"
          alt="Welcome banner"
@@ -136,24 +112,20 @@
          class="banner-image">
 </section>
 
-<!-- User Info Card -->
-<section class="user-info-section">
-    <div class="user-card">
-        
-        <div class="card-header">
-            <span class="welcome-emoji">👋</span>
-            <h2>Welcome, @Model.Name!</h2>
-            @if (PrivilegeHelper.IsSuperAdmin())
-            {
-                <h1>Super Admin</h1>
-            }
-            </div>
-            </div>
+<section class="welcome-container">
+    <span class="welcome-emoji">👋</span>
 
-            <!-- Optional: quick actions -->
-            <div class="card-footer">
-                <a href="#" class="setup-btn-green">View Profile</a>
-                <a href="#" class="btn btn-outline">Settings</a>
-            </div>
-        </div>
+    <div class="welcome-text">
+        <h2 class="user-name">Welcome, @Model.Name</h2>
+
+        @if (PrivilegeHelper.IsSuperAdmin())
+        {
+            <span class="admin-badge">Super Admin</span>
+        }
+    </div>
+
+    <div class="action-links">
+        <a href="#" class="minimal-link">View Profile</a>
+        <a href="#" class="minimal-link">Settings</a>
+    </div>
 </section>

@@ -2,6 +2,9 @@
 @{
     ViewBag.Title = "Log New Request";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // This ID comes from the Program_Setup table via the Controller
+    var workshopId = ViewBag.WorkshopId?.ToString() ?? "0";
 }
 
 <div class="setup-container">
@@ -9,7 +12,7 @@
         <h2>Log New Request</h2>
     </div>
 
-    @* Search Section *@
+    @* 1. Search Section *@
     <div class="action-row" style="margin-bottom:20px; padding:15px; background:#fdfdfd; border:1px solid #eee; border-radius:4px;">
         @using (Html.BeginForm("LogNewRequest", "NewRequest", FormMethod.Get, new { @class = "form-inline" }))
         {
@@ -23,50 +26,119 @@
     {
         @Html.AntiForgeryToken()
 
+        @* 2. User Information Section (All fields restored) *@
         <div class="form-section-header">User Information</div>
         <div class="grid-container">
             <div class="grid-label">Reported P-no</div>
             <div class="grid-input">
                 @Html.TextBoxFor(m => m.Pno, new { @readonly = "readonly", @style = "background:#eee;" })
             </div>
-            <div class="grid-label">Employee Name</div> <div class="grid-input">
+
+            <div class="grid-label">Employee Name</div>
+            <div class="grid-input">
                 @Html.TextBoxFor(m => m.emp_name, new { @readonly = "readonly", @style = "background:#eee;" })
             </div>
+
             <div class="grid-label">Designation</div>
             <div class="grid-input">
                 @Html.TextBoxFor(m => m.Emp_designation, new { @readonly = "readonly", @style = "background:#eee;" })
             </div>
+
             <div class="grid-label">Department</div>
             <div class="grid-input">
                 @Html.TextBoxFor(m => m.ATTENDANCE_DEPT_CODE, new { @readonly = "readonly", @style = "background:#eee;" })
             </div>
+
             <div class="grid-label">Email</div>
             <div class="grid-input">
                 @Html.TextBoxFor(m => m.Email)
             </div>
+
             <div class="grid-label">Mobile No</div>
             <div class="grid-input" style="display:flex; gap:5px;">
                 @Html.TextBoxFor(m => m.mobileno, new { @style = "width:68%;" })
                 @Html.TextBoxFor(m => m.MobileOperator, new { @readonly = "readonly", @style = "width:28%; background:#eee;" })
             </div>
+
             <div class="grid-label">Phone-Ext</div>
             <div class="grid-input">
                 @Html.TextBoxFor(m => m.Office_ext)
             </div>
+
             <div class="grid-label">Room No *</div>
             <div class="grid-input">
                 @Html.TextBoxFor(m => m.roomno, new { @required = "required" })
             </div>
+
             <div class="grid-label">IP-Address</div>
             <div class="grid-input">
                 @Html.TextBoxFor(m => m.ip_address)
             </div>
+
             <div class="grid-label">Location *</div>
             <div class="grid-input">
                 @Html.TextBoxFor(m => m.Location, new { @required = "required" })
             </div>
         </div>
 
+        @* 3. Workshop Section (Styled to match other sections) *@
+        <div id="workshopSection" style="display: none;">
+            <div class="form-section-header">Workshop Service Memo Details</div>
+            <div class="details-box">
+                <div class="details-row">
+                    <div class="details-label">Product / Model</div>
+                    <div class="details-content" style="display:flex; gap:10px;">
+                        <input type="text" name="ProductName" placeholder="Product Name" class="form-control" />
+                        <input type="text" name="ModelName" placeholder="Model" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="details-row">
+                    <div class="details-label">Serial No / LNIATA</div>
+                    <div class="details-content" style="display:flex; gap:10px;">
+                        <input type="text" name="SerialNo" id="SerialNo" placeholder="Serial No" class="form-control" />
+                        <input type="text" name="LNIATA" placeholder="LNIATA" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="details-row">
+                    <div class="details-label">Specs (RAM/HDD)</div>
+                    <div class="details-content" style="display:flex; gap:10px;">
+                        <input type="text" name="Ram" placeholder="RAM" class="form-control" />
+                        <input type="text" name="HDD" placeholder="HDD" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="details-row">
+                    <div class="details-label">Fault Description</div>
+                    <div class="details-content">
+                        <textarea name="Fault" class="form-control" rows="2" style="width:100%"></textarea>
+                    </div>
+                </div>
+
+                <div class="details-row">
+                    <div class="details-label">Diagnosed By</div>
+                    <div class="details-content">
+                        <textarea name="Diagnosed" class="form-control" rows="2" style="width:100%"></textarea>
+                    </div>
+                </div>
+
+                <div class="details-row">
+                    <div class="details-label">Dates (In / Out)</div>
+                    <div class="details-content" style="display:flex; gap:10px;">
+                        <div style="flex:1">
+                            <small>Date In:</small>
+                            <input type="date" name="DateIn" class="form-control" />
+                        </div>
+                        <div style="flex:1">
+                            <small>Date Out:</small>
+                            <input type="date" name="DateOut" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @* 4. General Request Details *@
         <div class="form-section-header">Service Request Details</div>
         <div class="details-box">
             <div class="details-row">
@@ -106,23 +178,47 @@
             </div>
         </div>
 
-        <div class="action-footer" style="margin-top: 20px; text-align: right; padding: 20px; border-top: 1px solid #eee;">
+        <div class="action-footer" style="margin-top: 20px; text-align: right; padding: 20px;">
             <button type="submit" class="setup-btn-green" style="min-width:200px;">💾 Save Request</button>
         </div>
     }
 </div>
+
 @section scripts {
     <script>
         $(function () {
-            // 1. VALIDATION BEFORE SAVE (Local to this page)
+            var workshopId = '@workshopId';
+
+            // Targeted selection of your global switcher based on the HTML you provided
+            var $globalSwitcher = $('#globalProgramForm select[name="programId"]');
+
+            function checkWorkshopVisibility() {
+                var currentVal = $globalSwitcher.val();
+
+                // Show if the global switcher matches the Workshop ID
+                if (currentVal == workshopId && workshopId != "0") {
+                    $('#workshopSection').show();
+                } else {
+                    $('#workshopSection').hide();
+                }
+            }
+
+            // Since the global switcher reloads the page on change,
+            // running this on page load is sufficient.
+            checkWorkshopVisibility();
+
+            // Validation logic
             $('#logRequestForm').on('submit', function (e) {
-                // If no checkbox is checked
+                if ($('#workshopSection').is(':visible')) {
+                    if ($('#SerialNo').val().trim() === "") {
+                        e.preventDefault();
+                        alert("Serial Number is required for Workshop items.");
+                    }
+                }
+
                 if ($('input[name="Area"]:checked').length === 0) {
                     e.preventDefault();
-
-                    // We call the function that is now globally available
-                    // Use 'showGlobalToast' if that's what you named it in _Layout
-                    showGlobalToast("Please select at least one Problem Area.", "error");
+                    alert("Please select at least one Problem Area.");
                 }
             });
         });
