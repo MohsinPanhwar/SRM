@@ -196,7 +196,7 @@
     <script>
 $(function () {
     // 1. TOAST HELPER
-    function showToast(message, type = 'success') {
+    function showGlobalToast(message, type = 'success') {
         const id = 'toast-' + Date.now();
         const icon = type === 'success' ? '✅' : '❌';
         const toastClass = type === 'success' ? 'toast-success' : 'toast-error';
@@ -250,7 +250,7 @@ $(function () {
                 resetForm(true, res.data.RoleName, res.data.program_Id);
                 $("html, body").animate({ scrollTop: 0 }, "fast");
             } else {
-                showToast(res.message || "Error loading role", "error");
+                showGlobalToast(res.message || "Error loading role", "error");
             }
         });
     });
@@ -262,7 +262,7 @@ $(function () {
         const programId = $('#programSelect').val() || null;
 
         if (!name) {
-            showToast("Please enter a role name.", "error");
+            showGlobalToast("Please enter a role name.", "error");
             return;
         }
 
@@ -273,7 +273,7 @@ $(function () {
 
         $.post('@Url.Action("SaveRole", "Role")', formData, function (res) {
             if (res.success) {
-                showToast(id == "0" ? "Role created!" : "Role updated!");
+                showGlobalToast(id == "0" ? "Role created!" : "Role updated!");
 
                 if (id == "0") {
                     // NEW ROLE: Append a fresh row to the table
@@ -306,7 +306,7 @@ $(function () {
 
                 resetForm(false); // Clear the form back to "Add" mode
             } else {
-                showToast(res.message, "error");
+                showGlobalToast(res.message, "error");
             }
         });
     });
@@ -318,9 +318,9 @@ $(function () {
             $.post('@Url.Action("DeleteRole", "Role")', { id: row.data('id') }, function (res) {
                 if (res.success) {
                     row.fadeOut(600, function() { $(this).remove(); });
-                    showToast("Role deleted", "error");
+                    showGlobalToast("Role deleted", "error");
                 } else {
-                    showToast(res.message, "error");
+                    showGlobalToast(res.message, "error");
                 }
             });
         }

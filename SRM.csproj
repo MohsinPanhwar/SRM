@@ -142,9 +142,11 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\ActivityController.cs" />
     <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\GroupController.cs" />
+    <Compile Include="Controllers\HardwareDispatchController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\LocationController.cs" />
@@ -152,6 +154,7 @@
     <Compile Include="Controllers\NewRequestController.cs" />
     <Compile Include="Controllers\ProgramController.cs" />
     <Compile Include="Controllers\RoleController.cs" />
+    <Compile Include="Controllers\SendController.cs" />
     <Compile Include="Controllers\UserController.cs" />
     <Compile Include="Controllers\ViewAllRequestsController.cs" />
     <Compile Include="Data\AppDbContext.cs" />
@@ -221,13 +224,21 @@
     <Content Include="Views\ServiceRequest\ViewAllRequests.cshtml" />
     <Content Include="Views\ServiceRequest\Details.cshtml" />
     <Content Include="Views\SystemSetup\MessageBoard.cshtml" />
+    <Content Include="Views\ServiceRequest\SendSMS.cshtml" />
+    <Content Include="Views\ServiceRequest\SendPassword.cshtml" />
+    <Content Include="Views\Hardware Dispatch\HardwareDispatch.cshtml" />
+    <Content Include="Views\ActivityManagement\LogNewActivity.cshtml" />
+    <Content Include="Views\ActivityManagement\ShowAllActivities.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Views\Activity\" />
     <Folder Include="Views\Admin\" />
     <Folder Include="Views\Base\" />
+    <Folder Include="Views\HardwareDispatch\" />
     <Folder Include="Views\MessageBoard\" />
     <Folder Include="Views\NewRequest\" />
+    <Folder Include="Views\Send\" />
     <Folder Include="Views\User\" />
     <Folder Include="Views\ViewAllRequests\" />
   </ItemGroup>

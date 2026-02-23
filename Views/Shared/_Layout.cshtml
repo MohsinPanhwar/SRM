@@ -56,11 +56,11 @@
                         }
                         @if (PrivilegeHelper.HasPrivilege("SMS"))
                         {
-                            <a href="@Url.Action("SendSmsToEngineer", "ServiceRequest")">Send SMS</a>
+                            <a href="@Url.Action("SendSMS", "Send")">Send SMS</a>
                         }
                         @if (PrivilegeHelper.HasPrivilege("SPWD"))
                         {
-                            <a href="@Url.Action("SendPasswordToAgents", "ServiceRequest")">Send Password to Agents</a>
+                            <a href="@Url.Action("SendPassword", "Send")">Send Password to Agents</a>
                         }
                     </div>
                 </div>
@@ -68,7 +68,7 @@
                 <div class="dropdown">
                     <button class="dropbtn">Hardware Dispatch</button>
                     <div class="dropdown-content">
-                        <a href="@Url.Action("LogNewHardware", "HardwareDispatch")">Log New Hardware Dispatch</a>
+                        <a href="@Url.Action("NewHardware", "HardwareDispatch")">Log New Hardware Dispatch</a>
                     </div>
                 </div>
 
@@ -94,7 +94,7 @@
                     <button class="dropbtn">Activity Management</button>
                     <div class="dropdown-content">
                         <a href="@Url.Action("LogNewActivity", "Activity")">Log new Activity</a>
-                        <a href="@Url.Action("Index", "Activity")">Show All Activities</a>
+                        <a href="@Url.Action("ShowAllActivities", "Activity")">Show All Activities</a>
                     </div>
                 </div>
 
@@ -183,7 +183,7 @@
 
         // Slide In -> Wait -> Slide Out
         $toast.show().animate({ left: "0px", opacity: "1" }, 300)
-              .delay(5000) // 5 seconds is much more user-friendly
+              .delay(1000) // 5 seconds is much more user-friendly
               .animate({ left: "-40px", opacity: "0" }, 300, function () {
                   $(this).remove();
               });

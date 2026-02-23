@@ -38,7 +38,7 @@ namespace SRM.Models
         public string Fault { get; set; }
 
         public string Diagnosed { get; set; }
-
+        [Column("DataBackup")]
         public string DataBackup { get; set; }
 
         public string WarrantyDateOut { get; set; }

@@ -163,6 +163,12 @@ namespace SRM.Controllers
             req.ReqDetails = (req.ReqDetails ?? "") + newEntry;
 
             await _db.SaveChangesAsync();
+            var workshopEntry = _db.NewIncomings.FirstOrDefault(n => n.RequestID == id);
+            if (workshopEntry != null)
+            {
+                workshopEntry.assignto = targetName;
+                await _db.SaveChangesAsync();
+            }
             return RedirectToAction("Details", new { id = id });
         }
 
@@ -200,7 +206,6 @@ namespace SRM.Controllers
 
             string timestamp = DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt");
             string agentName = Session["AgentName"]?.ToString() ?? "Admin";
-
             string log = $"<div class='log-entry' style='background:#fff5f5; color:red; border-left:3px solid red; padding:5px;'>{timestamp} CLOSED by {agentName}. Remarks: {ClosingRemarks}</div>";
 
             req.status = "C";
@@ -210,9 +215,16 @@ namespace SRM.Controllers
             await _db.SaveChangesAsync();
             _db.Configuration.ValidateOnSaveEnabled = true;
 
+            // Update DateOut in NewIncoming if this is a workshop request
+            var workshopEntry = _db.NewIncomings.FirstOrDefault(n => n.RequestID == id);
+            if (workshopEntry != null)
+            {
+                workshopEntry.WarrantyDateOut = DateTime.Now.ToString("dd/MM/yyyy");
+                await _db.SaveChangesAsync();
+            }
+
             return RedirectToAction("ViewAllRequests");
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> ResolveRequest(int id, string ActualPArea)

@@ -585,7 +585,7 @@ footer {
 /* Global Notification Container */
 #notification-area {
     position: fixed;
-    top: 20px;
+    top: 50px;
     left: 20px; /* Moved to Left */
     z-index: 9999;
     display: flex;
@@ -865,3 +865,4 @@ input:checked + .slider {
     input:checked + .slider:before {
         transform: translateX(22px);
     }
+

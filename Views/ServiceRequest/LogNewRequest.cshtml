@@ -5,6 +5,7 @@
 
     // This ID comes from the Program_Setup table via the Controller
     var workshopId = ViewBag.WorkshopId?.ToString() ?? "0";
+
 }
 
 <div class="setup-container">
@@ -60,7 +61,7 @@
                 @Html.TextBoxFor(m => m.MobileOperator, new { @readonly = "readonly", @style = "width:28%; background:#eee;" })
             </div>
 
-            <div class="grid-label">Phone-Ext</div>
+            <div class="grid-label">Office-Ext</div>
             <div class="grid-input">
                 @Html.TextBoxFor(m => m.Office_ext)
             </div>
@@ -92,7 +93,6 @@
                         <input type="text" name="ModelName" placeholder="Model" class="form-control" />
                     </div>
                 </div>
-
                 <div class="details-row">
                     <div class="details-label">Serial No / LNIATA</div>
                     <div class="details-content" style="display:flex; gap:10px;">
@@ -100,7 +100,6 @@
                         <input type="text" name="LNIATA" placeholder="LNIATA" class="form-control" />
                     </div>
                 </div>
-
                 <div class="details-row">
                     <div class="details-label">Specs (RAM/HDD)</div>
                     <div class="details-content" style="display:flex; gap:10px;">
@@ -108,32 +107,22 @@
                         <input type="text" name="HDD" placeholder="HDD" class="form-control" />
                     </div>
                 </div>
-
-                <div class="details-row">
-                    <div class="details-label">Fault Description</div>
+                <div class="details-row" style="align-items:center;">
+                    <div class="details-label" style="align-self:center;">Fault Description</div>
                     <div class="details-content">
-                        <textarea name="Fault" class="form-control" rows="2" style="width:100%"></textarea>
+                    <textarea name="Fault" class="form-control" rows="2" style="width:100%; padding-top:10px; line-height:2.5;"></textarea>
                     </div>
                 </div>
-
-                <div class="details-row">
-                    <div class="details-label">Diagnosed By</div>
+                <div class="details-row" style="align-items:center;">
+                    <div class="details-label" style="align-self:center;">Status</div>
                     <div class="details-content">
-                        <textarea name="Diagnosed" class="form-control" rows="2" style="width:100%"></textarea>
+                        <textarea name="Status" class="form-control" rows="2" style="width: 100%; padding-top: 10px; line-height: 2.5;"></textarea>
                     </div>
                 </div>
-
-                <div class="details-row">
-                    <div class="details-label">Dates (In / Out)</div>
+                <div class="details-row" style="align-items:center;">
+                    <div class="details-label" style="align-self:center;">Data Back up</div>
                     <div class="details-content" style="display:flex; gap:10px;">
-                        <div style="flex:1">
-                            <small>Date In:</small>
-                            <input type="date" name="DateIn" class="form-control" />
-                        </div>
-                        <div style="flex:1">
-                            <small>Date Out:</small>
-                            <input type="date" name="DateOut" class="form-control" />
-                        </div>
+                        <textarea name="DataBackup" class="form-control" rows="2" style="width: 100%; padding-top: 10px; line-height: 2.5;"></textarea>
                     </div>
                 </div>
             </div>
@@ -187,40 +176,35 @@
 @section scripts {
     <script>
         $(function () {
-            var workshopId = '@workshopId';
+    var workshopId = '@workshopId';
+    var currentProgramId = '@(ViewBag.CurrentProgramId ?? "0")'; // Add this
 
-            // Targeted selection of your global switcher based on the HTML you provided
-            var $globalSwitcher = $('#globalProgramForm select[name="programId"]');
+    var $globalSwitcher = $('#globalProgramForm select[name="programId"]');
 
-            function checkWorkshopVisibility() {
-                var currentVal = $globalSwitcher.val();
+    function checkWorkshopVisibility() {
+        var currentVal = $globalSwitcher.length > 0 ? $globalSwitcher.val() : currentProgramId;
 
-                // Show if the global switcher matches the Workshop ID
-                if (currentVal == workshopId && workshopId != "0") {
-                    $('#workshopSection').show();
-                } else {
-                    $('#workshopSection').hide();
-                }
+        if (currentVal == workshopId && workshopId != "0") {
+            $('#workshopSection').show();
+        } else {
+            $('#workshopSection').hide();
+        }
+    }
+
+    checkWorkshopVisibility();
+
+    $('#logRequestForm').on('submit', function (e) {
+        if ($('#workshopSection').is(':visible')) {
+            if ($('#SerialNo').val().trim() === "") {
+                e.preventDefault();
+                alert("Serial Number is required for Workshop items.");
             }
-
-            // Since the global switcher reloads the page on change,
-            // running this on page load is sufficient.
-            checkWorkshopVisibility();
-
-            // Validation logic
-            $('#logRequestForm').on('submit', function (e) {
-                if ($('#workshopSection').is(':visible')) {
-                    if ($('#SerialNo').val().trim() === "") {
-                        e.preventDefault();
-                        alert("Serial Number is required for Workshop items.");
-                    }
-                }
-
-                if ($('input[name="Area"]:checked').length === 0) {
-                    e.preventDefault();
-                    alert("Please select at least one Problem Area.");
-                }
-            });
-        });
+        }
+        if ($('input[name="Area"]:checked').length === 0) {
+            e.preventDefault();
+            alert("Please select at least one Problem Area.");
+        }
+    });
+});
     </script>
 }

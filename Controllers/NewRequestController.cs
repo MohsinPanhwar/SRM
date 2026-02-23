@@ -43,6 +43,7 @@ namespace SRM.Controllers
             // Assign the list to ViewBag. Use the ID from session as the selected value
             ViewBag.ProgramList = new SelectList(programsQuery, "Program_Id", "Program_Name", globalProgramId);
 
+            ViewBag.CurrentProgramId = globalProgramId?.ToString() ?? "0";
             // 5. Initial Load (Empty search)
             if (string.IsNullOrEmpty(searchPno))
             {
@@ -169,6 +170,8 @@ namespace SRM.Controllers
                         existingEmp.roomno = model.roomno;
                         existingEmp.Location = model.Location;
                         existingEmp.ip_address = model.ip_address;
+                        existingEmp.Office_ext = model.Office_ext;
+
                         // EF tracks these changes automatically
                     }
 
@@ -210,13 +213,14 @@ namespace SRM.Controllers
                             HDD = form["HDD"],
                             LNIATA = form["LNIATA"],
                             Fault = form["Fault"],
-                            Diagnosed = form["Diagnosed"],
-                            DateIn = form["DateIn"],
-
+                            Diagnosed = "null",
+                            DateIn = DateTime.Now.ToString("yyyy-MM-dd"),
                             time_stamp = DateTime.Now,
-                            Status = "In-Workshop",
+                            Status = form["Status"],
                             userip = Request.UserHostAddress,
+                            DataBackup = form["DataBackup"],
                             userdetails = Request.Browser.Browser + " " + Request.Browser.Version
+
                         };
 
                         _db.NewIncomings.Add(workshopEntry);

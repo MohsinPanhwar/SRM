@@ -48,7 +48,7 @@
     <script>
         $(function() {
             // 1. TOAST HELPER
-            function showToast(message, type = 'success') {
+            function showGlobalToast(message, type = 'success') {
                 const id = 'toast-' + Date.now();
                 const icon = type === 'success' ? '✅' : '🗑️';
                 const toastClass = type === 'success' ? 'toast-success' : 'toast-error';
@@ -74,19 +74,19 @@
             $('#addLocationBtn').click(function() {
                 var name = $('#newLocationName').val().trim();
                 if (!name) {
-                    showToast('Enter work area name', 'error');
+                    showGlobalToast('Enter work area name', 'error');
                     return;
                 }
 
                 // Controller will grab Program_id from Session["AgentProgramId"]
                 $.post('@Url.Action("SaveLocation", "Location")', { Location_Description: name }, function(res) {
                     if (res.success) {
-                        showToast("Work Area added!", "success");
+                        showGlobalToast("Work Area added!", "success");
 
                         // Reloading is best practice here to ensure the list matches the current Switcher context
                         setTimeout(function() { location.reload(); }, 800);
                     } else {
-                        showToast(res.message, "error");
+                        showGlobalToast(res.message, "error");
                     }
                 });
             });
@@ -98,17 +98,17 @@
                 var newName = row.find('.edit-input').val().trim();
 
                 if (!newName) {
-                    showToast('Name cannot be empty', 'error');
+                    showGlobalToast('Name cannot be empty', 'error');
                     return;
                 }
 
                 $.post('@Url.Action("SaveLocation", "Location")', { sno: id, Location_Description: newName }, function(res) {
                     if (res.success) {
                         revertRow(row, res.location.Location_Description);
-                        showToast("Work Area updated!");
+                        showGlobalToast("Work Area updated!");
                         row.css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
                     } else {
-                        showToast(res.message, "error");
+                        showGlobalToast(res.message, "error");
                     }
                 });
             });
@@ -121,10 +121,10 @@
                         if (res.success) {
                             row.css('background-color', '#fff5f5').fadeOut(600, function () {
                                 $(this).remove();
-                                showToast("Work Area deleted", "error");
+                                showGlobalToast("Work Area deleted", "error");
                             });
                         } else {
-                            showToast(res.message, "error");
+                            showGlobalToast(res.message, "error");
                         }
                     });
                 }

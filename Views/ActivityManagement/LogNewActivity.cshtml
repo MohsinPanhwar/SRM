@@ -1,0 +1,115 @@
+﻿@{
+    ViewBag.Title = "Log New Activity";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Log New Activity</h2>
+    </div>
+
+    <div class="form-section-header">Activity Details</div>
+    <div class="details-box">
+
+        <div class="details-row">
+            <div class="details-label">Activity</div>
+            <div class="details-content" style="display:flex; align-items:center; gap:8px;">
+                <select name="ActivityId" id="ActivityId" class="form-control" style="max-width:300px;">
+                    <option value="">-- Select Activity --</option>
+                </select>
+                <button type="button" id="btnAddActivity" style="background:#2e7d57; color:white; border:none; border-radius:50%; width:28px; height:28px; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
+            </div>
+        </div>
+
+        <div class="details-row">
+            <div class="details-label">Location</div>
+            <div class="details-content" style="display:flex; align-items:center; gap:8px;">
+                <select name="Location" id="Location" class="form-control" style="max-width:300px;">
+                    <option value="">-- Select Location --</option>
+                </select>
+                <button type="button" id="btnAddLocation" style="background:#2e7d57; color:white; border:none; border-radius:50%; width:28px; height:28px; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
+            </div>
+        </div>
+
+        <div class="details-row">
+            <div class="details-label">Report By</div>
+            <div class="details-content"><strong>@Session["AgentPno"]</strong></div>
+            <div class="details-label">Report Date</div>
+            <div class="details-content"><strong>@DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt")</strong></div>
+        </div>
+
+        <div class="details-row">
+            <div class="details-label">Start Date</div>
+            <div class="details-content">
+                <input type="date" name="StartDate" class="form-control" style="max-width:200px;" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="details-label">Start Time</div>
+            <div class="details-content" style="display:flex; align-items:center; gap:5px;">
+                <select name="StartHour" class="form-control" style="width:70px;">
+                    @for (int i = 1; i <= 12; i++)
+                    {
+                        <option value="@i">@i</option>
+                    }
+                </select>
+                <span>:</span>
+                <select name="StartMinute" class="form-control" style="width:70px;">
+                    @for (int i = 0; i < 60; i += 5)
+                    {
+                        <option value="@i.ToString("D2")">@i.ToString("D2")</option>
+                    }
+                </select>
+                <select name="StartAmPm" class="form-control" style="width:70px;">
+                    <option>AM</option>
+                    <option>PM</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="details-row">
+            <div class="details-label">End Date</div>
+            <div class="details-content">
+                <input type="date" name="EndDate" class="form-control" style="max-width:200px;" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="details-label">End Time</div>
+            <div class="details-content" style="display:flex; align-items:center; gap:5px;">
+                <select name="EndHour" class="form-control" style="width:70px;">
+                    @for (int i = 1; i <= 12; i++)
+                    {
+                        <option value="@i">@i</option>
+                    }
+                </select>
+                <span>:</span>
+                <select name="EndMinute" class="form-control" style="width:70px;">
+                    @for (int i = 0; i < 60; i += 5)
+                    {
+                        <option value="@i.ToString("D2")">@i.ToString("D2")</option>
+                    }
+                </select>
+                <select name="EndAmPm" class="form-control" style="width:70px;">
+                    <option>AM</option>
+                    <option>PM</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="details-row" style="align-items:center;">
+            <div class="details-label" style="align-self:center;">Activity Detail</div>
+            <div class="details-content" style="padding: 10px;">
+                <textarea name="ActivityDetail" class="form-control" rows="6" style="width:100%;"></textarea>
+            </div>
+        </div>
+
+        <div class="details-row">
+            <div class="details-label"></div>
+            <div class="details-content" style="display:flex; flex-direction:column; gap:10px; padding:10px;">
+                <label style="font-weight:normal;">
+                    <input type="checkbox" name="CreateServiceRequest" value="true" /> Create service request for this activity
+                </label>
+                <div>
+                    <button type="submit" class="setup-btn-green">📋 Log this activity</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

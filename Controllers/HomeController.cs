@@ -19,17 +19,19 @@ namespace SRM.Controllers
             Response.Cache.SetNoStore();
             Response.Cache.SetExpires(DateTime.UtcNow.AddMinutes(-1));
 
-            // Get logged-in user's Pno from session
             var pno = Session["AgentPno"] as string;
             if (string.IsNullOrEmpty(pno))
                 return RedirectToAction("Login", "Account");
 
-            // Fetch agent info from database
             var agent = _db.agent.FirstOrDefault(a => a.Pno == pno);
             if (agent == null)
                 return HttpNotFound();
 
-            // Pass agent as model to the view
+            // Fetch role name from Role table
+            var roleId = Session["AgentRoleId"] as int?;
+            var role = _db.Role.FirstOrDefault(r => r.Role_Id == roleId);
+            ViewBag.RoleName = role?.Role_Name ?? "User";
+
             return View(agent);
         }
     }

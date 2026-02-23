@@ -52,7 +52,7 @@
     <script>
         $(function () {
             // 1. THE TOAST FUNCTION (Must be defined here to work on this page)
-            function showToast(message, type = 'success') {
+            function showGlobalToast(message, type = 'success') {
                 // Create container if it doesn't exist (failsafe)
                 if ($('#notification-area').length === 0) {
                     $('body').append('<div id="notification-area"></div>');
@@ -87,13 +87,13 @@
                 };
 
                 if (!data.ProgramName || !data.GroupName) {
-                    showToast('Program and Group Name are required', 'error');
+                    showGlobalToast('Program and Group Name are required', 'error');
                     return;
                 }
 
                 $.post('@Url.Action("SaveGroup","Group")', data, function (res) {
                     if (res.success) {
-                        showToast("Group added successfully!", "success");
+                        showGlobalToast("Group added successfully!", "success");
 
                         // Append new row instantly
                         var newRow = `
@@ -116,7 +116,7 @@
 
                         $('#newGroupName').val(''); // Clear input
                     } else {
-                        showToast(res.message, "error");
+                        showGlobalToast(res.message, "error");
                     }
                 });
             });
@@ -138,10 +138,10 @@
                 $.post('@Url.Action("SaveGroup","Group")', data, function (res) {
                     if (res.success) {
                         revertRow(row, pName, gName, mName);
-                        showToast("Changes saved!", "success");
+                        showGlobalToast("Changes saved!", "success");
                         row.css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
                     } else {
-                        showToast(res.message, "error");
+                        showGlobalToast(res.message, "error");
                     }
                 });
             });
@@ -154,10 +154,10 @@
                         if (res.success) {
                             row.css('background-color', '#fff5f5').fadeOut(600, function () {
                                 $(this).remove();
-                                showToast("Group deleted", "error");
+                                showGlobalToast("Group deleted", "error");
                             });
                         } else {
-                            showToast(res.message, "error");
+                            showGlobalToast(res.message, "error");
                         }
                     });
                 }

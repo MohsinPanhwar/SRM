@@ -30,14 +30,31 @@
     }
 
     @@keyframes wave {
-        0% {transform: rotate(0deg)} 
-        20% {transform: rotate(7deg)} 
-        40% {transform: rotate(-4deg)} 
-        60% {transform: rotate(7deg)}
-        80% {transform: rotate(-2deg)}
-        100% {transform: rotate(0deg)}
+        0% {
+            transform: rotate(0deg)
+        }
 
+        20% {
+            transform: rotate(7deg)
+        }
+
+        40% {
+            transform: rotate(-4deg)
+        }
+
+        60% {
+            transform: rotate(7deg)
+        }
+
+        80% {
+            transform: rotate(-2deg)
+        }
+
+        100% {
+            transform: rotate(0deg)
+        }
     }
+
     .user-name {
         font-size: 2.5rem;
         font-weight: 700;
@@ -75,28 +92,28 @@
         transition: color 0.2s;
     }
 
-    .minimal-link:after {
-        content: '';
-        position: absolute;
-        width: 0;
-        height: 2px;
-        display: block;
-        margin-top: 5px;
-        right: 0;
-        background: #6366f1;
-        transition: width 0.3s ease;
-        -webkit-transition: width 0.3s ease;
-    }
+        .minimal-link:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            display: block;
+            margin-top: 5px;
+            right: 0;
+            background: #6366f1;
+            transition: width 0.3s ease;
+            -webkit-transition: width 0.3s ease;
+        }
 
-    .minimal-link:hover:after {
-        width: 100%;
-        left: 0;
-        background: #4338ca;
-    }
+        .minimal-link:hover:after {
+            width: 100%;
+            left: 0;
+            background: #4338ca;
+        }
 
-    .minimal-link:hover {
-        color: #4338ca;
-    }
+        .minimal-link:hover {
+            color: #4338ca;
+        }
 
     .banner-image {
         width: 100%;
@@ -122,10 +139,12 @@
         {
             <span class="admin-badge">Super Admin</span>
         }
+        else
+        {
+            <span class="admin-badge">@ViewBag.RoleName</span>
+        }
+
     </div>
 
-    <div class="action-links">
-        <a href="#" class="minimal-link">View Profile</a>
-        <a href="#" class="minimal-link">Settings</a>
-    </div>
+
 </section>

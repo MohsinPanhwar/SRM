@@ -5,6 +5,7 @@
     ViewBag.Title = "Manage User";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+
 <style>
     .fade-in-up {
         animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -24,21 +25,32 @@
 
     .role-group-header {
         transition: background-color 0.3s ease;
-        background-color: #f0f0f0;
+        background-color: #f8f9fa;
         font-weight: bold;
-        padding: 10px !important;
     }
+
+        .role-group-header td {
+            padding: 12px !important;
+            border-bottom: 2px solid #dee2e6;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+    
 </style>
 
 <div class="setup-container fade-in-up">
     <div class="section-header">
         <h2>Manage Users</h2>
         <div class="action-row">
-            <input type="text" id="PnoSearch" class="form-control" placeholder="Enter PNo (e.g. 10254)" />
+            <input type="text" id="PnoSearch" class="form-control" placeholder="Enter PNo (e.g. 51959)" />
             <button type="button" id="btnLookup" class="setup-btn-green">🔍 Find Record</button>
             <button type="button" id="btnToggleAction" class="setup-btn-green">Add New User</button>
         </div>
     </div>
+
     <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
         <div style="display:flex; align-items:center; gap:8px;">
             <label class="switch" style="margin:0;">
@@ -48,6 +60,7 @@
             <span style="font-size:0.9rem; font-weight:500;">Show active users only</span>
         </div>
     </div>
+
     <div id="userListSection">
         <table class="crud-table" id="allUsersTable">
             <thead>
@@ -67,11 +80,9 @@
                 }
                 @foreach (var u in Model)
                 {
-                    // Check if we have entered a new Role group
                     if (u.RoleId != currentRoleId)
                     {
                         currentRoleId = u.RoleId ?? 0;
-                        // Find the Role Name from the lookup list
                         var roleDisplayName = rolesSource.FirstOrDefault(r => r.Role_Id == currentRoleId)?.Role_Name ?? "General Users";
 
                         <tr class="role-group-header">
@@ -85,7 +96,11 @@
                     var statusText = (u.Status == "A" || u.Status == "Y") ? "Active" : "Inactive";
 
                     <tr data-pno="@u.Pno">
-                        <td><img src="/images/default.png" width="35" height="35" style="border-radius:50%; border: 1px solid #ddd;" /></td>
+                        <td style="width:60px; text-align:center; vertical-align:middle;">
+                            <img src="https://systemsupport.piac.com.pk/admin/AgentImages/@(u.Pno).jpg"
+                                 width="60" height="60"
+                                 style="border-radius:50%; border: 1px solid #ddd; display:block; margin:auto;"
+                                 onerror="this.outerHTML='<div style=\'width:60px;height:60px;border-radius:50%;background:#white;color:white;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:auto;\'>👤</div>'"                        </td>
                         <td class="td-name-pno"><strong>@u.Name</strong><br /><small class="text-muted">@u.Pno</small></td>
                         <td>
                             <span style="font-size: 0.85rem;">@(u.LastLoginDateTime?.ToString("g") ?? "-")</span><br />
@@ -106,6 +121,7 @@
         </table>
     </div>
 
+    @* Form Section *@
     <div id="userDetailsForm" style="display:none; margin-top: 20px;">
         <form id="manageUserForm">
             @Html.AntiForgeryToken()
@@ -176,7 +192,7 @@
                     <label>Program Name</label>
                     <select id="EditProgramId" name="ProgramId" class="form-control">
                         <option value="">-- Select Program --</option>
-                        @foreach (var p in (List<SelectListItem>)ViewBag.Programs)
+                        @foreach (var p in (List<SelectListItem>)ViewBag.AllPrograms)
                         {
                             <option value="@p.Value">@p.Text</option>
                         }
@@ -205,22 +221,20 @@
         </form>
     </div>
 
+    @* Password Section *@
     <div id="passwordFields" style="display:none; margin-top: 20px; padding: 20px; border: 1px solid #ffeeba; background: #fffaf0; border-radius: 8px;">
         <h4 style="margin-bottom: 15px;">Reset Password</h4>
         <form id="changePassForm">
             @Html.AntiForgeryToken()
             <input type="hidden" name="Pno" id="PasswordResetPno" />
-
             <div class="form-group" style="margin-bottom: 15px;">
                 <label>New Password</label>
                 <input type="password" name="newPassword" placeholder="Enter new password" class="form-control" required />
             </div>
-
             <div class="form-group" style="margin-bottom: 20px;">
                 <label>Confirm Password</label>
                 <input type="password" name="confirmPassword" placeholder="Confirm new password" class="form-control" required />
             </div>
-
             <button type="submit" class="setup-btn-green" style="width: 100%;">Update Password</button>
         </form>
     </div>
@@ -228,176 +242,164 @@
 
 @section scripts {
     <script>
-$(document).ready(function () {
+    $(document).ready(function () {
 
-    function showToast(message, type = 'success') {
-        const id = 'toast-' + Date.now();
-        const icon = type === 'success' ? '✅' : '🗑️';
-        const html = `<div id="${id}" class="toast-msg ${type === 'success' ? 'toast-success' : 'toast-error'}" style="display:none; position:relative; left:-40px; opacity:0;">
-                        <span style="margin-right:10px;">${icon}</span>
-                        <span>${message}</span>
-                      </div>`;
-        if ($('#notification-area').length === 0) $('body').append('<div id="notification-area"></div>');
-        $('#notification-area').append(html);
-        $(`#${id}`).show().animate({ left: "0px", opacity: "1" }, 300).delay(2000).fadeOut(function () { $(this).remove(); });
-    }
+        
 
-    const pendingToast = sessionStorage.getItem("pendingToast");
-    if (pendingToast) {
-        const toastData = JSON.parse(pendingToast);
-        showToast(toastData.message, toastData.type);
-        sessionStorage.removeItem("pendingToast");
-    }
-
-    function toggleView(showForm, isNewUser = false) {
-        if (showForm) {
-            $('#userListSection').hide();
-            $('#userDetailsForm').fadeIn();
-            $('#btnToggleAction').text('Back to List');
-            $('#IsNewUserFlag').val(isNewUser ? "true" : "false");
-            if (isNewUser) {
-                $('#manageUserForm')[0].reset();
-                $('#MainHiddenPno').val($('#PnoSearch').val().trim());
-                $('#typeIndiv').prop('checked', true).trigger('change');
-                $('#passwordFields').hide();
-            }
-        } else {
-            $('#userDetailsForm, #passwordFields').hide();
-            $('#userListSection').fadeIn();
-            $('#btnToggleAction').text('Add New User').removeClass('btn-secondary').addClass('setup-btn-green');
+        const pendingToast = sessionStorage.getItem("pendingToast");
+        if (pendingToast) {
+            const toastData = JSON.parse(pendingToast);
+            showGlobalToast(toastData.message, toastData.type);
+            sessionStorage.removeItem("pendingToast");
         }
-    }
 
-    function updateAdminStatus() {
-        var selectedRoleText = $('#EditRoleId option:selected').text().trim().toLowerCase();
-        $('#HiddenIsAdministrator').val(selectedRoleText.includes('admin') ? 'Y' : 'N');
-    }
-
-    $(document).on('change', '#EditRoleId', updateAdminStatus);
-
-    $('#manageUserForm').submit(function (e) {
-        e.preventDefault();
-        updateAdminStatus();
-
-        const $submitBtn = $(this).find('button[type="submit"]');
-        $submitBtn.prop('disabled', true).text('Processing...');
-
-        $.post('@Url.Action("ManageUser", "User")', $(this).serialize(), function (res) {
-            if (res.success) {
-                const toastData = {
-                    message: $('#IsNewUserFlag').val() === "true" ? "User Created!" : "Changes Saved!",
-                    type: "success"
-                };
-                sessionStorage.setItem("pendingToast", JSON.stringify(toastData));
-                location.reload();
+        function toggleView(showForm, isNewUser = false) {
+            if (showForm) {
+                $('#userListSection').hide();
+                $('#userDetailsForm').fadeIn();
+                $('#btnToggleAction').text('Back to List');
+                $('#IsNewUserFlag').val(isNewUser ? "true" : "false");
+                if (isNewUser) {
+                    $('#manageUserForm')[0].reset();
+                    $('#MainHiddenPno').val($('#PnoSearch').val().trim());
+                    $('#typeIndiv').prop('checked', true).trigger('change');
+                    $('#passwordFields').hide();
+                }
             } else {
-                showToast(res.message, "error");
-                $submitBtn.prop('disabled', false).text('💾 Save Changes');
+                $('#userDetailsForm, #passwordFields').hide();
+                $('#userListSection').fadeIn();
+                $('#btnToggleAction').text('Add New User').removeClass('btn-secondary').addClass('setup-btn-green');
             }
-        });
-    });
-
-    $('#changePassForm').submit(function(e){
-        e.preventDefault();
-        $.post('@Url.Action("ChangePassword", "User")', $(this).serialize(), function(res){
-            if(res.success) {
-                showToast("Password Updated!");
-                $('#passwordFields').slideUp();
-                $('#changePassForm')[0].reset();
-            } else showToast(res.message, "error");
-        });
-    });
-
-    $('#btnToggleAction').click(function () {
-        if ($('#userDetailsForm').is(':visible')) {
-            toggleView(false);
-        } else {
-            var pVal = $('#PnoSearch').val().trim();
-            if (!pVal) { alert("Enter PNo first."); return; }
-            if ($(`tr[data-pno="${pVal}"]`).length > 0) {
-                alert("User already exists.");
-                return;
-            }
-            toggleView(true, true);
         }
-    });
 
-    $(document).on('click', '.btn-delete-user', function() {
-        var pno = $(this).data('pno');
-        if (confirm("Delete user " + pno + "?")) {
-            $.post('@Url.Action("DeleteUser", "User")', { pno: pno }, function(res) {
-                if(res.success) {
-                    sessionStorage.setItem("pendingToast", JSON.stringify({ message: "User Deleted", type: "error" }));
+        function updateAdminStatus() {
+            var selectedRoleText = $('#EditRoleId option:selected').text().trim().toLowerCase();
+            $('#HiddenIsAdministrator').val(selectedRoleText.includes('admin') ? 'Y' : 'N');
+        }
+
+        $(document).on('change', '#EditRoleId', updateAdminStatus);
+
+        $('#manageUserForm').submit(function (e) {
+            e.preventDefault();
+            updateAdminStatus();
+            const $submitBtn = $(this).find('button[type="submit"]');
+            $submitBtn.prop('disabled', true).text('Processing...');
+
+            $.post('@Url.Action("ManageUser", "User")', $(this).serialize(), function (res) {
+                if (res.success) {
+                    sessionStorage.setItem("pendingToast", JSON.stringify({
+                        message: $('#IsNewUserFlag').val() === "true" ? "User Created!" : "Changes Saved!",
+                        type: "success"
+                    }));
                     location.reload();
+                } else {
+                    showGlobalToast(res.message, "error");
+                    $submitBtn.prop('disabled', false).text('💾 Save Changes');
+                }
+            });
+        });
+
+       $('#changePassForm').submit(function(e){
+            e.preventDefault();
+            $.post('@Url.Action("ChangePassword", "User")', $(this).serialize(), function(res){
+                if(res.success) {
+                    showGlobalToast("Password Updated!", "success");  // changed
+                    $('#passwordFields').slideUp();
+                    $('#changePassForm')[0].reset();
+                } else showGlobalToast(res.message, "error");  // changed
+            });
+        });
+
+        $('#btnToggleAction').click(function () {
+            if ($('#userDetailsForm').is(':visible')) {
+                toggleView(false);
+            } else {
+                var pVal = $('#PnoSearch').val().trim();
+                if (!pVal) { alert("Enter PNo first."); return; }
+                if ($(`tr[data-pno="${pVal}"]`).length > 0) {
+                    alert("User already exists in the list.");
+                    return;
+                }
+                toggleView(true, true);
+            }
+        });
+
+        $(document).on('click', '.btn-delete-user', function() {
+            var pno = $(this).data('pno');
+            if (confirm("Permanently delete user " + pno + "?")) {
+                $.post('@Url.Action("DeleteUser", "User")', { pno: pno }, function(res) {
+                    if(res.success) {
+                        sessionStorage.setItem("pendingToast", JSON.stringify({ message: "User Deleted", type: "error" }));
+                        location.reload();
+                    } else alert(res.message);
+                });
+            }
+        });
+
+        $(document).on('change', 'input[name="UserType"]', function () {
+            const isGroup = $('#typeGroup').is(':checked');
+            $('#GroupDropdown').prop('disabled', !isGroup).css('background-color', isGroup ? '#fff' : '#eee');
+        });
+
+        $(document).on('click', '.btn-select-user', function() {
+            $('#PnoSearch').val($(this).data('pno'));
+            $('#btnLookup').trigger('click');
+        });
+
+        $('#btnLookup').click(function () {
+            var pVal = $('#PnoSearch').val().trim();
+            if (!pVal) return;
+            $.get('@Url.Action("GetUserByPno", "User")', { pno: pVal }, function (res) {
+                if (res.success) {
+                    $('#MainHiddenPno, #PasswordResetPno').val(pVal);
+                    $('#EditName').val(res.data.Name);
+                    $('#EditEmail').val(res.data.Email);
+                    $('#EditMobile').val(res.data.Mobile);
+                    $('#MobileOperator').val(res.data.MobileOperator);
+                    $('#EditWorkArea').val(res.data.WorkArea);
+                    $('#EditRoleId').val(res.data.RoleId);
+                    $('#EditProgramId').val(res.data.ProgramId);
+                    $('#HiddenIsAdministrator').val(res.data.IsAdministrator);
+                    if (res.data.UserType === "G") {
+                        $('#typeGroup').prop('checked', true);
+                        $('#GroupDropdown').prop('disabled', false).val(res.data.Gid).css('background-color', '#fff');
+                    } else {
+                        $('#typeIndiv').prop('checked', true);
+                        $('#GroupDropdown').prop('disabled', true).val('').css('background-color', '#eee');
+                    }
+                    if (res.data.Status === "A" || res.data.Status === "Y") $('#statusActive').prop('checked', true);
+                    else $('#statusInactive').prop('checked', true);
+                    toggleView(true, false);
                 } else alert(res.message);
             });
-        }
-    });
-
-    $(document).on('change', 'input[name="UserType"]', function () {
-        const isGroup = $('#typeGroup').is(':checked');
-        $('#GroupDropdown').prop('disabled', !isGroup).css('background-color', isGroup ? '#fff' : '#eee');
-    });
-
-    $(document).on('click', '.btn-select-user', function() {
-        $('#PnoSearch').val($(this).data('pno'));
-        $('#btnLookup').trigger('click');
-    });
-
-    $('#btnLookup').click(function () {
-        var pVal = $('#PnoSearch').val().trim();
-        if (!pVal) return;
-        $.get('@Url.Action("GetUserByPno", "User")', { pno: pVal }, function (res) {
-            if (res.success) {
-                $('#MainHiddenPno, #PasswordResetPno').val(pVal);
-                $('#EditName').val(res.data.Name);
-                $('#EditEmail').val(res.data.Email);
-                $('#EditMobile').val(res.data.Mobile);
-                $('#MobileOperator').val(res.data.MobileOperator);
-                $('#EditWorkArea').val(res.data.WorkArea);
-                $('#EditRoleId').val(res.data.RoleId);
-                $('#EditProgramId').val(res.data.ProgramId);
-                $('#HiddenIsAdministrator').val(res.data.IsAdministrator);
-                if (res.data.UserType === "G") {
-                    $('#typeGroup').prop('checked', true);
-                    $('#GroupDropdown').prop('disabled', false).val(res.data.Gid).css('background-color', '#fff');
-                } else {
-                    $('#typeIndiv').prop('checked', true);
-                    $('#GroupDropdown').prop('disabled', true).val('').css('background-color', '#eee');
-                }
-                if (res.data.Status === "A" || res.data.Status === "Y") $('#statusActive').prop('checked', true);
-                else $('#statusInactive').prop('checked', true);
-                toggleView(true, false);
-            } else alert(res.message);
         });
-    });
 
-    $('#btnShowPass').click(function () { $('#passwordFields').slideToggle(); });
-});
+        $('#btnShowPass').click(function () { $('#passwordFields').slideToggle(); });
+
+        // Filter Logic
         $('#toggleActiveOnly').on('change', function () {
             const activeOnly = $(this).is(':checked');
-            $('#allUsersTableBody tr').each(function () {
-                const $row = $(this);
-                if ($row.hasClass('role-group-header')) return; // skip group headers
+
+            // Filter user rows
+            $('#allUsersTableBody tr').not('.role-group-header').each(function () {
+                const statusText = $(this).find('.td-status').text().trim();
                 if (activeOnly) {
-                    const statusText = $row.find('.td-status').text().trim();
-                    $row.toggle(statusText === 'Active');
+                    $(this).toggle(statusText === 'Active');
                 } else {
-                    $row.show();
+                    $(this).show();
                 }
             });
 
-            // Hide role group headers if all sibling rows are hidden
+            // Handle group headers (hide if no visible children)
             $('#allUsersTableBody tr.role-group-header').each(function () {
                 const $header = $(this);
-                let hasVisible = false;
-                $header.nextUntil('.role-group-header').each(function () {
-                    if ($(this).is(':visible')) hasVisible = true;
-                });
-                $header.toggle(hasVisible);
+                const hasVisibleRows = $header.nextUntil('.role-group-header').filter(':visible').length > 0;
+                $header.toggle(hasVisibleRows);
             });
         });
-        $('#toggleActiveOnly').trigger('change');
 
+        // Initialize Filter
+        $('#toggleActiveOnly').trigger('change');
+    });
     </script>
 }

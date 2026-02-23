@@ -82,7 +82,6 @@ body.login-page {
         border-color: rgba(255, 255, 255, 0.2);
     }
 
-/* ===== LOGIN BUTTON ===== */
 .btn-login {
     width: 100%;
     background-color: #21a257;
@@ -102,6 +101,41 @@ body.login-page {
         background-color: #1b8a49;
     }
 
+    .btn-login:disabled {
+        background-color: #314f35;
+        cursor: not-allowed;
+        opacity: 0.8;
+    }
+
+@keyframes dot-bounce {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.3;
+    }
+
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.btn-login .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+    margin: 0 3px;
+    animation: dot-bounce 1.2s infinite ease-in-out;
+}
+
+    .btn-login .dot:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .btn-login .dot:nth-child(3) {
+        animation-delay: 0.4s;
+    }
 /* ===== FOOTER ===== */
 .auth-footer {
     text-align: center;
@@ -114,3 +148,4 @@ body.login-page {
         font-size: 0.95rem;
         opacity: 0.8;
     }
+
