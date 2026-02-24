@@ -56,9 +56,8 @@
             </div>
 
             <div class="grid-label">Mobile No</div>
-            <div class="grid-input" style="display:flex; gap:5px;">
-                @Html.TextBoxFor(m => m.mobileno, new { @style = "width:68%;" })
-                @Html.TextBoxFor(m => m.MobileOperator, new { @readonly = "readonly", @style = "width:28%; background:#eee;" })
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.mobileno)
             </div>
 
             <div class="grid-label">Office-Ext</div>

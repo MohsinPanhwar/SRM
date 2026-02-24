@@ -8,108 +8,137 @@
         <h2>Log New Activity</h2>
     </div>
 
-    <div class="form-section-header">Activity Details</div>
-    <div class="details-box">
+    @using (Html.BeginForm("LogNewActivity", "Activity", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
 
-        <div class="details-row">
-            <div class="details-label">Activity</div>
-            <div class="details-content" style="display:flex; align-items:center; gap:8px;">
-                <select name="ActivityId" id="ActivityId" class="form-control" style="max-width:300px;">
+        <div class="form-section-header">Activity Details</div>
+        <div class="grid-container">
+
+            @* Row 1: Activity + Location *@
+            <div class="grid-label">Activity</div>
+            <div class="grid-input" style="display:flex; align-items:center; gap:8px;">
+                @* Activity dropdown *@
+                <select name="ActivityId" id="ActivityId" class="form-control" style="flex:1;">
                     <option value="">-- Select Activity --</option>
+                    @foreach (var item in ViewBag.Activities as List<SRM.Models.ActivityCategories>)
+                    {
+                         <option value="@item.cat_id">@item.cat_name</option>
+                    }
                 </select>
-                <button type="button" id="btnAddActivity" style="background:#2e7d57; color:white; border:none; border-radius:50%; width:28px; height:28px; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
+                <a href="@Url.Action("ViewAllCategories", "Activity")" style="text-decoration: none;">
+                    <button type="button" id="btnAddActivity" title="View All Activities"
+                            style=" background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        +
+                    </button>
+                </a>
             </div>
-        </div>
 
-        <div class="details-row">
-            <div class="details-label">Location</div>
-            <div class="details-content" style="display:flex; align-items:center; gap:8px;">
-                <select name="Location" id="Location" class="form-control" style="max-width:300px;">
+            <div class="grid-label">Location</div>
+            <div class="grid-input" style="display:flex; align-items:center; gap:8px;">
+                <select name="Location" id="Location" class="form-control" style="flex:1;">
                     <option value="">-- Select Location --</option>
+                    @foreach (var item in ViewBag.Locations as List<SRM.Models.IncidentLocation>)
+                    {
+                        <option value="@item.LocationCode">@item.LocationName</option>
+                    }
                 </select>
-                <button type="button" id="btnAddLocation" style="background:#2e7d57; color:white; border:none; border-radius:50%; width:28px; height:28px; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
-            </div>
-        </div>
+                <a href="@Url.Action("ViewAllLocations", "Activity")" style="text-decoration: none;">
 
-        <div class="details-row">
-            <div class="details-label">Report By</div>
-            <div class="details-content"><strong>@Session["AgentPno"]</strong></div>
-            <div class="details-label">Report Date</div>
-            <div class="details-content"><strong>@DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt")</strong></div>
-        </div>
-
-        <div class="details-row">
-            <div class="details-label">Start Date</div>
-            <div class="details-content">
-                <input type="date" name="StartDate" class="form-control" style="max-width:200px;" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <button type="button" id="btnAddLocation" title="Add New Location"
+                            style=" background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        +
+                    </button>
+                    </a>
             </div>
-            <div class="details-label">Start Time</div>
-            <div class="details-content" style="display:flex; align-items:center; gap:5px;">
-                <select name="StartHour" class="form-control" style="width:70px;">
+
+            @* Row 2: Report By + Report Date *@
+            <div class="grid-label">Report By</div>
+            <div class="grid-input">
+                <input type="text" class="form-control" value="@Session["AgentPno"]" readonly style="background:#eee; width:100%;" />
+            </div>
+
+            <div class="grid-label">Report Date</div>
+            <div class="grid-input">
+                <input type="text" class="form-control" value="@DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt")" readonly style="background:#eee; width:100%;" />
+            </div>
+
+            @* Row 3: Start Date + Start Time *@
+            <div class="grid-label">Start Date</div>
+            <div class="grid-input">
+                <input type="date" name="StartDate" class="form-control" style="width:100%;"
+                       value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <div class="grid-label">Start Time</div>
+            <div class="grid-input" style="display:flex; align-items:center; gap:5px;">
+                <select name="StartHour" class="form-control" style="width:80px; flex-shrink:0;">
                     @for (int i = 1; i <= 12; i++)
                     {
                         <option value="@i">@i</option>
-                    }
+}
                 </select>
                 <span>:</span>
-                <select name="StartMinute" class="form-control" style="width:70px;">
+                <select name="StartMinute" class="form-control" style="width:80px; flex-shrink:0;">
                     @for (int i = 0; i < 60; i += 5)
                     {
                         <option value="@i.ToString("D2")">@i.ToString("D2")</option>
-                    }
+}
                 </select>
-                <select name="StartAmPm" class="form-control" style="width:70px;">
+                <select name="StartAmPm" class="form-control" style="width:80px; flex-shrink:0;">
                     <option>AM</option>
                     <option>PM</option>
                 </select>
             </div>
-        </div>
 
-        <div class="details-row">
-            <div class="details-label">End Date</div>
-            <div class="details-content">
-                <input type="date" name="EndDate" class="form-control" style="max-width:200px;" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            @* Row 4: End Date + End Time *@
+            <div class="grid-label">End Date</div>
+            <div class="grid-input">
+                <input type="date" name="EndDate" class="form-control" style="width:100%;"
+                       value="@DateTime.Now.ToString("yyyy-MM-dd")" />
             </div>
-            <div class="details-label">End Time</div>
-            <div class="details-content" style="display:flex; align-items:center; gap:5px;">
-                <select name="EndHour" class="form-control" style="width:70px;">
+
+            <div class="grid-label">End Time</div>
+            <div class="grid-input" style="display:flex; align-items:center; gap:5px;">
+                <select name="EndHour" class="form-control" style="width:80px; flex-shrink:0;">
                     @for (int i = 1; i <= 12; i++)
                     {
                         <option value="@i">@i</option>
-                    }
+}
                 </select>
                 <span>:</span>
-                <select name="EndMinute" class="form-control" style="width:70px;">
+                <select name="EndMinute" class="form-control" style="width:80px; flex-shrink:0;">
                     @for (int i = 0; i < 60; i += 5)
                     {
                         <option value="@i.ToString("D2")">@i.ToString("D2")</option>
-                    }
+}
                 </select>
-                <select name="EndAmPm" class="form-control" style="width:70px;">
+                <select name="EndAmPm" class="form-control" style="width:80px; flex-shrink:0;">
                     <option>AM</option>
                     <option>PM</option>
                 </select>
             </div>
-        </div>
 
-        <div class="details-row" style="align-items:center;">
-            <div class="details-label" style="align-self:center;">Activity Detail</div>
-            <div class="details-content" style="padding: 10px;">
-                <textarea name="ActivityDetail" class="form-control" rows="6" style="width:100%;"></textarea>
+            @* Row 5: Activity Detail - label + textarea spanning remaining 3 columns *@
+            <div class="grid-label">Activity Detail</div>
+            <div class="grid-input" style="grid-column: 2 / 5;">
+                <textarea name="ActivityDetail" class="form-control"
+                          style="width:100%; min-height:120px; resize:none;"
+                          placeholder="Enter activity details here..."></textarea>
             </div>
-        </div>
 
-        <div class="details-row">
-            <div class="details-label"></div>
-            <div class="details-content" style="display:flex; flex-direction:column; gap:10px; padding:10px;">
-                <label style="font-weight:normal;">
-                    <input type="checkbox" name="CreateServiceRequest" value="true" /> Create service request for this activity
+            @* Row 6: Checkbox + Submit spanning columns 2-5 *@
+            <div class="grid-label"></div>
+            <div class="grid-input" style="grid-column: 2 / 5; display:flex; flex-direction:column; gap:15px; padding-top:5px;">
+                <label style="font-weight:normal; cursor:pointer;">
+                    <input type="checkbox" name="CreateServiceRequest" value="true" />
+                    Create service request for this activity
                 </label>
                 <div>
                     <button type="submit" class="setup-btn-green">📋 Log this activity</button>
                 </div>
             </div>
-        </div>
 
-    </div>
+        </div>
+    }
 </div>

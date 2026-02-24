@@ -1,0 +1,134 @@
+﻿@model IEnumerable<SRM.Models.ActivityCategories>
+
+@{
+    ViewBag.Title = "Category Setup";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Activity Categories</h2>
+        <div class="action-row">
+            <input type="text" id="newCatName" placeholder="Enter category description" class="form-control" />
+            <button id="addCatBtn" class="setup-btn-green">+ Add Category</button>
+            <button type="button"
+                    class="setup-btn-green"
+                    onclick="location.href='@Url.Action("LogNewActivity", "Activity")'"
+                    style="cursor: pointer;">
+                ← Back to Form
+            </button>
+        </div>
+    </div>
+
+    <table class="crud-table" id="categoryTable">
+        <thead>
+            <tr>
+                <th style="width: 80px;">ID</th>
+                <th>Category Description</th>
+                <th style="width: 120px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="categoryTableBody">
+            @foreach (var item in Model)
+            {
+                <tr data-id="@item.cat_id">
+                    <td style="font-weight:bold; color:#666;">@item.cat_id</td>
+                    <td class="cat-name">@item.cat_name</td>
+                    <td class="actions-cell">
+                        <div class="icon-btn-group">
+                            <button class="edit-btn" title="Edit">✏️</button>
+                            <button class="delete-btn" title="Delete">❌</button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('.crud-table').animate({ opacity: 1 }, 800);
+
+            // ADD
+            $('#addCatBtn').click(function () {
+                var name = $('#newCatName').val().trim();
+                if (!name) { showGlobalToast('Enter a description', 'error'); return; }
+
+                $.post('@Url.Action("AddCategory", "Activity")', { catName: name }, function (res) {
+                    if (res.success) {
+                        var newRow = $(`
+                            <tr data-id="${res.category.cat_id}" style="display:none; background-color: #f0fff4;">
+                                <td style="font-weight:bold; color:#666;">${res.category.cat_id}</td>
+                                <td class="cat-name">${res.category.cat_name}</td>
+                                <td class="actions-cell"><div class="icon-btn-group">
+                                    <button class="edit-btn" title="Edit">✏️</button>
+                                    <button class="delete-btn" title="Delete">❌</button>
+                                </div></td>
+                            </tr>`);
+                        $('#categoryTableBody').append(newRow);
+                        newRow.fadeIn(1000, function() { $(this).css('background-color', 'transparent'); });
+                        $('#newCatName').val('');
+                        showGlobalToast("Category added!", "success");
+                    } else { showGlobalToast(res.message, 'error'); }
+                });
+            });
+
+            // DELETE
+            $(document).on('click', '.delete-btn', function () {
+                var row = $(this).closest('tr');
+                if (confirm('Delete this category?')) {
+                    $.post('@Url.Action("DeleteCategory", "Activity")', { id: row.data('id') }, function (res) {
+                        if (res.success) {
+                            row.css('background-color', '#fff5f5').fadeOut(600, function() {
+                                $(this).remove();
+                                showGlobalToast("Deleted.", "error");
+                            });
+                        }
+                    });
+                }
+            });
+
+            // EDIT
+            $(document).on('click', '.edit-btn', function () {
+                var row = $(this).closest('tr');
+                var nameCell = row.find('.cat-name');
+                var oldName = nameCell.text().trim();
+                row.data('old-name', oldName);
+                nameCell.html(`<input type="text" class="edit-input" value="${oldName}" style="width:100%; padding:5px; border:1px solid #2e7d57;" />`);
+                row.find('.actions-cell').html(`
+                    <div class="icon-btn-group">
+                        <button class="save-btn" title="Save">💾</button>
+                        <button class="cancel-btn" title="Cancel">🚫</button>
+                    </div>`);
+            });
+
+            // SAVE EDIT
+            $(document).on('click', '.save-btn', function () {
+                var row = $(this).closest('tr');
+                var newName = row.find('.edit-input').val().trim();
+                $.post('@Url.Action("EditCategory", "Activity")', { id: row.data('id'), catName: newName }, function (res) {
+                    if (res.success) {
+                        revertRow(row, res.category.cat_name);
+                        showGlobalToast("Saved!", "success");
+                    }
+                });
+            });
+
+            $(document).on('click', '.cancel-btn', function () {
+                var row = $(this).closest('tr');
+                revertRow(row, row.data('old-name'));
+            });
+
+            function revertRow(row, name) {
+                row.find('.cat-name').text(name);
+                row.find('.actions-cell').html(`
+                    <div class="icon-btn-group">
+                        <button class="edit-btn" title="Edit">✏️</button>
+                        <button class="delete-btn" title="Delete">❌</button>
+                    </div>`);
+            }
+        });
+    </script>
+}

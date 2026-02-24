@@ -1,0 +1,150 @@
+﻿@model IEnumerable<SRM.Models.IncidentLocation>
+
+@{
+    ViewBag.Title = "Location Setup";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Manage Locations</h2>
+        <div class="action-row" style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="newLocCode" placeholder="Code (e.g. LHR)" class="form-control"
+                   style="width: 120px; text-transform: uppercase;" maxlength="3" />
+
+            <input type="text" id="newLocName" placeholder="Enter location name" class="form-control"
+                   style="flex-grow: 1;" />
+
+            <button id="addLocBtn" class="setup-btn-green" style="white-space: nowrap;">+ Add Location</button>
+            <button type="button"
+                    class="setup-btn-green"
+                    onclick="location.href='@Url.Action("LogNewActivity", "Activity")'"
+                    style="cursor: pointer;">
+                ← Back to Form
+            </button>
+        </div>
+    </div>
+
+    <table class="crud-table" id="locationTable">
+        <thead>
+            <tr>
+                <th style="width: 100px;">Code</th>
+                <th>Location Name</th>
+                <th style="width: 120px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="locationTableBody">
+            @foreach (var item in Model)
+            {
+                <tr data-id="@item.LocationCode">
+                    <td style="font-weight:bold; color:#666;">@item.LocationCode</td>
+                    <td class="loc-name">@item.LocationName</td>
+                    <td class="actions-cell">
+                        <div class="icon-btn-group">
+                            <button class="edit-btn" title="Edit">✏️</button>
+                            <button class="delete-btn" title="Delete">❌</button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('.crud-table').animate({ opacity: 1 }, 800);
+
+            // ADD WITH CODE INPUT
+            $('#addLocBtn').click(function () {
+                var code = $('#newLocCode').val().trim();
+                var name = $('#newLocName').val().trim();
+
+                if (!code || !name) {
+                    showGlobalToast('Please enter both Code and Name', 'error');
+                    return;
+                }
+
+                $.post('@Url.Action("AddLocation", "Activity")', { locCode: code, locName: name }, function (res) {
+                    if (res.success) {
+                        var newRow = $(`
+                            <tr data-id="${res.location.LocationCode}" style="display:none; background-color: #f0fff4;">
+                                <td style="font-weight:bold; color:#666;">${res.location.LocationCode}</td>
+                                <td class="loc-name">${res.location.LocationName}</td>
+                                <td class="actions-cell">
+                                    <div class="icon-btn-group">
+                                        <button class="edit-btn" title="Edit">✏️</button>
+                                        <button class="delete-btn" title="Delete">❌</button>
+                                    </div>
+                                </td>
+                            </tr>`);
+                        $('#locationTableBody').append(newRow);
+                        newRow.fadeIn(1000, function() { $(this).css('background-color', 'transparent'); });
+
+                        // Clear inputs
+                        $('#newLocCode').val('');
+                        $('#newLocName').val('');
+                        showGlobalToast("Location added successfully!", "success");
+                    } else {
+                        showGlobalToast(res.message, 'error');
+                    }
+                });
+            });
+
+            // (Delete, Edit, and Save functions remain the same as previous logic)
+            $(document).on('click', '.delete-btn', function () {
+                var row = $(this).closest('tr');
+                if (confirm('Delete this location?')) {
+                    $.post('@Url.Action("DeleteLocation", "Activity")', { id: row.data('id') }, function (res) {
+                        if (res.success) {
+                            row.css('background-color', '#fff5f5').fadeOut(600, function() {
+                                $(this).remove();
+                                showGlobalToast("Location removed.", "error");
+                            });
+                        }
+                    });
+                }
+            });
+
+            $(document).on('click', '.edit-btn', function () {
+                var row = $(this).closest('tr');
+                var nameCell = row.find('.loc-name');
+                var oldName = nameCell.text().trim();
+                row.data('old-name', oldName);
+                nameCell.html(`<input type="text" class="edit-input" value="${oldName}" style="width:100%; padding:5px; border:1px solid #2e7d57;" />`);
+                row.find('.actions-cell').html(`
+                    <div class="icon-btn-group">
+                        <button class="save-btn" title="Save">💾</button>
+                        <button class="cancel-btn" title="Cancel">🚫</button>
+                    </div>`);
+            });
+
+            $(document).on('click', '.save-btn', function () {
+                var row = $(this).closest('tr');
+                var id = row.data('id');
+                var newName = row.find('.edit-input').val().trim();
+                $.post('@Url.Action("EditLocation", "Activity")', { id: id, locName: newName }, function (res) {
+                    if (res.success) {
+                        revertRow(row, res.location.LocationName);
+                        showGlobalToast("Changes saved!", "success");
+                    }
+                });
+            });
+
+            $(document).on('click', '.cancel-btn', function () {
+                var row = $(this).closest('tr');
+                revertRow(row, row.data('old-name'));
+            });
+
+            function revertRow(row, name) {
+                row.find('.loc-name').text(name);
+                row.find('.actions-cell').html(`
+                    <div class="icon-btn-group">
+                        <button class="edit-btn" title="Edit">✏️</button>
+                        <button class="delete-btn" title="Delete">❌</button>
+                    </div>`);
+            }
+        });
+    </script>
+}

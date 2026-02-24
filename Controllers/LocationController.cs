@@ -34,9 +34,9 @@ namespace SRM.Controllers
                 return Json(new { success = false, message = "Work area name required" });
 
             // 1. Get the ID directly from the Switcher's Session
-            int? activeProgramId = Session["AgentProgramId"] as int?;
+            int? globalProgramId = Session["AgentProgramId"] as int?;
 
-            if (!activeProgramId.HasValue)
+            if (!globalProgramId.HasValue)
             {
                 return Json(new { success = false, message = "Please select a specific program in the top switcher first." });
             }
@@ -48,7 +48,7 @@ namespace SRM.Controllers
             bool exists = _db.Locations.Any(x =>
                 x.Location_Description.Trim().ToLower() == normalizedName &&
                 x.sno != sno &&
-                x.Program_id == activeProgramId);
+                x.Program_id == globalProgramId);
 
             if (exists)
                 return Json(new { success = false, message = "This Work Area already exists in the currently selected program." });
@@ -62,7 +62,7 @@ namespace SRM.Controllers
                 {
                     Location_Description = trimmedValue,
                     Location_ID = trimmedValue, // Set same as description
-                    Program_id = activeProgramId
+                    Program_id = globalProgramId
                 };
                 _db.Locations.Add(loc);
             }

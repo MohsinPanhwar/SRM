@@ -441,16 +441,27 @@ footer {
 
 /* ===== PROFILE / MANAGE USER PAGE (Unified) ===== */
 .setup-container {
-    max-width: 1200px;
+    max-width: 1200px; /* Slightly wider than profile to accommodate tables */
     width: 95%;
     margin: 30px auto;
     padding: 30px;
     background: #fff;
-    border-radius: 12px; /* Matches Section Headers */
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05); /* Matches Section Headers */
-    box-sizing: border-box;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     border: 1px solid #eef2f6;
+    box-sizing: border-box;
 }
+
+    /* Adjust the section header inside a container */
+    .setup-container .section-header {
+        padding: 0 0 20px 0; /* Remove internal padding since container has it */
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        margin-bottom: 20px;
+    }
+
+
 
     .setup-container h2 {
         color: #1B4D3E;
@@ -561,27 +572,6 @@ footer {
         }
 
 /* ===== GLOBAL SETUP CONTAINER ===== */
-.setup-container {
-    max-width: 1200px; /* Slightly wider than profile to accommodate tables */
-    width: 95%;
-    margin: 30px auto;
-    padding: 30px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    border: 1px solid #eef2f6;
-    box-sizing: border-box;
-}
-
-    /* Adjust the section header inside a container */
-    .setup-container .section-header {
-        padding: 0 0 20px 0; /* Remove internal padding since container has it */
-        box-shadow: none;
-        border: none;
-        border-radius: 0;
-        margin-bottom: 20px;
-    }
-
 /* Global Notification Container */
 #notification-area {
     position: fixed;
@@ -632,37 +622,101 @@ footer {
     background-color: #1b4d3e; /* Green like image */
 }
 
-   .grid-container {
-        display: grid;
-        grid-template-columns: 140px 1fr 140px 1fr;
-        border-left: 1px solid #ccc;
-        border-top: 1px solid #ccc;
-        background: #f2f2f2;
+/* =========================================
+   GRID CONTAINER – MATCH DETAILS STYLE
+========================================= */
+/* =====================================================
+   Unified Form Grid (User Info + Activity Details)
+   ===================================================== */
+.grid-container {
+    display: grid;
+    grid-template-columns: 180px 1fr 180px 1fr;
+    row-gap: 22px;
+    column-gap: 10px;
+    background: #ffffff;
+    padding: 32px 36px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    border: 1px solid #eef2f6;
+}
+
+/* Labels */
+.grid-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #000;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    align-self: flex-start;
+    padding-top: 10px;
+}
+
+/* Inputs / Selects / Textarea */
+.grid-input input,
+.grid-input select,
+.grid-input textarea {
+    width: 100%;
+    height: 44px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    border: 1px solid #d9dee6;
+    background-color: #f5f6f8;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+/* Textarea override */
+.grid-input textarea {
+    height: auto;
+    min-height: 140px;
+    resize: none;
+}
+
+/* Readonly fields */
+.grid-input input[readonly] {
+    background-color: #eef0f3;
+    color: #555;
+}
+
+/* Focus state */
+.grid-input input:focus,
+.grid-input select:focus,
+.grid-input textarea:focus {
+    outline: none;
+    border-color: #2e7d57;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(46, 125, 87, 0.12);
+}
+
+/* Inline input + button (Activity / Location) */
+.activity-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+    .activity-inline select {
+        flex: 1;
     }
 
-    .grid-label {
-        padding: 8px;
-        border-right: 1px solid #ccc;
-        border-bottom: 1px solid #ccc;
-        font-weight: bold;
-        font-size: 0.85em;
-        display: flex;
-        align-items: center;
+/* Time inputs (Hour / Minute / AMPM) */
+.time-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+    .time-group select {
+        min-width: 80px;
     }
 
-    .grid-input {
-        padding: 4px;
-        border-right: 1px solid #ccc;
-        border-bottom: 1px solid #ccc;
-        background: #fff;
-    }
-
-        .grid-input input, .grid-input select {
-            width: 100%;
-            border: 1px solid #aaa;
-            padding: 3px;
-            font-size: 0.9em;
-        }
+/* Checkbox alignment */
+.grid-input input[type="checkbox"] {
+    width: auto;
+    height: auto;
+    margin-right: 8px;
+}
 .form-section-header {
     background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
     color: white;
@@ -695,9 +749,11 @@ footer {
 }
 
 .details-box {
-    border: 1px solid #ccc;
-    border-top: none;
-    background: #fff;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    border: 1px solid #eef2f6;
 }
 .search-area {
     background: #fdfdfd;
@@ -866,3 +922,63 @@ input:checked + .slider {
         transform: translateX(22px);
     }
 
+/* =====================================
+   NOTICEABLE BUT SAFE FORM REFINEMENT
+===================================== */
+
+/* Give each row visual separation without layout change */
+.details-row {
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f3f6;
+}
+
+    .details-row:last-child {
+        border-bottom: none;
+    }
+
+/* Labels: clearly secondary, not competing */
+.details-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #black;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding-top: 4px;
+}
+
+/* Content area feels cleaner */
+.details-content {
+    font-size: 0.92rem;
+    color: #1f293;
+}
+
+    /* Inputs: calmer, less boxed */
+    .details-content .form-control {
+        border-radius: 6px;
+        border-color: #d8dee6;
+        background-color: #fbfcfd;
+    }
+
+        /* Focus is professional and noticeable */
+        .details-content .form-control:focus {
+            border-color: #1B4D3E;
+            box-shadow: 0 0 0 2px rgba(27, 77, 62, 0.12);
+            background-color: #fff;
+        }
+
+    /* Textarea visually separated */
+    .details-content textarea {
+        padding: 12px;
+        line-height: 1.5;
+    }
+
+
+/* Action area looks intentional */
+.details-row:last-of-type .details-content {
+    padding-top: 20px;
+    border-top: 1px solid #eef2f6;
+}
+
+/* =========================================
+   USER INFORMATION – 2 COLUMN LAYOUT
+========================================= */
