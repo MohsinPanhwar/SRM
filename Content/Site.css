@@ -1,4 +1,4 @@
-﻿/* ===== GLOBAL / RESET ===== */
+/* ===== GLOBAL / RESET ===== */
 html {
     height: 100%;
 }
@@ -257,32 +257,29 @@ footer {
     box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
     white-space: nowrap;
 }
-            transition: all 0.2s ease !important;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
-            white-space: nowrap;
-        }
 
     .setup-btn-green:hover {
         transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(27, 77, 62, 0.25) !important;
         filter: brightness(1.1);
     }
 
-/* THE BACK TO LIST BUTTON: Inheriting the Green Gradient Style */
-.Back-To-List {
-    height: 38px !important;
-    min-width: 160px !important;
-    padding: 0 20px !important;
-    background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important;
-    color: #ffffff !important;
-    border: none !important;
-    border-radius: 6px !important;
-    cursor: pointer !important;
-    font-size: 0.85rem !important;
-    font-weight: 600 !important;
-    /* Use 'none' by default so jQuery can toggle it */
-    display: none !important;
-    align-items: center;
-    justify-content: center;
+/* ===== CRUD TABLE & INLINE EDITING ===== */
+.crud-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+    .crud-table thead {
+        background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
         .crud-table thead th {
             color: white !important;
             font-weight: bold;
@@ -290,41 +287,41 @@ footer {
 
     .crud-table th,
     .crud-table td {
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
-    white-space: nowrap;
-}
+        padding: 12px 15px;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 0.9rem;
         text-align: left;
         /* vertical-align ensures text and buttons align even if row height grows */
         vertical-align: middle;
-
-    .Back-To-List:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 12px rgba(27, 77, 62, 0.25) !important;
-        filter: brightness(1.1);
-        color: #ffffff !important;
     }
+
+        .crud-table th:first-child,
+        .crud-table td:first-child {
+            padding-left: 30px;
+        }
+
         /* Updated: Actions Column remains a table cell to preserve borders */
-/* This special rule allows jQuery's .show() to work despite the !important above */
-#btnBackToList[style*="display: block"],
-#btnBackToList[style*="display: inline-block"] {
+        .crud-table th:last-child,
+        .crud-table td:last-child,
+        .actions-cell {
             text-align: center !important;
             width: 120px;
             white-space: nowrap;
-/* ==========================
-   CRUD Table Styling
+        }
+
 /* NEW: Internal wrapper to handle centering without breaking the <td> */
 
 
 
-        background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important;
+
 .edit-btn, .save-btn, .delete-btn, .cancel-btn {
     background: transparent !important;
     color: inherit !important;
-        border-bottom: 1px solid #e0e0e0;
-        font-size: 0.9rem;
-    }
-
-        .crud-table th:first-child,
+    border: none !important;
+    box-shadow: none !important;
+    padding: 4px 6px !important;
+    margin: 0 !important;
+    cursor: pointer;
     font-size: 1.3rem;
     line-height: 1;
     display: inline-flex;
@@ -334,71 +331,31 @@ footer {
     outline: none !important;
     text-decoration: none !important;
 }
-        .actions-cell {
+
     .edit-btn:hover, .save-btn:hover, .delete-btn:hover, .cancel-btn:hover {
         transform: scale(1.2);
         opacity: 0.7;
     }
-        }
+
     .edit-btn:active, .save-btn:active, .delete-btn:active, .cancel-btn:active {
         transform: scale(0.95);
     }
 /* ===== SETUP CONTAINER ===== */
 .setup-container {
-                display: inline-block;
-            }
-/* FIXED: Inline Edit Input now matches header height and style */
-.edit-input {
-    width: 100% !important;
-    height: 34px !important; /* Slightly smaller to fit inside table rows */
-    padding: 0 10px !important;
-    border: 1px solid #0e5dff !important;
-    border-radius: 4px !important;
-    font-size: 0.85rem !important;
-    box-sizing: border-box !important;
-    outline: none;
-    background: #fff !important;
-}
-
-/* Action Buttons (✏️/💾 and ❌/🚫) */
-.edit-btn, .save-btn, .delete-btn, .cancel-btn {
-    padding: 6px 12px !important;
-    font-size: 0.9rem !important;
-    border-radius: 4px !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 4px 6px !important;
-    margin: 0 !important;
-    cursor: pointer;
-    color: #fff !important;
-    transition: opacity 0.2s;
-}
-
-.edit-btn, .save-btn {
-    background-color: #0e5dff !important;
-}
-
-.delete-btn, .cancel-btn {
-    background-color: #f20101 !important;
-}
-
-    .setup-container .form-group {
-}
-/* ===== PROFILE / MANAGE USER PAGE (Unified) ===== */
-.profile-container {
-    .setup-container label {
-        font-weight: 600;
+    max-width: 1200px;
+    width: 95%;
     margin: 30px auto;
     padding: 30px;
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     border: 1px solid #eef2f6;
-    .setup-container input[type="text"],
-    .setup-container input[type="email"],
-    .setup-container input[type="password"],
-    .setup-container input[type="tel"],
-    .setup-container select {
+    box-sizing: border-box;
+}
+
+    .setup-container .section-header {
+        padding: 0 0 20px 0;
+        box-shadow: none;
         border: none;
         border-radius: 0;
         margin-bottom: 20px;
@@ -410,33 +367,35 @@ footer {
         font-weight: 700;
         margin: 0;
         padding-bottom: 10px;
-        .setup-container input:focus,
-        .setup-container select:focus {
+        border-bottom: 2px solid #f4f6f8;
+        width: 100%;
+    }
 
     .setup-container h3 {
         color: #1B4D3E;
         margin-top: 20px;
         margin-bottom: 20px;
         font-weight: 600;
-    .setup-container input[readonly] {
+        font-size: 1.2rem;
+    }
 
-    /* Form groups */
-    .profile-container .form-group {
+    .setup-container .form-group {
         margin-bottom: 20px;
     }
 
-    .setup-container .form-row {
+    .setup-container label {
+        font-weight: 600;
         margin-bottom: 8px;
         color: #444;
         display: block;
         font-size: 0.9rem;
     }
 
-    /* Inputs – Adjusted to be slightly more compact like management pages */
-    .profile-container input[type="text"],
-    .profile-container input[type="email"],
-    .profile-container input[type="password"],
-    .setup-container .btn-success {
+    .setup-container input[type="text"],
+    .setup-container input[type="email"],
+    .setup-container input[type="password"],
+    .setup-container input[type="tel"],
+    .setup-container select {
         width: 100%;
         height: 42px;
         padding: 0 16px;
@@ -448,25 +407,22 @@ footer {
         box-sizing: border-box;
     }
 
-        /* Focus state – same Green Glow as others */
-        .profile-container input:focus,
-        .profile-container select:focus {
+        .setup-container input:focus,
+        .setup-container select:focus {
             border-color: #1B4D3E;
             box-shadow: 0 0 0 3px rgba(27, 77, 62, 0.1);
             outline: none;
             background-color: #fff;
         }
 
-    /* Readonly fields – subtle look */
-    .profile-container input[readonly] {
+    .setup-container input[readonly] {
         background-color: #f1f3f5 !important;
         color: #666;
         cursor: not-allowed;
         border-color: #e9ecef;
     }
 
-    /* Form rows */
-    .profile-container .form-row {
+    .setup-container .form-row {
         display: flex;
         flex-wrap: wrap;
         gap: 25px;
@@ -477,8 +433,7 @@ footer {
             min-width: 300px;
         }
 
-    /* Buttons – Styled exactly like the "Add" buttons */
-    .profile-container .btn-success {
+    .setup-container .btn-success {
         height: 42px;
         min-width: 180px;
         background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important;
@@ -537,6 +492,48 @@ footer {
     border-left: 8px solid #28b87b;
 }
 
+.toast-error {
+    background: #f5365c;
+    border-left: 8px solid #d62f50;
+}
+
+
+/* ===== FORM GRID ===== */
+.grid-container {
+    display: grid;
+    grid-template-columns: 160px 1fr 160px 1fr;
+    gap: 12px 15px;
+    align-items: center;
+    margin-top: 30px;
+}
+
+.grid-label {
+    font-weight: bold;
+    color: #333;
+    padding-right: 10px;
+}
+
+.grid-input {
+    width: 100%;
+}
+
+    .grid-input input[type="text"],
+    .grid-input textarea,
+    .grid-input select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 14px;
+    }
+
+.form-control-readonly {
+    background-color: #eeeeee !important;
+    border: 1px solid #cccccc;
+    cursor: not-allowed;
+}
+
 .grid-full-width {
     grid-column: 1 / span 2;
     margin-top: 10px;
@@ -546,8 +543,8 @@ footer {
     display: flex;
     align-items: center;
     gap: 10px;
-    align-items: center;
-    margin-top: 30px;
+}
+
     .activity-inline select {
         flex: 1;
     }
@@ -570,7 +567,7 @@ footer {
 
 .form-section-header {
     background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
-.grid-label {
+    color: white;
     padding: 8px 15px;
     font-weight: bold;
     font-size: 1em;
@@ -645,7 +642,7 @@ footer {
     background: #fdfdfd;
     border: 1px solid #eee;
     padding: 15px;
-    color: #333;
+    border-radius: 4px;
     margin-bottom: 20px;
 }
 
@@ -675,7 +672,7 @@ footer {
 
 .btn-search {
     background: #2e7d57;
-}
+    color: white;
     border: none;
     padding: 5px 20px;
     cursor: pointer;
@@ -817,45 +814,3 @@ input:checked + .slider {
         color: #1a73e8; /* Material Blue for 'All' */
     }
 
-        width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-sizing: border-box;
-        font-size: 14px;
-    }
-
-.form-control-readonly {
-    background-color: #eeeeee !important;
-    border: 1px solid #cccccc;
-    cursor: not-allowed;
-}
-
-.table-responsive {
-    max-height: 400px; /* Limits height so it doesn't push the message too far down */
-    overflow-y: auto;
-}
-
-.table thead th {
-    position: sticky;
-    top: 0;
-    background-color: #343a40;
-    color: white;
-    z-index: 1;
-}
-
-.badge-success {
-    background-color: #28a745;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8em;
-}
-
-.badge-danger {
-    background-color: #dc3545;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8em;
-}

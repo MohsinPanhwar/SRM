@@ -192,20 +192,6 @@ namespace SRM.Controllers
                 ModelState.AddModelError("", "An error occurred during registration.");
                 return View();
             }
-
-            //catch (Exception ex)
-            //{
-            //    System.Diagnostics.Debug.WriteLine($"Register error: {ex.Message}");
-            //    System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-
-            //    if (ex.InnerException != null)
-            //    {
-            //        System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
-            //    }
-
-            //    ModelState.AddModelError("", $"An error occurred during registration: {ex.Message}");
-            //    return View();
-            //}
         }
 
         [Authorize]

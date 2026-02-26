@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -10,9 +8,8 @@ namespace SRM.Models
     public class EmployeeProfile
     {
         [Key]
-        [Column("Pno")]
         public string Pno { get; set; }
-         
+
         public string emp_name { get; set; }
 
         public string Pay_group { get; set; }
@@ -50,10 +47,9 @@ namespace SRM.Models
         public int? Register_ID { get; set; }
 
         public int? Mgr_ID { get; set; }
-         
+
         public string Blood_Group { get; set; }
-        
-        [Column("Email")]
+
         public string Email { get; set; }
 
         public int? ATTENDANCE_DEPT { get; set; }
@@ -106,12 +102,10 @@ namespace SRM.Models
 
         public string mobileno { get; set; }
 
-        [Column("Location")] // Ensure this column name matches your SQL Table column name
         public string Location { get; set; }
 
         public string ContractType { get; set; }
 
         public string MobileOperator { get; set; }
-    }  
+    }
 }
-

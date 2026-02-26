@@ -116,23 +116,22 @@ namespace SRM.Controllers
         {
             // 1️⃣ Try API first
             var apiEmp = await FetchFromPiaSoapApi(pno);
-           
 
             if (apiEmp != null)
             {
                 return Json(new
                 {
                     success = true,
-                    name = apiEmp.Name,
-                    designation = apiEmp.Designation,
-                    department = apiEmp.Department,
+                    name = apiEmp.emp_name, // Keep these as is if apiEmp is a different DTO
+                    designation = apiEmp.Emp_designation,
+                    department = apiEmp.DEPT,
                     email = apiEmp.Email,
-                    mobile = apiEmp.Mobile
+                    mobile = apiEmp.mobileno
                 }, JsonRequestBehavior.AllowGet);
             }
 
-            // 2️⃣ fallback to local DB
-            var emp = db.Employees.FirstOrDefault(x => x.Pno == pno);
+            // 2️⃣ Fallback to local DB - Updated to match your Model properties
+            var emp = db.EmployeeProfiles.FirstOrDefault(x => x.Pno == pno);
 
             if (emp == null)
                 return Json(new { success = false }, JsonRequestBehavior.AllowGet);
@@ -140,11 +139,11 @@ namespace SRM.Controllers
             return Json(new
             {
                 success = true,
-                name = emp.Name,
-                designation = emp.Designation,
-                department = emp.Department,
+                name = emp.emp_name,           // Changed from .Name
+                designation = emp.Emp_designation, // Changed from .Designation
+                department = emp.DEPT,          // Changed from .Department
                 email = emp.Email,
-                mobile = emp.Mobile
+                mobile = emp.mobileno           // Changed from .Mobile
             }, JsonRequestBehavior.AllowGet);
         }
         [HttpPost]
@@ -152,31 +151,32 @@ namespace SRM.Controllers
         {
             try
             {
-                var existing = db.Employees.FirstOrDefault(x => x.Pno == emp.Pno);
-           
+                var existing = db.EmployeeProfiles.FirstOrDefault(x => x.Pno == emp.Pno);
 
                 if (existing == null)
                 {
                     // INSERT
-                    db.Employees.Add(emp);
+                    db.EmployeeProfiles.Add(emp);
                 }
                 else
                 {
-                    // UPDATE
-                    existing.Name = emp.Name;
-                    existing.Designation = emp.Designation;
-                    existing.Department = emp.Department;
+                    // UPDATE - Property names must match your model exactly
+                    existing.emp_name = emp.emp_name;
+                    existing.Emp_designation = emp.Emp_designation;
+                    existing.DEPT = emp.DEPT;
                     existing.Email = emp.Email;
-                    existing.Mobile = emp.Mobile;
-                    existing.Office_Ext = emp.Office_Ext;
-                    existing.Roomno = emp.Roomno;
-                    existing.Ip_Address = emp.Ip_Address;
+                    existing.mobileno = emp.mobileno;
+                    existing.Office_ext = emp.Office_ext;
+                    existing.roomno = emp.roomno;
+                    existing.ip_address = emp.ip_address;
                     existing.Location = emp.Location;
+
+                    // Optional: Update metadata
+                    existing.UPDATED_BY = "System"; // Or current user
+                    existing.UPDATED_ON = DateTime.Now;
                 }
 
                 db.SaveChanges();
-
-
                 return Json(new { success = true, message = "User saved successfully" });
             }
             catch (Exception ex)
@@ -184,7 +184,6 @@ namespace SRM.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -249,11 +248,11 @@ namespace SRM.Controllers
                             return new EmployeeProfile
                             {
                                 Pno = emp.ContainsKey("pno") ? emp["pno"] : pno,
-                                Name = emp.ContainsKey("name") ? emp["name"] : "N/A",
-                                Designation = emp.ContainsKey("Emp_designation") ? emp["Emp_designation"] : "N/A",
-                                Department = emp.ContainsKey("Department") ? emp["Department"] : "N/A",
+                                emp_name = emp.ContainsKey("name") ? emp["name"] : "N/A",
+                                Emp_designation = emp.ContainsKey("Emp_designation") ? emp["Emp_designation"] : "N/A",
+                                DEPT = emp.ContainsKey("Department") ? emp["Department"] : "N/A",
                                 Email = emp.ContainsKey("email") ? emp["email"] : "",
-                                Mobile = emp.ContainsKey("Phone_Num") ? emp["Phone_Num"] : ""
+                                mobileno = emp.ContainsKey("Phone_Num") ? emp["Phone_Num"] : ""
                             };
                         }
                     }
