@@ -13,10 +13,10 @@ namespace SRM.Controllers
         private AppDbContext db = new AppDbContext();
 
         // GET
-        public ActionResult Index()
+        public ActionResult ViewCategory()
         {
             var list = db.invCategory.ToList();
-            return View(list);
+            return View("~/Views/AssetIssuance/ViewCategory.cshtml",list);
         }
 
         // SAVE

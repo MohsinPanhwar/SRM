@@ -13,9 +13,9 @@ namespace SRM.Controllers
         private AppDbContext db = new AppDbContext();
 
         // GET
-        public ActionResult Index()
+        public ActionResult ViewBrand()
         {
-            return View(db.invBrand.ToList());
+            return View("~/Views/AssetIssuance/ViewBrand.cshtml",db.invBrand.ToList());
         }
 
         // SAVE (Add + Update)

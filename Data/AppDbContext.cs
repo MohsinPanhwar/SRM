@@ -25,6 +25,9 @@ namespace SRM.Data
         public DbSet<IncidentLocation> IncidentLocations { get; set; }
         public DbSet<ActivityCategories> ActivityCategories { get; set; }
 
+        public DbSet<InvIssueDetail> InvIssueDetails { get; set; }
+        public DbSet<Brand> invBrand { get; set; }
+        public DbSet<Category> invCategory { get; set; }
 
     }
 }

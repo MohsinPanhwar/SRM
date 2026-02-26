@@ -317,7 +317,7 @@ namespace SRM.Controllers
             }
 
             vm.Assets = resultList.OrderByDescending(x => x.entry_date).ToList();
-            return View(vm);
+            return View("~/Views/AssetIssuance/IssuedAssets.cshtml",vm);
         }
         public ActionResult Details(int id)
         {
