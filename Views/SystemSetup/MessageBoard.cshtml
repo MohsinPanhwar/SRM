@@ -1,19 +1,83 @@
-﻿@{
+﻿@model dynamic
+@{
     ViewBag.Title = "Message Board";
-    Layout = "~/Views/Shared/_Layout.cshtml";}
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
 
-<!DOCTYPE html>
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Message Board</h2>
+        <div class="action-row">
+            <small>Program Filter: @(Session["AgentProgramId"] ?? "Global")</small>
+        </div>
+    </div>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Message Board</title>
-</head>
-<body>
-    <div class="setup-container"
-    <div class=" = section-header">
-    <h2>Message board</h2>
+    <div class="setup-grid" style="display: grid; grid-template-columns: 150px 1fr 150px 1fr; gap: 15px; padding: 20px; background: #fafafa; border-radius: 8px;">
+
+        <div class="grid-label">Send To</div>
+        <div class="grid-input">
+            <select id="targetType" class="form-control" onchange="toggleRecipientList()">
+                <option value="ALL">Entire Program (Broadcast)</option>
+                <option value="GROUP">Specific Group</option>
+                <option value="INDIVIDUAL">Individual Agent</option>
+            </select>
+        </div>
+
+        <div class="grid-label" id="lblRecipient" style="display:none;">Select Name</div>
+        <div class="grid-input" id="divRecipient" style="display:none;">
+            <select id="finalRecipient" class="form-control"></select>
+        </div>
+
+        <div class="grid-label" style="align-self: start; margin-top: 18px;">Message Detail</div>
+        <div class="grid-input" style="grid-column: 2 / 5;">
+            <textarea id="txtMessage" class="form-control" style="width:100%; min-height:120px; resize:none; margin-top: 10px;" placeholder="Enter message text..."></textarea>
+        </div>
+
+        <div style="grid-column: 1 / 5; display: flex; justify-content: flex-end; margin-top: 10px;">
+            <button type="button" id="btnPost" class="setup-btn-green">Send Message</button>
+        </div>
     </div>
-    </div>
-</body>
-</html>
+</div>
+
+@section scripts {
+    <script>
+        function toggleRecipientList() {
+            var type = $('#targetType').val();
+            var $ddl = $('#finalRecipient');
+            $ddl.empty();
+
+            if (type === "ALL") {
+                $('#lblRecipient, #divRecipient').hide();
+            } else if (type === "GROUP") {
+                $('#lblRecipient, #divRecipient').show();
+                @if (ViewBag.Groups != null) {
+                    foreach (var g in (IEnumerable<SRM.Models.Group>)ViewBag.Groups) {
+                        <text>$ddl.append('<option value="@g.gid">Group: @g.gname</option>');</text>
+                    }
+                }
+            } else if (type === "INDIVIDUAL") {
+                $('#lblRecipient, #divRecipient').show();
+                @if (ViewBag.Agents != null) {
+                    foreach (var a in (IEnumerable<SRM.Models.Agent>)ViewBag.Agents) {
+                        <text>$ddl.append('<option value="@a.Pno">@a.Name (@a.Pno)</option>');</text>
+                    }
+                }
+            }
+        }
+
+        $(document).ready(function () {
+            $('#btnPost').click(function () {
+                var msg = $('#txtMessage').val().trim();
+                if (!msg) { alert("Please enter a message"); return; }
+
+                // This will just send the data to the controller action
+                $.post('@Url.Action("PostMessage", "Message")', {
+                    recipientId: $('#targetType').val() === "ALL" ? "ALL" : $('#finalRecipient').val(),
+                    message: msg
+                }, function (res) {
+                    alert("Message action triggered!");
+                });
+            });
+        });
+    </script>
+}

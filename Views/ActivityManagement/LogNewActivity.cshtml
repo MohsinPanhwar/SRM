@@ -23,8 +23,7 @@
                     <option value="">-- Select Activity --</option>
                     @foreach (var item in ViewBag.Activities as List<SRM.Models.ActivityCategories>)
                     {
-                        <option value="@item.cat_id">@item.cat_name</option>
-                    }
+        <option value="@item.cat_id">@item.cat_name</option>}
                 </select>
                 <a href="@Url.Action("ViewAllCategories", "Activity")" style="text-decoration: none;">
                     <button type="button" id="btnAddActivity" title="View All Activities"
@@ -40,8 +39,7 @@
                     <option value="">-- Select Location --</option>
                     @foreach (var item in ViewBag.Locations as List<SRM.Models.IncidentLocation>)
                     {
-                        <option value="@item.LocationCode">@item.LocationName</option>
-                    }
+        <option value="@item.LocationCode">@item.LocationName</option>}
                 </select>
                 <a href="@Url.Action("ViewAllLocations", "Activity")" style="text-decoration: none;">
 
@@ -75,15 +73,13 @@
                 <select name="StartHour" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     @for (int i = 1; i <= 12; i++)
                     {
-                        <option value="@i">@i</option>
-                    }
+        <option value="@i">@i</option>}
                 </select>
                 <span>:</span>
                 <select name="StartMinute" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     @for (int i = 0; i < 60; i += 5)
                     {
-                        <option value="@i.ToString("D2")">@i.ToString("D2")</option>
-                    }
+        <option value="@i.ToString("D2")">@i.ToString("D2")</option>}
                 </select>
                 <select name="StartAmPm" class="form-control" style="width:80px; flex-shrink:0;height: 45px !important;">
                     <option>AM</option>
@@ -103,15 +99,13 @@
                 <select name="EndHour" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     @for (int i = 1; i <= 12; i++)
                     {
-                        <option value="@i">@i</option>
-                    }
+        <option value="@i">@i</option>}
                 </select>
                 <span>:</span>
                 <select name="EndMinute" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     @for (int i = 0; i < 60; i += 5)
                     {
-                        <option value="@i.ToString("D2")">@i.ToString("D2")</option>
-                    }
+        <option value="@i.ToString("D2")">@i.ToString("D2")</option>}
                 </select>
                 <select name="EndAmPm" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     <option>AM</option>
@@ -120,7 +114,8 @@
             </div>
 
             @* Row 5: Activity Detail *@
-            <div class="grid-label">Activity Detail</div>
+            <div class="grid-label" style="align-self: start; margin-top: 18px;">Activity Detail</div>
+
             <div class="grid-input" style="grid-column: 2 / 5;">
                 <textarea name="ActivityDetail" class="form-control"
                           style="width:100%; min-height:120px; resize:none; padding-top: 10px !important; margin-top: 10px;"
@@ -134,7 +129,7 @@
                     <input type="checkbox" name="CreateServiceRequest" value="true" />
                     Create service request for this activity
                 </label>
-                <div>
+                <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
                     <button type="submit" class="setup-btn-green">📋 Log this activity</button>
                 </div>
             </div>
