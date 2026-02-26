@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewBag.Title - Service Request Manager</title>
     <link rel="stylesheet" href="~/Content/site.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
 
@@ -43,6 +44,17 @@
                         </div>
                     </div>
                 }
+
+                <div class="dropdown">
+                    <button class="dropbtn">Asset Issuance</button>
+                    <div class="dropdown-content">
+                        <a href="@Url.Action("Index", "Category")">View All Category</a>
+                            <a href="@Url.Action("Index", "InventoryBrand")">View All Brands</a>
+                            <a href="@Url.Action("Issuance", "AssetIssuance")">Issuance</a>
+                            <a href="@Url.Action("IssuedAssets", "AssetIssuance")">View All Asset</a>
+</div>
+                </div>
+
                 <div class="dropdown">
                     <button class="dropbtn">Service Request</button>
                     <div class="dropdown-content">
