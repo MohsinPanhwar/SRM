@@ -1,0 +1,120 @@
+﻿@model List<SRM.Models.Category>
+
+@{
+    ViewBag.Title = "Category Setup";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class=" setup-container">
+    <div class="section-header">
+        <h2>Category Setup</h2>
+
+        <div class="action-row">
+            <input type="text" id="newCategoryName" placeholder="Enter Category Name" />
+            <button id="addCategoryBtn" class="setup-btn-green">+ Add Category</button>
+        </div>
+    </div>
+
+    <table class="crud-table">
+        <thead>
+            <tr>
+                <th>Category Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="categoryTableBody">
+            @foreach (var cat in Model)
+            {
+                <tr data-id="@cat.CategoryID">
+                    <td class="category-name">@cat.CategoryName</td>
+                    <td class="actions-cell">
+                        <button class="edit-btn" title="Edit">✏️</button>
+                        <button class="delete-btn" title="Delete">❌</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section scripts{
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+$(function(){
+
+    // 1️⃣ ADD CATEGORY
+    $('#addCategoryBtn').click(function () {
+        var name = $('#newCategoryName').val().trim();
+
+        if (!name) {
+            alert('Category name is required');
+            return;
+        }
+
+        $.post('@Url.Action("Save","Category")',
+            { CategoryID: 0, CategoryName: name },
+            function (res) {
+                if (res.success) location.reload();
+                else alert(res.message);
+            }
+        );
+    });
+
+    // 2️⃣ EDIT CATEGORY
+    $(document).on('click', '.edit-btn', function () {
+        var row = $(this).closest('tr');
+        var name = row.find('.category-name').text().trim();
+
+        row.find('.category-name').html(
+            `<input type="text" class="edit-input" value="${name}" />`
+        );
+
+        row.find('.actions-cell').html(`
+            <button class="save-btn">💾</button>
+            <button class="cancel-btn">🚫</button>
+        `);
+    });
+
+    // 3️⃣ SAVE EDIT
+    $(document).on('click', '.save-btn', function () {
+        var row = $(this).closest('tr');
+        var id = row.data('id');
+        var name = row.find('.category-name input').val().trim();
+
+        if (!name) {
+            alert('Category name cannot be empty');
+            return;
+        }
+
+        $.post('@Url.Action("Save","Category")',
+            { CategoryID: id, CategoryName: name },
+            function (res) {
+                if (res.success) location.reload();
+                else alert(res.message);
+            }
+        );
+    });
+
+    // 4️⃣ CANCEL EDIT
+    $(document).on('click', '.cancel-btn', function () {
+        location.reload();
+    });
+
+    // 5️⃣ DELETE CATEGORY
+    $(document).on('click', '.delete-btn', function () {
+        var row = $(this).closest('tr');
+
+        if (confirm('Delete this category?')) {
+            $.post('@Url.Action("Delete","Category")',
+                { id: row.data('id') },
+                function (res) {
+                    if (res.success) row.remove();
+                }
+            );
+        }
+    });
+
+});
+    </script>
+}

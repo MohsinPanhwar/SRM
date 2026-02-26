@@ -1,0 +1,840 @@
+﻿<!--@model SRM.Models.ViewModels.AssetIssuanceVM
+@{
+    ViewBag.Title = "Asset Issuance";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+<div class="setup-container">-->
+<!-- PAGE HEADER -->
+<!--<div class="section-header">
+    <h2>Log New Request</h2>
+</div>-->
+<!-- SEARCH BAR -->
+<!--<div class="search-area">
+    <table class="filter-table">
+        <tr>
+            <td><strong>Reported P-no:</strong></td>
+            <td>
+                <input type="text" id="pno" class="form-control" style="min-width:200px;" />
+            </td>
+            <td>
+                <button id="btnSearch" class="setup-btn-green">🔍 Search & Load</button>
+            </td>
+        </tr>
+    </table>
+</div>-->
+<!-- ═══════════════ USER INFORMATION ═══════════════ -->
+<!--<div class="form-section-header">USER INFORMATION</div>
+
+<table class="info-table" style="margin-bottom:20px;">
+    <tr>
+        <td class="info-label">Reported Employee ID</td>
+        <td><input type="text" id="empId" class="form-control" /></td>
+        <td class="info-label">Employee Name</td>
+        <td><input type="text" id="name" class="form-control" /></td>
+    </tr>
+    <tr>
+        <td class="info-label">Designation</td>
+        <td><input type="text" id="designation" class="form-control" /></td>
+        <td class="info-label">Department</td>
+        <td><input type="text" id="department" class="form-control" /></td>
+    </tr>
+    <tr>
+        <td class="info-label">Email</td>
+        <td><input type="text" id="email" class="form-control" /></td>
+        <td class="info-label">Mobile No</td>
+        <td><input type="text" id="mobile" class="form-control" /></td>
+    </tr>
+    <tr>
+        <td class="info-label">Phone-Ext</td>
+        <td>@Html.TextBoxFor(m => m.Office_Ext, new { @class = "form-control", id = "phoneExt" })</td>
+        <td class="info-label">Room No *</td>
+        <td>@Html.TextBoxFor(m => m.RoomNo, new { @class = "form-control", id = "roomNo" })</td>
+    </tr>
+    <tr>
+        <td class="info-label">IP-Address</td>
+        <td>@Html.TextBoxFor(m => m.IpAddress, new { @class = "form-control", id = "ipAddress" })</td>
+        <td class="info-label">Location *</td>
+
+        <td>
+            @Html.DropDownListFor(m => m.Location,
+                Model.LocationList,
+                new { @class = "form-control", id = "location" })
+        </td>
+    </tr>
+</table>-->
+<!-- ═══════════════ ASSET DETAILS ═══════════════ -->
+<!--<div class="form-section-header">ASSET DETAILS</div>
+
+<table class="info-table">-->
+<!-- Asset Type + Add new Asset -->
+<!--<tr>
+    <td class="info-label">Asset Type</td>
+    <td>
+        <div class="input-with-action">
+            @Html.DropDownListFor(m => m.Issue.CategoryID,
+            Model.CategoryList, "-- Select --", new { @class = "form-control" })
+            <button type="button" class="btn-add-inline" id="btnAddAsset" onclick="location.href='@Url.Action("Index", "Category")'">+ Add new Asset</button>
+        </div>
+    </td>
+    <td class="info-label">Tel. Ext</td>
+    <td>
+        <input type="text" id="telExt" class="form-control"
+               placeholder="Enter Telephone Extension (for Telephone Issuance)" />
+    </td>
+</tr>-->
+<!-- Make / Brand + Add new Brand -->
+<!--<tr>
+    <td class="info-label">Make / Brand</td>
+    <td>
+        <div class="input-with-action">
+            @Html.DropDownListFor(m => m.Issue.BrandID,
+            Model.BrandList, "-- Select --", new { @class = "form-control" })
+            <button type="button" class="btn-add-inline" id="btnAddBrand" onclick="location.href='@Url.Action("Index", "InventoryBrand")'">+ Add new Brand</button>
+        </div>
+    </td>
+    <td class="info-label">Model Number</td>
+    <td>
+        @Html.TextBoxFor(m => m.Issue.modelNumber, new { @class = "form-control", placeholder = "Enter model ID" })
+    </td>
+</tr>-->
+<!-- Serial Number + Asset Tag -->
+<!--<tr>
+    <td class="info-label">Serial Number</td>
+    <td>
+        @Html.TextBoxFor(m => m.Issue.serialNumber, new { @class = "form-control", placeholder = "Enter serial number" })
+    </td>
+    <td class="info-label">Asset Tag Number</td>
+    <td>
+        @Html.TextBoxFor(m => m.Issue.assetTag, new { @class = "form-control", placeholder = "Enter asset tag number" })
+    </td>
+</tr>-->
+<!-- Condition -->
+<!--<tr>
+    <td class="info-label">Condition</td>
+    <td colspan="3">
+        <div class="radio-group">
+            <label><input type="radio" name="condition" value="New" /> New</label>
+            <label><input type="radio" name="condition" value="Used" /> Used</label>
+            <label><input type="radio" name="condition" value="Refurbished" /> Refurbished</label>
+        </div>
+    </td>
+</tr>-->
+<!-- Accessories Included -->
+<!--<tr>
+    <td class="info-label">Accessories Included</td>
+    <td colspan="3">
+        <div class="checkbox-group">
+            <label><input type="checkbox" name="accessories" value="Mouse" /> Mouse</label>
+            <label><input type="checkbox" name="accessories" value="WirelessMouse" /> Wireless Mouse</label>
+            <label><input type="checkbox" name="accessories" value="Keyboard" /> Keyboard</label>
+            <label><input type="checkbox" name="accessories" value="WirelessKeyboard" /> Wireless Keyboard</label>
+            <label><input type="checkbox" name="accessories" value="PowerAdapter" /> Power Adapter</label>
+            <label><input type="checkbox" name="accessories" value="LaptopBag" /> Laptop Bag</label>
+            <label><input type="checkbox" name="accessories" value="LCD" /> LCD</label>
+            <label><input type="checkbox" name="accessories" value="LED" /> LED</label>
+            <label><input type="checkbox" name="accessories" value="LANCable" /> LAN Cable</label>
+            <label><input type="checkbox" name="accessories" value="Headset" /> Headset</label>
+        </div>
+    </td>
+</tr>-->
+<!-- Other Accessories -->
+<!--<tr>
+    <td class="info-label">Other Accessories</td>
+    <td colspan="3">
+        <input type="text" id="otherAccessories" class="form-control"
+               placeholder="Charger, bag, cables, mouse, etc." />
+    </td>
+</tr>-->
+<!-- Other Serial Number -->
+<!--<tr>
+    <td class="info-label">Other Serial Number</td>
+    <td colspan="3">
+        <textarea id="otherSerialNumber" class="form-control" style="height:70px; padding:8px 10px;"></textarea>
+    </td>
+</tr>-->
+<!-- Warranty Status + Previous User PNO -->
+<!--<tr>
+    <td class="info-label">Warranty Status</td>
+    <td>
+        <input type="date" id="warrantyStatus" class="form-control" />
+    </td>
+    <td class="info-label">Previous User PNO</td>
+    <td>
+        <input type="text" id="previousUserPno" class="form-control" placeholder="PNO of previous user" />
+    </td>
+</tr>-->
+<!-- Issue Date + Purchase Order No -->
+<!--<tr>
+    <td class="info-label">Issue Date</td>
+    <td>
+        <input type="date" id="issueDate" class="form-control" />
+    </td>
+    <td class="info-label">Purchase Order No</td>
+    <td>
+        <input type="text" id="purchaseOrderNo" class="form-control" placeholder="PO Number" />
+    </td>
+</tr>-->
+<!-- Gatepass No + Issued to (PNO) -->
+<!--<tr>
+    <td class="info-label">Gatepass No</td>
+    <td>
+        <input type="text" id="gatepassNo" class="form-control" placeholder="Gatepass Number" />
+    </td>
+    <td class="info-label">Issued to (PNO)</td>
+    <td>
+        <input type="text" id="issuedToPno" class="form-control" />
+    </td>
+</tr>-->
+<!-- Station -->
+<!--<tr>
+    <td class="info-label">Station</td>
+    <td colspan="3">
+
+        @Html.DropDownListFor(m => m.Location,
+    Model.LocationList,
+    new { @class = "form-control", id = "assetLocation" })
+
+    </td>
+</tr>-->
+<!-- Remarks -->
+<!--<tr>
+        <td class="info-label">Remarks</td>
+        <td colspan="3">
+            @Html.TextAreaFor(m => m.Issue.remarks,
+            new { @class = "form-control", style = "height:80px;" })
+        </td>
+    </tr>
+
+</table>-->
+<!-- ACTION BUTTONS -->
+<!--<div style="text-align:center; margin-top:25px; display:flex; justify-content:center; gap:12px;">
+        <button type="button" id="btnSaveUser" class="setup-btn-green">💾 Save User</button>
+        <button type="button" id="btnSubmitFinal" class="setup-btn-green">✔ Submit Asset</button>
+    </div>
+    <div class="form-section-header" style="margin-top:40px; background-color: #1e4d2b; color: white; text-align: center;">
+        Assign Asset to Employee/User
+    </div>
+
+    <table class="crud-table" style="width:100%; margin-top:10px; border-collapse: collapse;">
+        <thead>
+            <tr style="background-color: #1e4d2b; color: white;">
+                <th>Ref No</th>
+                <th>Issue Date</th>
+                <th>Item Name</th>
+                <th>Brand</th>
+                <th>Accessories</th>
+                <th>Print QR Code</th>
+                <th>View Details</th>
+                <th>Edit</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.RecentAssets != null && Model.RecentAssets.Any())
+            {
+                foreach (var item in Model.RecentAssets)
+                {
+                    <tr>
+                        <td>@item.sno</td>
+                        <td>@item.IssueDate.ToString("dd-MMM-yyyy")</td>
+                        <td>@item.CategoryName</td>
+                        <td>@item.BrandName</td>
+                        <td>@item.accessories</td>
+                        <td style="text-align:center;">
+                            <button class="btn-print-qr" data-id="@item.sno">Print</button>
+                        </td>
+                        <td style="text-align:center;">
+                            <a href="@Url.Action("Details", "AssetIssuance", new { id = item.sno })">Details</a>
+                        </td>
+                        <td style="text-align:center;">
+                            <a href="@Url.Action("Edit", "AssetIssuance", new { id = item.sno })">Edit</a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="8" style="text-align:center; padding:20px;">No assets issued yet.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="~/Scripts/jquery.validate.min.js"></script>
+<script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+
+
+<script>
+    //$("#btnSearch").click(function () {
+    //    var pno = $("#pno").val();
+
+    //    if (!pno) {
+    //        alert("Enter PNO");
+    //        return;
+    //    }
+
+    //    $.get('/AssetIssuance/GetEmployee', { pno: pno }, function (res) {
+
+    //        if (res.success) {
+    //            $("#empId").val(pno);
+    //            $("#name").val(res.name);
+    //            $("#designation").val(res.designation);
+    //            $("#department").val(res.department);
+    //            $("#email").val(res.email);
+    //            $("#mobile").val(res.mobile);
+    //        }
+    //        else {
+    //            alert("Employee not found");
+    //        }
+
+    //    });
+    //});
+    $("#btnSearch").click(function () {
+        var pno = $("#pno").val();
+
+        if (!pno) {
+            alert("Enter PNO");
+            return;
+        }
+
+        $.get('/AssetIssuance/GetEmployee', { pno: pno }, function (res) {
+
+            if (res.success) {
+                $("#empId").val(pno);
+                $("#name").val(res.name);
+                $("#designation").val(res.designation);
+                $("#department").val(res.department);
+                $("#email").val(res.email);
+                $("#mobile").val(res.mobile);
+
+                // 🔹 make readonly AFTER data loaded
+                setEmployeeFieldsReadonly(true);
+            }
+            else {
+                alert("Employee not found");
+
+                // 🔹 allow editing if not found
+                setEmployeeFieldsReadonly(false);
+
+                // clear old values
+                $("#empId").val("");
+                $("#name").val("");
+                $("#designation").val("");
+                $("#department").val("");
+                $("#email").val("");
+                $("#mobile").val("");
+            }
+
+        });
+    });
+    function setEmployeeFieldsReadonly(isReadonly) {
+        $("#empId").prop("readonly", isReadonly);
+        $("#name").prop("readonly", isReadonly);
+        $("#designation").prop("readonly", isReadonly);
+        $("#department").prop("readonly", isReadonly);
+        $("#email").prop("readonly", isReadonly);
+        $("#mobile").prop("readonly", isReadonly);
+    }
+
+    $("#btnSaveUser").click(function () {
+
+        var emp = {
+            Pno: $("#empId").val(),
+            Name: $("#name").val(),
+            Designation: $("#designation").val(),
+            Department: $("#department").val(),
+            Email: $("#email").val(),
+            Mobile: $("#mobile").val(),
+            Office_ext: $("#phoneExt").val(),
+            Ip_Address: $("#ipAddress").val(),   // ✅ fixed
+            Roomno: $("#roomNo").val(),
+            Location: $("#location").val()
+        };
+
+        if (!emp.Pno) {
+            alert("PNO is required");
+            return;
+        }
+
+        $.ajax({
+            url: '/AssetIssuance/SaveUser',
+            type: 'POST',
+            data: emp,
+            success: function (res) {
+                if (res.success) {
+                    alert(res.message);
+                } else {
+                    alert("Error: " + res.message);
+                }
+            },
+            error: function () {
+                alert("Server error while saving user");
+            }
+        });
+
+    });
+
+
+$(document).ready(function () {
+    console.log("Page Ready - Script Loaded");
+
+    $(document).on("click", "#btnSubmitFinal", function (e) {
+        e.preventDefault();
+
+        // 1. Collect Accessories
+        var selectedAcc = [];
+        $(".checkbox-group input[type='checkbox']:checked").each(function () {
+            selectedAcc.push($(this).val());
+        });
+
+        // 2. Map all fields
+        // IMPORTANT: Ensure the left-side names match your C# Class properties exactly
+        var assetData = {
+            CategoryID: $("#Issue_CategoryID").val(),
+            BrandID: $("#Issue_BrandID").val(),
+            modelNumber: $("#Issue_modelNumber").val(),
+            serialNumber: $("#Issue_serialNumber").val(),
+            assetTag: $("#Issue_assetTag").val(),
+            condition: $("input[name='condition']:checked").val(),
+            accessories: selectedAcc.join(", "),
+            other_accessories: $("#otherAccessories").val(),
+            otherserialNumber: $("#otherSerialNumber").val(),
+            warranty: $("#warrantyStatus").val(),
+            previousUser: $("#previousUserPno").val(),
+            IssueDate: $("#issueDate").val(),
+            ponum: $("#purchaseOrderNo").val(),
+            gatepass: $("#gatepassNo").val(),
+            Location_ID: $("#assetLocation").val(),
+            remarks: $("#Issue_remarks").val(),
+            TelExt: $("#telExt").val(),
+            Issued_to_PNO: $("#empId").val()
+        };
+
+        console.log("Button Clicked! Sending this data:", assetData);
+
+        // 3. Validation
+        if (!assetData.serialNumber || !assetData.Issued_to_PNO) {
+            alert("Please provide Serial Number and Employee PNO.");
+            return;
+        }
+
+        // 4. AJAX Call
+        $.ajax({
+            url: '/AssetIssuance/SaveAsset',
+            type: 'POST',
+            data: { Issue: assetData }, // 'Issue' must match C# parameter name
+            success: function (res) {
+                if (res.success) {
+                    alert("Saved Successfully!");
+                    window.location.reload();
+                } else {
+                    alert("Server Error: " + res.message);
+                }
+            },
+            error: function (xhr) {
+                console.error("Critical Error:", xhr.responseText);
+                alert("Communication failed. Check the 'Network' tab in F12 for details.");
+            }
+        });
+    });
+});
+
+
+
+
+
+
+</script>-->
+
+
+
+<div class="setup-container">
+
+    <div class="section-header">
+        <h2>Asset Issuance & Management</h2>
+    </div>
+
+    <div class="search-area" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd;">
+        <div style="display:flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div style="display:flex; gap:10px; align-items:center;">
+                <strong>Reported P-no:</strong>
+                <input type="text" id="pno" class="form-control" style="width:200px;" placeholder="Enter PNO..." />
+                <button id="btnSearch" class="setup-btn-green">🔍 Search & Load</button>
+            </div>
+
+            <button type="button" id="btnShowAssetForm" class="setup-btn-green" style="background-color: #2c3e50;">
+                ➕ Assign Asset to User
+            </button>
+        </div>
+    </div>
+
+    <div class="form-section-header">USER INFORMATION</div>
+
+    <table class="info-table" style="margin-bottom:20px;">
+        <tr>
+            <td class="info-label">Reported Employee ID</td>
+            <td><input type="text" id="empId" class="form-control" /></td>
+            <td class="info-label">Employee Name</td>
+            <td><input type="text" id="name" class="form-control" /></td>
+        </tr>
+        <tr>
+            <td class="info-label">Designation</td>
+            <td><input type="text" id="designation" class="form-control" /></td>
+            <td class="info-label">Department</td>
+            <td><input type="text" id="department" class="form-control" /></td>
+        </tr>
+        <tr>
+            <td class="info-label">Email</td>
+            <td><input type="text" id="email" class="form-control" /></td>
+            <td class="info-label">Mobile No</td>
+            <td><input type="text" id="mobile" class="form-control" /></td>
+        </tr>
+        <tr class="extra-user-info">
+            <td class="info-label">Phone-Ext</td>
+            <td>@Html.TextBoxFor(m => m.Office_Ext, new { @class = "form-control", id = "phoneExt" })</td>
+            <td class="info-label">Room No *</td>
+            <td>@Html.TextBoxFor(m => m.RoomNo, new { @class = "form-control", id = "roomNo" })</td>
+        </tr>
+        <tr class="extra-user-info">
+            <td class="info-label">IP-Address</td>
+            <td>@Html.TextBoxFor(m => m.IpAddress, new { @class = "form-control", id = "ipAddress" })</td>
+            <td class="info-label">Location *</td>
+            <td>
+                @Html.DropDownListFor(m => m.Location,
+                    Model.LocationList,
+                    new { @class = "form-control", id = "location" })
+            </td>
+        </tr>
+    </table>
+
+    <div style="text-align:right; margin-bottom:20px;">
+        <button type="button" id="btnSaveUser" class="setup-btn-green" style="font-size:12px; padding:5px 15px;">💾 Save/Update User Info</button>
+    </div>
+
+    <div id="assetFormContainer" style="display:none; border: 2px solid #1e4d2b; padding: 20px; border-radius: 10px; background-color: #fcfcfc; margin-bottom: 30px;">
+
+        <div class="form-section-header" style="background-color: #1e4d2b;">NEW ASSET ASSIGNMENT</div>
+
+        <table class="info-table">
+            <tr>
+                <td class="info-label">Asset Type</td>
+                <td>
+                    <div class="input-with-action">
+                        @Html.DropDownListFor(m => m.Issue.CategoryID, Model.CategoryList, "-- Select --", new { @class = "form-control" })
+                        <button type="button" class="btn-add-inline" id="btnAddAsset" onclick="location.href='@Url.Action("Index", "Category")'">+</button>
+                    </div>
+                </td>
+                <td class="info-label">Tel. Ext</td>
+                <td><input type="text" id="telExt" class="form-control" placeholder="For Telephone Issuance" /></td>
+            </tr>
+            <tr>
+                <td class="info-label">Make / Brand</td>
+                <td>
+                    <div class="input-with-action">
+                        @Html.DropDownListFor(m => m.Issue.BrandID, Model.BrandList, "-- Select --", new { @class = "form-control" })
+                        <button type="button" class="btn-add-inline" id="btnAddBrand" onclick="location.href='@Url.Action("Index", "InventoryBrand")'">+</button>
+                    </div>
+                </td>
+                <td class="info-label">Model Number</td>
+                <td>@Html.TextBoxFor(m => m.Issue.modelNumber, new { @class = "form-control", placeholder = "Enter model ID" })</td>
+            </tr>
+            <tr>
+                <td class="info-label">Serial Number</td>
+                <td>@Html.TextBoxFor(m => m.Issue.serialNumber, new { @class = "form-control", placeholder = "Enter serial number" })</td>
+                <td class="info-label">Asset Tag Number</td>
+                <td>@Html.TextBoxFor(m => m.Issue.assetTag, new { @class = "form-control", placeholder = "Enter tag number" })</td>
+            </tr>
+            <tr>
+                <td class="info-label">Condition</td>
+                <td colspan="3">
+                    <div class="radio-group">
+                        <label><input type="radio" name="condition" value="New" /> New</label>
+                        <label><input type="radio" name="condition" value="Used" /> Used</label>
+                        <label><input type="radio" name="condition" value="Refurbished" /> Refurbished</label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="info-label">Accessories Included</td>
+                <td colspan="3">
+                    <div class="checkbox-group" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
+                        <label><input type="checkbox" name="accessories" value="Mouse" /> Mouse</label>
+                        <label><input type="checkbox" name="accessories" value="WirelessMouse" /> Wireless Mouse</label>
+                        <label><input type="checkbox" name="accessories" value="Keyboard" /> Keyboard</label>
+                        <label><input type="checkbox" name="accessories" value="WirelessKeyboard" /> Wireless Keyboard</label>
+                        <label><input type="checkbox" name="accessories" value="PowerAdapter" /> Power Adapter</label>
+                        <label><input type="checkbox" name="accessories" value="LaptopBag" /> Laptop Bag</label>
+                        <label><input type="checkbox" name="accessories" value="LCD" /> LCD</label>
+                        <label><input type="checkbox" name="accessories" value="Headset" /> Headset</label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="info-label">Other Accessories</td>
+                <td colspan="3"><input type="text" id="otherAccessories" class="form-control" placeholder="Charger, cables, etc." /></td>
+            </tr>
+            <tr>
+                <td class="info-label">Other Serial Number</td>
+                <td colspan="3"><textarea id="otherSerialNumber" class="form-control" style="height:50px;"></textarea></td>
+            </tr>
+            <tr>
+                <td class="info-label">Warranty Status</td>
+                <td><input type="date" id="warrantyStatus" class="form-control" /></td>
+                <td class="info-label">Previous User PNO</td>
+                <td><input type="text" id="previousUserPno" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td class="info-label">Issue Date</td>
+                <td><input type="date" id="issueDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" /></td>
+                <td class="info-label">Purchase Order No</td>
+                <td><input type="text" id="purchaseOrderNo" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td class="info-label">Gatepass No</td>
+                <td><input type="text" id="gatepassNo" class="form-control" /></td>
+                <td class="info-label">Station</td>
+                <td>
+                    @Html.DropDownListFor(m => m.Location, Model.LocationList, new { @class = "form-control", id = "assetLocation" })
+                </td>
+            </tr>
+            <tr>
+                <td class="info-label">Remarks</td>
+                <td colspan="3">@Html.TextAreaFor(m => m.Issue.remarks, new { @class = "form-control", style = "height:60px;" })</td>
+            </tr>
+        </table>
+
+        <div style="text-align:center; margin-top:20px; display:flex; justify-content:center; gap:10px;">
+            <button type="button" id="btnSubmitFinal" class="setup-btn-green" style="background-color:#1e4d2b; padding: 10px 30px;">✔ Confirm Assignment</button>
+            <button type="button" onclick="$('#assetFormContainer').slideUp();" class="setup-btn-green" style="background-color:#666;">Cancel</button>
+        </div>
+    </div>
+
+    <div class="form-section-header" style="margin-top:20px; background-color: #2c3e50;">ASSIGNED ASSET LIST</div>
+
+    <table class="crud-table" style="width:100%; margin-top:10px; border-collapse: collapse;">
+        <thead>
+            <tr style="background-color: #2c3e50; color: white;">
+                <th>Ref No</th>
+                <th>Issue Date</th>
+                <th>Item Name</th>
+                <th>Brand</th>
+                <th>Accessories</th>
+              
+                <th width="200">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.RecentAssets != null && Model.RecentAssets.Any())
+            {
+                foreach (var item in Model.RecentAssets)
+                {
+                    <tr>
+                        <td>@item.sno</td>
+                        <td>@item.IssueDate.ToString("dd-MMM-yyyy")</td>
+                        <td>@item.CategoryName</td>
+                        <td>@item.BrandName</td>
+                        <td>@item.accessories</td>
+
+                        <td class="actions-cell" style="white-space:nowrap;">
+                            <!-- View Details -->
+                            <a href="@Url.Action("Details", "AssetIssuance", new { id = item.sno })"
+                               title="View Details"
+                               style="color:#1a6b3c; font-size:26px; text-decoration:none; margin-right:16px;">
+                                <i class="bi bi-eye-fill"></i>
+                            </a>
+                            <a href="javascript:void(0)"
+                               onclick="editAsset(@item.sno)"
+                               title="Edit"
+                               style="color:#1a6b3c; font-size:26px; text-decoration:none; margin-right:16px;">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <!-- Print QR -->
+                            <button class="btn-print-qr"
+                                    data-id="@item.sno"
+                                    data-serial="@item.serialNumber"
+                                    title="Print QR Label"
+                                    style="background:none; border:none; cursor:pointer; color:#1a6b3c; font-size:26px; padding:0;">
+                                <i class="bi bi-qr-code-scan"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7" style="text-align:center; padding:20px;">No assets found for this user.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+
+    function editAsset(id) {
+        // 1. Show the form container immediately with an animation
+        $("#assetFormContainer").slideDown(500);
+
+        $.get('/AssetIssuance/GetAssetById', { id: id }, function (res) {
+            if (res.success) {
+                // 2. Fill the form fields with returned data
+                $("#Issue_CategoryID").val(res.data.CategoryID);
+                $("#Issue_BrandID").val(res.data.BrandID);
+                $("#Issue_modelNumber").val(res.data.modelNumber);
+                $("#Issue_serialNumber").val(res.data.serialNumber);
+                $("#Issue_assetTag").val(res.data.assetTag);
+                $("#issueDate").val(res.issueDate);
+                $("#assetLocation").val(res.data.Location_ID);
+                $("#Issue_remarks").val(res.data.remarks);
+                $("#empId").val(res.data.Issued_to_PNO);
+                $("#telExt").val(res.data.TelExt);
+
+                // 3. Handle Accessories Checkboxes
+                $(".checkbox-group input").prop('checked', false);
+                if (res.data.accessories) {
+                    var accArray = res.data.accessories.split(", ");
+                    accArray.forEach(function (val) {
+                        $(".checkbox-group input[value='" + val + "']").prop('checked', true);
+                    });
+                }
+
+                // 4. Update the Button UI
+                $("#btnSubmitFinal")
+                    .text("Update Asset Information")
+                    .css("background-color", "#d35400"); // Change color to Orange for Edit mode
+
+                // 5. Scroll smoothly to the form so the user sees it
+                $('html, body').animate({
+                    scrollTop: $("#assetFormContainer").offset().top - 20
+                }, 500);
+
+                // 6. Store ID for the Save process
+                window.editingAssetId = id;
+
+            } else {
+                alert("Error: Could not retrieve asset data.");
+            }
+        });
+    
+    }
+    $(document).ready(function () {
+
+        // 1. TOGGLE ASSET FORM
+        $("#btnShowAssetForm").click(function () {
+            var currentEmp = $("#empId").val();
+            if (!currentEmp) {
+                alert("Please Search and Load an Employee first!");
+                return;
+            }
+            $("#assetFormContainer").slideToggle();
+            // Pre-fill the "Issued to PNO" if you have that field
+            $("#issuedToPno").val(currentEmp);
+        });
+
+        // 2. SEARCH EMPLOYEE
+        $("#btnSearch").click(function () {
+            var pno = $("#pno").val();
+            if (!pno) { alert("Enter PNO"); return; }
+
+            $.get('/AssetIssuance/GetEmployee', { pno: pno }, function (res) {
+                if (res.success) {
+                    $("#empId").val(pno);
+                    $("#name").val(res.name);
+                    $("#designation").val(res.designation);
+                    $("#department").val(res.department);
+                    $("#email").val(res.email);
+                    $("#mobile").val(res.mobile);
+                    setEmployeeFieldsReadonly(true);
+                } else {
+                    alert("Employee not found");
+                    setEmployeeFieldsReadonly(false);
+                }
+            });
+        });
+
+        function setEmployeeFieldsReadonly(isReadonly) {
+            $("#empId, #name, #designation, #department, #email, #mobile").prop("readonly", isReadonly);
+        }
+
+        // 3. SAVE USER INFO
+        $("#btnSaveUser").click(function () {
+            var emp = {
+                Pno: $("#empId").val(),
+                Name: $("#name").val(),
+                Designation: $("#designation").val(),
+                Department: $("#department").val(),
+                Email: $("#email").val(),
+                Mobile: $("#mobile").val(),
+                Office_ext: $("#phoneExt").val(),
+                Ip_Address: $("#ipAddress").val(),
+                Roomno: $("#roomNo").val(),
+                Location: $("#location").val()
+            };
+            if (!emp.Pno) { alert("PNO is required"); return; }
+
+            $.post('/AssetIssuance/SaveUser', emp, function (res) {
+                alert(res.message);
+            });
+        });
+
+
+        // 4. SUBMIT ASSET FINAL
+        $("#btnSubmitFinal").click(function (e) {
+            e.preventDefault();
+
+            var selectedAcc = [];
+            $(".checkbox-group input[type='checkbox']:checked").each(function () {
+                selectedAcc.push($(this).val());
+            });
+
+            var assetData = {
+                sno: window.editingAssetId,
+                CategoryID: $("#Issue_CategoryID").val(),
+                BrandID: $("#Issue_BrandID").val(),
+                modelNumber: $("#Issue_modelNumber").val(),
+                serialNumber: $("#Issue_serialNumber").val(),
+                assetTag: $("#Issue_assetTag").val(),
+                condition: $("input[name='condition']:checked").val(),
+                accessories: selectedAcc.join(", "),
+                other_accessories: $("#otherAccessories").val(), // Restored
+                otherserialNumber: $("#otherSerialNumber").val(), // Restored
+                warranty: $("#warrantyStatus").val(), // Restored
+                previousUser: $("#previousUserPno").val(), // Restored
+                IssueDate: $("#issueDate").val(),
+                ponum: $("#purchaseOrderNo").val(), // Restored
+                gatepass: $("#gatepassNo").val(), // Restored
+                Location_ID: $("#assetLocation").val(),
+                remarks: $("#Issue_remarks").val(),
+                TelExt: $("#telExt").val(),
+                Issued_to_PNO: $("#empId").val()
+            };
+
+            if (!assetData.serialNumber || !assetData.Issued_to_PNO) {
+                alert("Serial Number and Employee PNO are required.");
+                return;
+            }
+            
+            $.ajax({
+                url: '/AssetIssuance/SaveAsset',
+                type: 'POST',
+                data: { Issue: assetData },
+                success: function (res) {
+                    if (res.success) {
+                        alert("Asset Assigned Successfully!");
+                        window.editingAssetId = null;
+                        window.location.reload();
+                    } else {
+                        alert("Error: " + res.message);
+                    }
+                }
+            });
+        });
+    });
+</script>

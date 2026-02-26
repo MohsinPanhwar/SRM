@@ -1,0 +1,58 @@
+﻿@model SRM.Models.InvIssueDetail
+
+<div class="setup-container">
+
+    <div class="section-header">
+        <h2>Asset Details</h2>
+    </div>
+
+    <table class="info-table">
+        <tr>
+            <td class="info-label">Ref No</td>
+            <td>@Model.sno</td>
+        </tr>
+        <tr>
+            <td class="info-label">Entry Date</td>
+            <td>@Model.entry_date.ToString("dd-MMM-yyyy")</td>
+        </tr>
+        <tr>
+            <td class="info-label">Issue to PNO</td>
+            <td>@Model.Issued_to_PNO</td>
+        </tr>
+        <tr>
+            <td class="info-label">Issue Date</td>
+            <td>@Model.IssueDate.ToString("dd-MMM-yyyy")</td>
+        </tr>
+        <tr>
+            <td class="info-label">Location</td>
+            <td>@Model.Locations</td>
+        </tr>
+        <tr>
+            <td class="info-label">Item Name</td>
+            <td>@Model.CategoryName</td>
+        </tr>
+        <tr>
+            <td class="info-label">Brand</td>
+            <td>@Model.BrandName</td>
+        </tr>
+        <tr>
+            <td class="info-label">Condition</td>
+            <td>@Model.condition</td>
+        </tr>
+        <tr>
+            <td class="info-label">Accessories</td>
+            <td>@Model.accessories</td>
+        </tr>
+        <tr>
+            <td class="info-label">Remarks</td>
+            <td>@Model.remarks</td>
+        </tr>
+    </table>
+
+    <div style="margin-top:20px; text-align:center;">
+        <a href="@Url.Action("IssuedAssets", "AssetIssuance")" class="setup-btn-green" style="text-decoration:none;">
+            ⬅ Back to List
+        </a>
+    </div>
+
+</div>

@@ -1,0 +1,93 @@
+﻿@model SRM.Models.ViewModels.IssuedAssetListVM
+@{
+    ViewBag.Title = "Issued Assets";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="setup-container">
+    <!-- HEADER -->
+    <div class="section-header">
+        <h2>Issued Assets</h2>
+        <div class="action-row">
+            @using (Html.BeginForm("IssuedAssets", "AssetIssuance", FormMethod.Get))
+            {
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <select name="brandId" class="form-control" style="width:auto; min-width:150px;">
+                        @foreach (var item in Model.BrandList)
+                        {
+                            <option value="@item.Value" @(item.Value == Model.SelectedBrandId?.ToString() ? "selected" : "")>
+                                @item.Text
+                            </option>
+                        }
+                    </select>
+                    <select name="pno" class="form-control" style="width:auto; min-width:150px;">
+                        @foreach (var item in Model.PnoList)
+                        {
+                            <option value="@item.Value" @(item.Value == Model.SelectedPno ? "selected" : "")>
+                                @item.Text
+                            </option>
+                        }
+                    </select>
+                    <button type="submit" class="setup-btn-green">🔍 Filter</button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <table class="crud-table">
+        <thead>
+            <tr>
+                <th>Ref No</th>
+                <th>Entry Date</th>
+                <th>Issue to PNO</th>
+                <th>Issue Date</th>
+                <th>Location</th>
+                <th>Item Name</th>
+                <th>Brand</th>
+                <th>Condition</th>
+                <th>Accessories</th>
+                <th width="220">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Assets)
+            {
+               
+                    <!-- EXISTING -->
+            <tr>
+                <td>@item.sno</td>
+                <td>@item.entry_date.ToString("dd-MMM-yyyy")</td>
+                <td>@item.Issued_to_PNO</td>
+                <td>@item.IssueDate.ToString("dd-MMM-yyyy")</td>
+                <td style="max-width:130px; position:relative;">
+                    <span class="truncate-tooltip" title="@item.Locations"
+                          style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer;">
+                        @item.Locations
+                    </span>
+                </td>
+                <td>@item.CategoryName</td>
+                <td>@item.BrandName</td>
+                <td>@item.condition</td>
+                <td>@item.accessories</td>
+
+                <td class="actions-cell" style="white-space:nowrap;">
+                    <!-- View Details -->
+                    <a href="@Url.Action("Details", "AssetIssuance", new { id = item.sno })"
+                       title="View Details"
+                       style="color:#1a6b3c; font-size:26px; text-decoration:none; margin-right:16px;">
+                        <i class="bi bi-eye-fill"></i>
+                    </a>
+                    <!-- Print QR -->
+                    <button class="btn-print-qr"
+                            data-id="@item.sno"
+                            data-serial="@item.serialNumber"
+                            title="Print QR Label"
+                            style="background:none; border:none; cursor:pointer; color:#1a6b3c; font-size:26px; padding:0;">
+                        <i class="bi bi-qr-code-scan"></i>
+                    </button>
+                </td>
+            </tr>
+                }
+            </tbody>
+    </table>
+</div>

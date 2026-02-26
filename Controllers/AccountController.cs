@@ -200,20 +200,38 @@ namespace SRM.Controllers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Register error: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                var errorMessage = ex.Message;
 
                 if (ex.InnerException != null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    errorMessage += " | Inner: " + ex.InnerException.Message;
+
+                    if (ex.InnerException.InnerException != null)
+                    {
+                        errorMessage += " | SQL: " + ex.InnerException.InnerException.Message;
+                    }
                 }
 
-                ModelState.AddModelError("", $"An error occurred during registration: {ex.Message}");
+                ModelState.AddModelError("", errorMessage);
                 return View();
             }
+
+            //catch (Exception ex)
+            //{
+            //    System.Diagnostics.Debug.WriteLine($"Register error: {ex.Message}");
+            //    System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+
+            //    if (ex.InnerException != null)
+            //    {
+            //        System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            //    }
+
+            //    ModelState.AddModelError("", $"An error occurred during registration: {ex.Message}");
+            //    return View();
+            //}
         }
 
- 
+
         [Authorize]
         [HttpGet]
         public ActionResult Logout()

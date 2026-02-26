@@ -1,0 +1,115 @@
+﻿@model List<SRM.Models.Brand>
+
+@{
+    ViewBag.Title = "Brand Setup";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Brand Setup</h2>
+
+        <div class="action-row">
+            <input type="text" id="newBrandName" placeholder="Enter Brand Name" />
+            <button id="addBrandBtn" class="setup-btn-green">+ Add Brand</button>
+        </div>
+    </div>
+
+    <table class="crud-table">
+        <thead>
+            <tr>
+                <th>Brand Name</th>
+                <th width="120">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var brand in Model)
+            {
+                <tr data-id="@brand.ID">
+                    <td class="brand-name">@brand.Name</td>
+                    <td class="actions-cell">
+                        <button class="edit-btn" title="Edit">✏️</button>
+                        <button class="delete-btn" title="Delete">❌</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section scripts {
+    <script>
+$(function () {
+
+    // ADD
+    $('#addBrandBtn').click(function () {
+        var name = $('#newBrandName').val().trim();
+
+        if (!name) {
+            alert('Brand name is required');
+            return;
+        }
+
+        $.post('@Url.Action("Save","InventoryBrand")',
+            { ID: 0, Name: name },
+            function (res) {
+                if (res.success) location.reload();
+                else alert(res.message);
+            });
+    });
+
+    // EDIT
+    $(document).on('click', '.edit-btn', function () {
+        var row = $(this).closest('tr');
+        var name = row.find('.brand-name').text().trim();
+
+        row.find('.brand-name').html(
+            `<input type="text" class="edit-input" value="${name}" />`
+        );
+
+        row.find('.actions-cell').html(`
+            <button class="save-btn">💾</button>
+            <button class="cancel-btn">🚫</button>
+        `);
+    });
+
+    // SAVE EDIT
+    $(document).on('click', '.save-btn', function () {
+        var row = $(this).closest('tr');
+        var id = row.data('id');
+        var name = row.find('.brand-name input').val().trim();
+
+        if (!name) {
+            alert('Brand name is required');
+            return;
+        }
+
+        $.post('@Url.Action("Save","InventoryBrand")',
+            { ID: id, Name: name },
+            function (res) {
+                if (res.success) location.reload();
+            });
+    });
+
+    // CANCEL
+    $(document).on('click', '.cancel-btn', function () {
+        location.reload();
+    });
+
+    // DELETE
+    $(document).on('click', '.delete-btn', function () {
+        var row = $(this).closest('tr');
+        var id = row.data('id');
+
+        if (confirm('Delete this brand?')) {
+            $.post('@Url.Action("Delete","InventoryBrand")',
+                { id: id },
+                function (res) {
+                    if (res.success) row.remove();
+                });
+        }
+    });
+
+});
+    </script>
+}
