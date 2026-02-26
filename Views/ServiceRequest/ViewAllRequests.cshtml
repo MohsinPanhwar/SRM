@@ -25,6 +25,23 @@
                         </td>
                         <td><input type="text" name="searchText" value="@Model.SearchText" placeholder="Enter keyword..." /></td>
                     </tr>
+                    @* --- Added Status Filter Row --- *@
+                    <tr>
+                        <td><strong>Status Filter</strong></td>
+                        <td>
+                            <select name="statusFilter" class="form-control" onchange="this.form.submit();">
+                                <option value="All" @(Model.StatusFilter == "All" ? "selected" : "")>-- All Statuses --</option>
+                                <option value="Q" @(Model.StatusFilter == "Q" ? "selected" : "")>Queued 👥</option>
+                                <option value="F" @(Model.StatusFilter == "F" ? "selected" : "")>Forwarded ➡️</option>
+                                <option value="R" @(Model.StatusFilter == "R" ? "selected" : "")>Resolved ✅</option>
+                                <option value="C" @(Model.StatusFilter == "C" ? "selected" : "")>Closed ✔️</option>
+                            </select>
+                        </td>
+                        <td style="color: #666; font-size: 0.85em;">
+                            Currently viewing: <strong>@Model.StatusFilter</strong>
+                        </td>
+                    </tr>
+                    @* ------------------------------ *@
                     <tr>
                         <td><strong>From</strong></td>
                         <td><input type="date" name="fromDate" value="@Model.FromDate.ToString("yyyy-MM-dd")" /></td>
@@ -56,7 +73,7 @@
         <small>Showing results from <strong>@Model.FromDate.ToString("dd-MMM-yyyy")</strong> to <strong>@Model.ToDate.ToString("dd-MMM-yyyy")</strong></small>
     </div>
 
-    <table class="main-grid">
+    <table class="crud-table">
         <thead>
             <tr>
                 <th>Request ID</th>

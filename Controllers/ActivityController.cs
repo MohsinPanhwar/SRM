@@ -279,9 +279,115 @@ namespace SRM.Controllers
             DateTime date = DateTime.Parse(dateStr);
             return new DateTime(date.Year, date.Month, date.Day, hour, minute, 0);
         }
-        public ActionResult ActivityDetails()
+        public ActionResult Details(int id)
         {
-            return View("~/Views/ActivityManagement/ActivityDetails.cshtml");
+            var activity = (from am in _db.ActivityMasters
+                            join cat in _db.ActivityCategories on am.Activity.ToString() equals cat.cat_id into catJoin
+                            from cat in catJoin.DefaultIfEmpty()
+                            join loc in _db.IncidentLocations on am.Location equals loc.LocationCode into locJoin
+                            from loc in locJoin.DefaultIfEmpty()
+                            where am.sno == id
+                            select new ActivityVM // Ensure this class name matches your ViewModel
+                            {
+                                sno = am.sno,
+                                ActivityName = cat != null ? cat.cat_name : "N/A",
+                                LocationName = loc != null ? loc.LocationName : am.Location,
+                                ActivityDate = am.ActivityDate,
+                                ActivityEndDate = am.ActivityEndDate,
+                                ReportDate = am.ReportDate,
+                                ReportBy = am.ReportBy,
+                                Detail = am.Detail,
+                                workLog = am.workLog,
+                                ResolutionDetail = am.ResolutionDetail,
+                                status = am.status == "C" ? "Closed" : "Open"
+                            }).FirstOrDefault();
+
+            // FIX: If no record is found, don't go to the View; show an error or redirect
+            if (activity == null)
+            {
+                TempData["Error"] = "Activity record not found.";
+                return RedirectToAction("ShowAllActivities");
+            }
+
+            return View("~/Views/ActivityManagement/ActivityDetails.cshtml", activity);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult UpdateActivity(ActivityVM model)
+        {
+            var activity = _db.ActivityMasters.FirstOrDefault(x => x.sno == model.sno);
+
+            if (activity != null)
+            {
+                string pno = Session["AgentPno"]?.ToString() ?? "00000";
+                string agentName = Session["AgentName"]?.ToString() ?? "Unknown";
+                string timestamp = DateTime.Now.ToString("dd-MMM-yyyy HH:mm");
+                string newWorkLogEntries = "";
+
+                // 1. Handle standard Resolution Detail entry
+                if (!string.IsNullOrWhiteSpace(model.ResolutionDetail))
+                {
+                    newWorkLogEntries += $"[{timestamp} | {agentName} ({pno})]" + Environment.NewLine +
+                                         model.ResolutionDetail.Trim() + Environment.NewLine +
+                                         "--------------------------------------------------" + Environment.NewLine + Environment.NewLine;
+                }
+
+                // 2. Logic: If status is being changed to Closed, add the specific header
+                if (model.status == "Closed" && activity.status != "C")
+                {
+                    newWorkLogEntries += $"[{timestamp} | {agentName} ({pno})]" + Environment.NewLine +
+                                         "*** ACTIVITY CLOSED ***" + Environment.NewLine +
+                                         "--------------------------------------------------";
+
+                    activity.status = "C";
+                    activity.ClosedDate = DateTime.Now;
+                    activity.ClosedBy = pno;
+                }
+                else
+                {
+                    activity.status = (model.status == "Closed") ? "C" : "O";
+                }
+
+                // 3. Append all new entries to existing WorkLog
+                if (!string.IsNullOrEmpty(newWorkLogEntries))
+                {
+                    string existingLog = (activity.workLog ?? "").Trim();
+                    activity.workLog = string.IsNullOrEmpty(existingLog)
+                        ? newWorkLogEntries.Trim()
+                        : existingLog + Environment.NewLine + Environment.NewLine + newWorkLogEntries.Trim();
+                }
+
+                _db.SaveChanges();
+                TempData["Success"] = "Activity updated successfully!";
+            }
+
+            return Redirect(Url.Action("Details", new { id = model.sno }) + "#worklog-section");
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ReopenActivity(ActivityVM model)
+        {
+            var activity = _db.ActivityMasters.FirstOrDefault(x => x.sno == model.sno);
+            if (activity != null)
+            {
+                string pno = Session["AgentPno"]?.ToString() ?? "00000";
+                string agentName = Session["AgentName"]?.ToString() ?? "Unknown";
+                string timestamp = DateTime.Now.ToString("dd-MMM-yyyy HH:mm");
+
+                activity.status = "O"; // Set back to Open
+                activity.ClosedDate = null;
+                activity.ClosedBy = null;
+
+                string entry = $"[{timestamp} | {agentName} ({pno})]" + Environment.NewLine +
+                               "*** ACTIVITY RE-OPENED ***" + Environment.NewLine +
+                               "--------------------------------------------------";
+
+                activity.workLog = (activity.workLog ?? "").Trim() + Environment.NewLine + Environment.NewLine + entry;
+
+                _db.SaveChanges();
+                TempData["Success"] = "Activity re-opened successfully.";
+            }
+            return Redirect(Url.Action("Details", new { id = model.sno }) + "#worklog-section");
         }
         protected override void Dispose(bool disposing)
         {

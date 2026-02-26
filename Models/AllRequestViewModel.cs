@@ -21,5 +21,6 @@ namespace SRM.Models
         public int ResolvedCount { get; set; }
         public int ClosedCount { get; set; }
         public int TotalCount => QueueCount + ForwardedCount + ResolvedCount + ClosedCount;
+        public string SelectedStatus { get; set; } // Add this
     }
 }

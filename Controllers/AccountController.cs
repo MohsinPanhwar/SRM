@@ -19,6 +19,7 @@ namespace SRM.Controllers
         public AccountController()
         {
             _context = new AppDbContext();
+            // Fallback for secret key
             string secretKey = System.Configuration.ConfigurationManager.AppSettings["JwtSecretKey"] ?? "YourSuperSecretKeyThatShouldBeAt32Characters!";
             _tokenService = new JwtTokenService(secretKey, 24);
         }
@@ -44,10 +45,20 @@ namespace SRM.Controllers
 
             try
             {
-                // Find agent - simple query, no includes needed
+                // 1. Normalize Input for "P" prefix flexibility
+                // This allows 'P60987', 'p60987', and '60987' to all work.
+                string searchInput = pno.Trim().ToUpper();
+                string pnoWithoutP = searchInput.StartsWith("P") ? searchInput.Substring(1) : searchInput;
+                string pnoWithP = searchInput.StartsWith("P") ? searchInput : "P" + searchInput;
+
+                // 2. Find agent: Match raw input, prefixed version, or unprefixed version
                 var agent = _context.agent
                     .FirstOrDefault(a =>
-                        (a.Pno == pno || a.Email == pno) && a.Status == "A");
+                        (a.Pno.ToUpper() == searchInput ||
+                         a.Pno.ToUpper() == pnoWithP ||
+                         a.Pno.ToUpper() == pnoWithoutP ||
+                         a.Email.ToUpper() == searchInput)
+                        && a.Status == "A");
 
                 if (agent == null || !VerifyPassword(password, agent.Password))
                 {
@@ -55,7 +66,7 @@ namespace SRM.Controllers
                     return View();
                 }
 
-                // Generate JWT Token
+                // 3. Generate JWT Token
                 bool isAdmin = agent.IsAdministrator == "Y";
                 string jwtToken = _tokenService.GenerateToken(
                     agent.Sno,
@@ -71,11 +82,12 @@ namespace SRM.Controllers
                     return View();
                 }
 
+                // 4. Set Authentication Cookie
                 bool remember = rememberMe ?? false;
                 var cookie = new HttpCookie(JWT_COOKIE_NAME, jwtToken)
                 {
                     HttpOnly = true,
-                    Secure = false,
+                    Secure = Request.IsSecureConnection, // Better security practice
                     Path = "/",
                     Expires = remember ? DateTime.Now.AddDays(30) : DateTime.Now.AddHours(24)
                 };
@@ -83,32 +95,32 @@ namespace SRM.Controllers
                 Response.Cookies.Add(cookie);
                 System.Web.Security.FormsAuthentication.SetAuthCookie(agent.Pno, remember);
 
-                // Update audit fields
+                // 5. Update Audit Fields
                 agent.LastLoginDateTime = DateTime.UtcNow;
                 agent.LastLoginIp = GetClientIpAddress();
                 agent.LastUpdate = DateTime.UtcNow;
                 _context.SaveChanges();
 
-                // Store in session
+                // 6. Manage Session Data
                 Session["AgentId"] = agent.Sno;
                 Session["AgentName"] = agent.Name;
                 Session["AgentPno"] = agent.Pno;
                 Session["IsAdmin"] = isAdmin ? "Y" : "N";
-                Session["UserPrivileges"] = agent.Privilege ?? string.Empty;
                 Session["AgentProgramId"] = agent.ProgramId;
-                string userPrivileges = string.Empty;
+
+                // Determine Privileges (Role overrides Agent table default)
+                string userPrivileges = agent.Privilege ?? "View";
                 if (agent.RoleId.HasValue)
                 {
                     var role = _context.Role.FirstOrDefault(r => r.Role_Id == agent.RoleId.Value);
                     if (role != null)
                     {
-                        userPrivileges = role.Privilege ?? string.Empty;
+                        userPrivileges = role.Privilege ?? userPrivileges;
                     }
                 }
                 Session["UserPrivileges"] = userPrivileges;
 
-
-
+                // 7. Redirection
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 {
                     return Redirect(returnUrl);
@@ -119,8 +131,7 @@ namespace SRM.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Login error: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-                ModelState.AddModelError("", "An error occurred during login. " + ex.Message);
+                ModelState.AddModelError("", "An error occurred during login. Please try again.");
                 return View();
             }
         }
@@ -139,45 +150,20 @@ namespace SRM.Controllers
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(pno))
-                {
-                    ModelState.AddModelError("pno", "Personnel number is required.");
-                }
+                if (string.IsNullOrWhiteSpace(pno)) ModelState.AddModelError("pno", "Personnel number is required.");
+                if (string.IsNullOrWhiteSpace(name)) ModelState.AddModelError("name", "Full name is required.");
+                if (string.IsNullOrWhiteSpace(password)) ModelState.AddModelError("password", "Password is required.");
+                if (password != confirmPassword) ModelState.AddModelError("confirmPassword", "Passwords do not match.");
+                if (password != null && password.Length < 6) ModelState.AddModelError("password", "Password must be at least 6 characters.");
 
-                if (string.IsNullOrWhiteSpace(name))
-                {
-                    ModelState.AddModelError("name", "Full name is required.");
-                }
-
-                if (string.IsNullOrWhiteSpace(password))
-                {
-                    ModelState.AddModelError("password", "Password is required.");
-                }
-
-                if (password != confirmPassword)
-                {
-                    ModelState.AddModelError("confirmPassword", "Passwords do not match.");
-                }
-
-                if (password != null && password.Length < 6)
-                {
-                    ModelState.AddModelError("password", "Password must be at least 6 characters.");
-                }
-
+                // Uniqueness check
                 if (!string.IsNullOrWhiteSpace(pno) && _context.agent.Any(a => a.Pno == pno))
-                {
                     ModelState.AddModelError("pno", "Personnel number already exists.");
-                }
 
                 if (!string.IsNullOrEmpty(email) && _context.agent.Any(a => a.Email == email))
-                {
                     ModelState.AddModelError("email", "Email already registered.");
-                }
 
-                if (!ModelState.IsValid)
-                {
-                    return View();
-                }
+                if (!ModelState.IsValid) return View();
 
                 var agent = new Agent
                 {
@@ -203,7 +189,7 @@ namespace SRM.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Register error: {ex.Message}");
-                ModelState.AddModelError("", $"An error occurred during registration: {ex.Message}");
+                ModelState.AddModelError("", "An error occurred during registration.");
                 return View();
             }
         }
@@ -215,17 +201,19 @@ namespace SRM.Controllers
             Session.Clear();
             Session.Abandon();
 
+            // Clear Forms Auth Cookie
             if (System.Web.Security.FormsAuthentication.CookiesSupported)
             {
-                var cookie = new HttpCookie(System.Web.Security.FormsAuthentication.FormsCookieName, "")
+                var faCookie = new HttpCookie(System.Web.Security.FormsAuthentication.FormsCookieName, "")
                 {
                     Expires = DateTime.Now.AddYears(-1),
                     HttpOnly = true
                 };
-                Response.Cookies.Add(cookie);
+                Response.Cookies.Add(faCookie);
             }
 
-            foreach (var key in Request.Cookies.AllKeys)
+            // Clear JWT and all other application cookies
+            foreach (string key in Request.Cookies.AllKeys)
             {
                 var c = new HttpCookie(key) { Expires = DateTime.Now.AddDays(-1) };
                 Response.Cookies.Add(c);
@@ -241,7 +229,7 @@ namespace SRM.Controllers
         {
             if (string.IsNullOrEmpty(currentPassword) || string.IsNullOrEmpty(newPassword))
             {
-                ModelState.AddModelError("", "Current password and new password are required.");
+                ModelState.AddModelError("", "Current and new passwords are required.");
                 return View();
             }
 
@@ -251,24 +239,12 @@ namespace SRM.Controllers
                 return View();
             }
 
-            if (newPassword.Length < 6)
-            {
-                ModelState.AddModelError("", "New password must be at least 6 characters.");
-                return View();
-            }
-
             try
             {
                 var userPno = Session["AgentPno"] as string;
-
-                if (string.IsNullOrEmpty(userPno))
-                {
-                    ModelState.AddModelError("", "Session expired. Please login again.");
-                    return RedirectToAction("Login");
-                }
+                if (string.IsNullOrEmpty(userPno)) return RedirectToAction("Login");
 
                 var agent = _context.agent.FirstOrDefault(a => a.Pno == userPno);
-
                 if (agent == null)
                 {
                     ModelState.AddModelError("", "User not found.");
@@ -288,21 +264,11 @@ namespace SRM.Controllers
                 TempData["SuccessMessage"] = "Password changed successfully.";
                 return RedirectToAction("home", "Home");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Diagnostics.Debug.WriteLine($"ChangePassword error: {ex.Message}");
                 ModelState.AddModelError("", "An error occurred while changing password.");
                 return View();
             }
-        }
-
-        private bool IsJwtAuthenticated()
-        {
-            if (Request.Cookies[JWT_COOKIE_NAME] == null)
-                return false;
-
-            string token = Request.Cookies[JWT_COOKIE_NAME].Value;
-            return _tokenService.IsTokenValid(token);
         }
 
         private string HashPassword(string password)
@@ -315,7 +281,7 @@ namespace SRM.Controllers
                     rng.GetBytes(salt);
                 }
 
-                var pbkdf2 = new System.Security.Cryptography.Rfc2898DeriveBytes(password, salt, 10000);
+                var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 10000);
                 byte[] hash = pbkdf2.GetBytes(20);
 
                 byte[] hashBytes = new byte[36];
@@ -334,17 +300,13 @@ namespace SRM.Controllers
                 byte[] salt = new byte[16];
                 Array.Copy(hashBytes, 0, salt, 0, 16);
 
-                var pbkdf2 = new System.Security.Cryptography.Rfc2898DeriveBytes(password, salt, 10000);
+                var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 10000);
                 byte[] computedHash = pbkdf2.GetBytes(20);
 
                 for (int i = 0; i < 20; i++)
                 {
-                    if (hashBytes[i + 16] != computedHash[i])
-                    {
-                        return false;
-                    }
+                    if (hashBytes[i + 16] != computedHash[i]) return false;
                 }
-
                 return true;
             }
             catch
@@ -365,10 +327,7 @@ namespace SRM.Controllers
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                _context?.Dispose();
-            }
+            if (disposing) _context?.Dispose();
             base.Dispose(disposing);
         }
     }

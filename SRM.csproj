@@ -151,6 +151,7 @@
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\LocationController.cs" />
     <Compile Include="Controllers\MessageController.cs" />
+    <Compile Include="Controllers\MISController.cs" />
     <Compile Include="Controllers\NewRequestController.cs" />
     <Compile Include="Controllers\ProgramController.cs" />
     <Compile Include="Controllers\RoleController.cs" />
@@ -175,6 +176,7 @@
     <Compile Include="Models\Request_Master.cs" />
     <Compile Include="Models\Role.cs" />
     <Compile Include="Models\ViewModels\ActivityVM.cs" />
+    <Compile Include="Models\ViewModels\DashboardVM.cs" />
     <Compile Include="Models\ViewModels\ManageGroupVM.cs" />
     <Compile Include="Models\ViewModels\ManageRoleVM.cs" />
     <Compile Include="Models\ViewModels\ManageUserVM.cs" />
@@ -192,7 +194,7 @@
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
-    <Content Include="Content\Site.css" />
+    <Content Include="Content\site.css" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <None Include="Scripts\jquery-3.4.1.intellisense.js" />
@@ -236,6 +238,8 @@
     <Content Include="Views\ActivityManagement\ViewAllCategories.cshtml" />
     <Content Include="Views\ActivityManagement\ViewAllLocations.cshtml" />
     <Content Include="Views\ActivityManagement\ActivityDetails.cshtml" />
+    <Content Include="Views\MIS\Dashboard.cshtml" />
+    <Content Include="Views\MIS\Mis.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

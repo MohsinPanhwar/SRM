@@ -19,16 +19,16 @@
             <div class="grid-label">Activity</div>
             <div class="grid-input" style="display:flex; align-items:center; gap:8px;">
                 @* Activity dropdown *@
-                <select name="ActivityId" id="ActivityId" class="form-control" style="flex:1;">
+                <select name="ActivityId" id="ActivityId" class="form-control" style="flex: 1; height: 45px !important;">
                     <option value="">-- Select Activity --</option>
                     @foreach (var item in ViewBag.Activities as List<SRM.Models.ActivityCategories>)
                     {
-                         <option value="@item.cat_id">@item.cat_name</option>
+                        <option value="@item.cat_id">@item.cat_name</option>
                     }
                 </select>
                 <a href="@Url.Action("ViewAllCategories", "Activity")" style="text-decoration: none;">
                     <button type="button" id="btnAddActivity" title="View All Activities"
-                            style=" background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            style=" background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         +
                     </button>
                 </a>
@@ -36,7 +36,7 @@
 
             <div class="grid-label">Location</div>
             <div class="grid-input" style="display:flex; align-items:center; gap:8px;">
-                <select name="Location" id="Location" class="form-control" style="flex:1;">
+                <select name="Location" id="Location" class="form-control" style="flex: 1; height: 45px !important;">
                     <option value="">-- Select Location --</option>
                     @foreach (var item in ViewBag.Locations as List<SRM.Models.IncidentLocation>)
                     {
@@ -46,46 +46,46 @@
                 <a href="@Url.Action("ViewAllLocations", "Activity")" style="text-decoration: none;">
 
                     <button type="button" id="btnAddLocation" title="Add New Location"
-                            style=" background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            style=" background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         +
                     </button>
-                    </a>
+                </a>
             </div>
 
             @* Row 2: Report By + Report Date *@
             <div class="grid-label">Report By</div>
             <div class="grid-input">
-                <input type="text" class="form-control" value="@Session["AgentPno"]" readonly style="background:#eee; width:100%;" />
+                <input type="text" class="form-control" value="@Session["AgentPno"]" readonly style="background: #eee; width: 100%; height: 45px !important;" />
             </div>
 
             <div class="grid-label">Report Date</div>
             <div class="grid-input">
-                <input type="text" class="form-control" value="@DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt")" readonly style="background:#eee; width:100%;" />
+                <input type="text" class="form-control" value="@DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt")" readonly style="background: #eee; width: 100%; height: 45px !important;" />
             </div>
 
             @* Row 3: Start Date + Start Time *@
             <div class="grid-label">Start Date</div>
             <div class="grid-input">
-                <input type="date" name="StartDate" class="form-control" style="width:100%;"
+                <input type="date" name="StartDate" class="form-control" style="width: 100%; height: 45px !important;"
                        value="@DateTime.Now.ToString("yyyy-MM-dd")" />
             </div>
 
             <div class="grid-label">Start Time</div>
             <div class="grid-input" style="display:flex; align-items:center; gap:5px;">
-                <select name="StartHour" class="form-control" style="width:80px; flex-shrink:0;">
+                <select name="StartHour" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     @for (int i = 1; i <= 12; i++)
                     {
                         <option value="@i">@i</option>
-}
+                    }
                 </select>
                 <span>:</span>
-                <select name="StartMinute" class="form-control" style="width:80px; flex-shrink:0;">
+                <select name="StartMinute" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     @for (int i = 0; i < 60; i += 5)
                     {
                         <option value="@i.ToString("D2")">@i.ToString("D2")</option>
-}
+                    }
                 </select>
-                <select name="StartAmPm" class="form-control" style="width:80px; flex-shrink:0;">
+                <select name="StartAmPm" class="form-control" style="width:80px; flex-shrink:0;height: 45px !important;">
                     <option>AM</option>
                     <option>PM</option>
                 </select>
@@ -94,36 +94,36 @@
             @* Row 4: End Date + End Time *@
             <div class="grid-label">End Date</div>
             <div class="grid-input">
-                <input type="date" name="EndDate" class="form-control" style="width:100%;"
+                <input type="date" name="EndDate" class="form-control" style="width: 100%; height: 45px !important;"
                        value="@DateTime.Now.ToString("yyyy-MM-dd")" />
             </div>
 
             <div class="grid-label">End Time</div>
             <div class="grid-input" style="display:flex; align-items:center; gap:5px;">
-                <select name="EndHour" class="form-control" style="width:80px; flex-shrink:0;">
+                <select name="EndHour" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     @for (int i = 1; i <= 12; i++)
                     {
                         <option value="@i">@i</option>
-}
+                    }
                 </select>
                 <span>:</span>
-                <select name="EndMinute" class="form-control" style="width:80px; flex-shrink:0;">
+                <select name="EndMinute" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     @for (int i = 0; i < 60; i += 5)
                     {
                         <option value="@i.ToString("D2")">@i.ToString("D2")</option>
-}
+                    }
                 </select>
-                <select name="EndAmPm" class="form-control" style="width:80px; flex-shrink:0;">
+                <select name="EndAmPm" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     <option>AM</option>
                     <option>PM</option>
                 </select>
             </div>
 
-            @* Row 5: Activity Detail - label + textarea spanning remaining 3 columns *@
+            @* Row 5: Activity Detail *@
             <div class="grid-label">Activity Detail</div>
             <div class="grid-input" style="grid-column: 2 / 5;">
                 <textarea name="ActivityDetail" class="form-control"
-                          style="width:100%; min-height:120px; resize:none;"
+                          style="width:100%; min-height:120px; resize:none; padding-top: 10px !important; margin-top: 10px;"
                           placeholder="Enter activity details here..."></textarea>
             </div>
 

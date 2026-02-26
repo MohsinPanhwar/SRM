@@ -11,7 +11,7 @@ namespace SRM.Controllers
 {
     public class ViewAllRequestsController : Controller
     {
-        private AppDbContext _db = new AppDbContext();
+        private readonly AppDbContext _db = new AppDbContext();
 
         // GET: ViewAllRequests
         public async Task<ActionResult> ViewAllRequests(string searchBy, string searchText, DateTime? fromDate, DateTime? toDate, string statusFilter)
@@ -169,7 +169,7 @@ namespace SRM.Controllers
                 workshopEntry.assignto = targetName;
                 await _db.SaveChangesAsync();
             }
-            return RedirectToAction("Details", new { id = id });
+            return RedirectToAction("Details", new { id });
         }
 
         [HttpPost]
@@ -194,7 +194,7 @@ namespace SRM.Controllers
             await _db.SaveChangesAsync();
             _db.Configuration.ValidateOnSaveEnabled = true;
 
-            return RedirectToAction("Details", new { id = id });
+            return RedirectToAction("Details", new { id });
         }
 
         [HttpPost]
@@ -232,7 +232,7 @@ namespace SRM.Controllers
             var req = _db.Request_Master.Find(id);
             if (req == null) return HttpNotFound();
 
-            if (string.IsNullOrEmpty(ActualPArea)) return RedirectToAction("Details", new { id = id });
+            if (string.IsNullOrEmpty(ActualPArea)) return RedirectToAction("Details", new { id });
 
             string resolverName = Session["AgentName"]?.ToString() ?? "Unknown Agent";
             string resolverPno = Session["AgentPno"]?.ToString() ?? "";
@@ -274,7 +274,7 @@ namespace SRM.Controllers
             await _db.SaveChangesAsync();
             _db.Configuration.ValidateOnSaveEnabled = true;
 
-            return RedirectToAction("Details", new { id = id });
+            return RedirectToAction("Details", new { id });
         }
 
         protected override void Dispose(bool disposing)

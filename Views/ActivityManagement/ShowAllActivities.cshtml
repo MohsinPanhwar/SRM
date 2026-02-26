@@ -1,29 +1,33 @@
-﻿@{
-    ViewBag.Title = "Show All Activities";
-    Layout = "~/Views/Shared/_Layout.cshtml";}
-
-@model IEnumerable<dynamic>
-
+﻿@model IEnumerable<dynamic>
 @{
     ViewBag.Title = "Activity Management";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+<style>
+    /* The magic for smoothness */
+    .activity-row {
+        transition: opacity 0.4s ease, transform 0.4s ease;
+        opacity: 1;
+        transform: scaleY(1);
+    }
 
+        /* State when a row is filtered out */
+        .activity-row.filtered-out {
+            opacity: 0;
+            transform: scaleY(0);
+            display: none; /* We will handle this in JS with a delay */
+        }
+</style>
 <div class="setup-container">
     <div class="section-header">
         <h2>Activity Management</h2>
-        <div class="action-row">
-            <a href="@Url.Action("LogNewActivity", "Activity")" class="setup-btn-green">
-                <span style="margin-right:5px;">+</span> Log New Activity
-            </a>
-        </div>
     </div>
 
     @* --- Dashboard Summary Section --- *@
     <div style="display: flex; justify-content: center; margin-bottom: 30px;">
         <table style="width: 450px; border-collapse: collapse; text-align: center; border: 1px solid #ccc; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
             <thead>
-                <tr style="background-color: #2e7d57; color: white;">
+                <tr style="background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%); color: white;">
                     <th style="padding: 12px; border: 1px solid #ccc; font-weight: 600;">Status</th>
                     <th style="padding: 12px; border: 1px solid #ccc; font-weight: 600;">No of Activities</th>
                 </tr>
@@ -49,9 +53,29 @@
         </table>
     </div>
 
+    @* --- Filter and Action Row --- *@
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+
+    @* Status Filter Toggle *@
+    
+    <div class="filter-wrapper">
+        <div class="filter-pill-box">
+            <button type="button" class="filter-pill active" onclick="filterTable('all', this)">All</button>
+            <button type="button" class="filter-pill pill-open" onclick="filterTable('O', this)">Open</button>
+            <button type="button" class="filter-pill pill-closed" onclick="filterTable('C', this)">Closed</button>
+        </div>
+    </div>
+        @* Log New Activity Button *@
+        <button type="button" class="setup-btn-green" onclick="location.href='@Url.Action("LogNewActivity", "Activity")'"
+                style="display: flex; align-items: center; margin-right: 5px; padding: 10px 20px;">
+            <span style="margin-right:8px; font-size: 1.2em; font-weight: bold;">+</span>
+            Log New Activity
+        </button>
+    </div>
+
     @* --- Main Activities Table --- *@
     <div style="overflow-x: auto;">
-        <table class="crud-table" id="activitiesTable" style="opacity: 0;">
+        <table class="crud-table" id="activitiesTable" style="opacity: 0; width: 100%;">
             <thead>
                 <tr>
                     <th style="width: 60px;">Sno</th>
@@ -59,8 +83,8 @@
                     <th>Location</th>
                     <th>Activity Date</th>
                     <th>Reported By / Date</th>
-                    <th style="width: 80px; text-align: center;">Status</th>
-                    <th style="width: 100px; text-align: center;">Details</th>
+                    <th style="width: 100px; text-align: center;">Status</th>
+                    <th style="width: 80px; text-align: center;">Details</th>
                 </tr>
             </thead>
             <tbody>
@@ -76,7 +100,8 @@
                 {
                     foreach (var item in Model)
                     {
-                        <tr>
+                        @* Added class and data-attribute for JS filtering *@
+                        <tr class="activity-row" data-status="@item.status">
                             <td style="font-weight: bold; color: #666;">@item.sno</td>
                             <td style="text-transform: uppercase; font-weight: 600; color: #2c3e50;">
                                 @item.ActivityName
@@ -91,19 +116,18 @@
                                     on @(item.ReportDate != null ? item.ReportDate.ToString("dd-MMM-yyyy hh:mm tt") : "")
                                 </span>
                             </td>
-                            <td style="text-align: center;">
+                            <td style="text-align: center; font-weight: bold; font-size: 0.9em; text-transform: uppercase;">
                                 @if (item.status == "C")
                                 {
-                                    <span title="Closed" style="font-size: 1.2em; cursor: help;">✅</span>
+                                    <span style="color: #d32f2f;">Closed</span>
                                 }
                                 else
                                 {
-                                    <span title="Open" style="font-size: 1.2em; cursor: help;">🟠</span>
+                                    <span style="color: #2e7d32;">Open</span>
                                 }
                             </td>
                             <td style="text-align: center;">
-                                <a href="@Url.Action("ActivityDetails", "Activity", new { id = item.sno })"
-                                   class="view-link"
+                                <a href="@Url.Action("Details", "Activity", new { id = item.sno })"
                                    style="text-decoration: none; font-size: 1.3em;"
                                    title="View Details">🔍</a>
                             </td>
@@ -117,12 +141,32 @@
 
 @section scripts {
     <script>
-        $(document).ready(function () {
-            // Smooth fade-in animation to match your CRUD style
-            $('#activitiesTable').animate({ opacity: 1 }, 600);
+        
+        function filterTable(status, btn) {
+            // 1. Swap active class
+            $('.filter-pill').removeClass('active');
+            $(btn).addClass('active');
 
-            // Optional: Toast notifications if you redirected back here with message
-        });
+            // 2. Smooth Filtering Logic
+            $('.activity-row').each(function () {
+                var $row = $(this);
+                var rowStatus = $row.attr('data-status');
+
+                if (status === 'all' || rowStatus === status) {
+                    // Show the row: first make it exist, then fade it in
+                    $row.show().css('opacity', '0').animate({ opacity: 1 }, 300);
+                } else {
+                    // Hide the row: fade it out, then display none
+                    $row.animate({ opacity: 0 }, 300, function () {
+                        $row.hide();
+                    });
+                }
+            });
+        }
+
+    $(document).ready(function () {
+        $('#activitiesTable').css('opacity', '1'); // Triggered by your existing CSS
+    });
+
     </script>
-    }
- 
+}

@@ -1,10 +1,173 @@
-﻿@{
-    ViewBag.Title = "Activity Categories";
+@model SRM.Models.ViewModels.ActivityVM
+@{
+    ViewBag.Title = "Activity Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="setup-container">
-    <div class="section-header">
-        <h2>Activity Details</h2>
+@if (Model == null)
+{
+    <div class="alert alert-danger">
+        <h4>Error: Record not found.</h4>
+        <button type="button" class="setup-btn-green" onclick="location.href='@Url.Action("ShowAllActivities", "Activity")'">
+            Back to List
+        </button>
     </div>
-</div>
+}
+else
+{
+    <div class="setup-container">
+        <div class="section-header">
+            <h2>Activity Management</h2>
+            <div class="action-row">
+                <button type="button" class="setup-btn-green" onclick="location.href='@Url.Action("ShowAllActivities", "Activity")'">
+                    &larr; Back to List
+                </button>
+            </div>
+        </div>
+
+        <div class="form-section-header">Activity Details</div>
+
+        <div class="grid-container">
+            <div class="grid-label">Sno</div>
+            <div class="grid-input" style="grid-column: span 3;">
+                @Html.TextBoxFor(m => m.sno, new { @readonly = "readonly", @class = "form-control form-control-readonly", style = "width:80px;" })
+            </div>
+
+            <div class="grid-label">Activity</div>
+            <div class="grid-input" style="grid-column: span 3;">
+                @Html.TextBoxFor(m => m.ActivityName, new { @readonly = "readonly", @class = "form-control form-control-readonly" })
+            </div>
+
+            <div class="grid-label">Location</div>
+            <div class="grid-input" style="grid-column: span 3;">
+                @Html.TextBoxFor(m => m.LocationName, new { @readonly = "readonly", @class = "form-control form-control-readonly" })
+            </div>
+
+            <div class="grid-label">Activity Start Date</div>
+            <div class="grid-input">
+                <div class="time-group">
+                    <input type="text" class="form-control form-control-readonly" style="width:120px;" value="@(Model.ActivityDate?.ToString("dd-MMM-yyyy"))" readonly />
+                    <input type="text" class="form-control form-control-readonly" style="width:90px;" value="@(Model.ActivityDate?.ToString("hh:mm tt"))" readonly />
+                </div>
+            </div>
+
+            <div class="grid-label">Activity End Date</div>
+            <div class="grid-input">
+                <div class="time-group">
+                    <input type="text" class="form-control form-control-readonly" style="width:120px;" value="@(Model.ActivityEndDate?.ToString("dd-MMM-yyyy"))" readonly />
+                    <input type="text" class="form-control form-control-readonly" style="width:90px;" value="@(Model.ActivityEndDate?.ToString("hh:mm tt"))" readonly />
+                </div>
+            </div>
+
+            <div class="grid-label">Report Date</div>
+            <div class="grid-input">
+                <div class="time-group">
+                    <input type="text" class="form-control form-control-readonly" style="width:120px;" value="@(Model.ReportDate?.ToString("dd-MMM-yyyy"))" readonly />
+                    <input type="text" class="form-control form-control-readonly" style="width:90px;" value="@(Model.ReportDate?.ToString("hh:mm tt"))" readonly />
+                </div>
+            </div>
+            <div class="grid-label">Reported By</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.ReportBy, new { @readonly = "readonly", @class = "form-control form-control-readonly", style = "margin-left:20px;" })
+            </div>
+
+            <div class="grid-label">Activity Detail</div>
+            <div class="grid-input" style="grid-column: span 3;margin-top:10px;">
+                @Html.TextAreaFor(m => m.Detail, new
+           {
+               @readonly = "readonly",
+               @class = "form-control form-control-readonly",
+               rows = "3",
+               style = "resize:none; width:100%; padding-top:15px !important; line-height:0.3;"
+           })
+            </div>
+        </div>
+
+        <br /><hr />
+
+        <div id="worklog-section" class="details-row" style="margin-top:40px;">
+            <div class="details-label grid-label"style="font-weight: bold;">WorkLog History</div>
+            <div class="details-content">
+                <div class="form-control" style="min-height:200px; height:auto; background-color: #fcfcfc; color: #333; padding:12px; white-space: pre-wrap; word-break: break-word; overflow-y: auto; margin-left: 20px; width: calc(100% - 20px); border: 1px solid #ccc; font-family: monospace;">@Model.workLog</div>
+            </div>
+        </div>
+
+        @using (Html.BeginForm("UpdateActivity", "Activity", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.sno)
+
+            <div class="details-row">
+                <div class="details-label grid-label" style="font-weight: bold;">Add Update / Resolution</div>
+                <div class="details-content">
+                    @if (Model.status == "Closed")
+                    {
+                        @Html.TextAreaFor(m => m.ResolutionDetail, new
+                        {
+                            @class = "form-control",
+                            rows = "3",
+                            @readonly = "readonly",
+                            placeholder = "This activity is closed. No further updates allowed.",
+                            style = "resize:none; margin-left:20px; width:calc(100% - 20px); background-color: #e9ecef !important;"
+                        })
+                    }
+                    else
+                    {
+                        @Html.TextAreaFor(m => m.ResolutionDetail, new
+                        {
+                            @class = "form-control",
+                            rows = "3",
+                            placeholder = "Type update here...",
+                            style = "resize:none; margin-left:20px; width:calc(100% - 20px); background-color: #ffffff !important;"
+                        })
+                    }
+                </div>
+            </div>
+
+            <div class="details-row">
+                <div class="details-label grid-label"style="font-weight: bold;">Status</div>
+                <div class="details-content">
+                    @if (Model.status == "Closed")
+                    {
+                        @Html.DropDownListFor(m => m.status, new SelectList(new[] { "Open", "Closed" }, Model.status), new { @class = "form-control", style = "width:120px; margin-left:20px; background-color: #e9ecef;", @disabled = "disabled" })
+                        @Html.HiddenFor(m => m.status)
+                    }
+                    else
+                    {
+                        @Html.DropDownListFor(m => m.status, new SelectList(new[] { "Open", "Closed" }, Model.status), new { @class = "form-control", style = "width:120px; margin-left:20px; background-color: #ffffff;" })
+                    }
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; margin-top:20px; margin-right:30px;">
+                @if (Model.status == "Closed")
+                {
+                    @* This button triggers the ReopenActivity action instead of UpdateActivity *@
+                    <button type="submit"
+                            formaction="@Url.Action("ReopenActivity", "Activity")"
+                            class="setup-btn-green"
+                            style="background-color: #f39c12 !important; border-color: #e67e22 !important;">
+                        &#x1F513; Re-open Activity
+                    </button>
+                }
+                else
+                {
+            <button type="submit" class="setup-btn-green">
+                &#x1F4BE; Save and Append
+            </button>
+                }
+            </div>
+        }
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Find the worklog history box
+            var worklogBox = document.querySelector("#worklog-section .form-control");
+
+            if (worklogBox) {
+                // Set the vertical scroll position to the bottom
+                worklogBox.scrollTop = worklogBox.scrollHeight;
+            }
+        });
+    </script>
+}

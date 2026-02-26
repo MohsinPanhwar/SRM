@@ -1,4 +1,4 @@
-﻿/* ===== GLOBAL / RESET ===== */
+/* ===== GLOBAL / RESET ===== */
 html {
     height: 100%;
 }
@@ -10,6 +10,7 @@ body {
     flex-direction: column;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: #f7f7f7;
+    padding-top: 62px;
 }
 
 /* ===== NAVBAR ===== */
@@ -159,11 +160,6 @@ body {
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     }
 
-/* ===== BODY CONTENT OFFSET (for fixed navbar) ===== */
-body {
-    padding-top: 62px;
-}
-
 /* ===== MAIN CONTENT (pushes footer down) ===== */
 .main-container,
 .page-content,
@@ -185,66 +181,6 @@ body {
         object-fit: cover;
     }
 
-/* ===== QUICK ACTION CARDS ===== */
-.card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.card {
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-    padding: 20px;
-    text-align: center;
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-    }
-
-.card-icon {
-    font-size: 2.5rem;
-    color: #2E7D57;
-    margin-bottom: 10px;
-    display: block;
-}
-
-.card h3 {
-    margin-bottom: 10px;
-    font-size: 1.2rem;
-    font-weight: 600;
-}
-
-.card p {
-    font-size: 0.95rem;
-    color: #666;
-    margin-bottom: 15px;
-}
-
-.btn-card {
-    display: inline-block;
-    background-color: #2E7D57;
-    color: #fff;
-    padding: 8px 16px;
-    border-radius: 5px;
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: background 0.3s, transform 0.3s;
-    cursor: pointer;
-    border: none;
-}
-
-    .btn-card:hover {
-        background-color: #1B4D3E;
-        transform: translateY(-2px);
-    }
 
 /* ===== FOOTER ===== */
 footer {
@@ -280,19 +216,18 @@ footer {
         width: 100%;
     }
 
-    /* The row containing inputs and buttons */
     .section-header .action-row {
         display: flex;
-        align-items: center; /* Changed from stretch to center for better small-button handling */
+        align-items: center;
         flex-wrap: wrap;
         gap: 12px;
         width: 100%;
     }
 
-        /* Unified height for ALL Header Inputs and Selects */
+        /* Unified height for header inputs, selects, and .form-control */
         .section-header .action-row input,
         .section-header .action-row select,
-        .form-control { /* Force Bootstrap classes to obey your height */
+        .form-control {
             flex: 1;
             height: 38px !important;
             padding: 0 15px !important;
@@ -303,7 +238,7 @@ footer {
             background-color: #f9fbff;
         }
 
-/* THE ADD BUTTONS: Unified Green Gradient */
+/* Green gradient add buttons */
 .setup-btn-green {
     height: 38px !important;
     min-width: 160px !important;
@@ -329,11 +264,7 @@ footer {
         filter: brightness(1.1);
     }
 
-
 /* ===== CRUD TABLE & INLINE EDITING ===== */
-/* ==========================
-   CRUD Table Styling
-   ========================== */
 .crud-table {
     width: 100%;
     border-collapse: collapse;
@@ -354,11 +285,14 @@ footer {
             font-weight: bold;
         }
 
-    .crud-table th, .crud-table td {
+    .crud-table th,
+    .crud-table td {
         padding: 12px 15px;
         border-bottom: 1px solid #e0e0e0;
         font-size: 0.9rem;
         text-align: left;
+        /* vertical-align ensures text and buttons align even if row height grows */
+        vertical-align: middle;
     }
 
         .crud-table th:first-child,
@@ -366,37 +300,21 @@ footer {
             padding-left: 30px;
         }
 
-        /* Actions column */
+        /* Updated: Actions Column remains a table cell to preserve borders */
         .crud-table th:last-child,
         .crud-table td:last-child,
         .actions-cell {
-            text-align: left;
+            text-align: center !important;
             width: 120px;
             white-space: nowrap;
         }
 
-/* FIXED: Inline Edit Input now matches header height and style */
-.edit-input {
-    width: 100% !important;
-    height: 34px !important; /* Slightly smaller to fit inside table rows */
-    padding: 0 10px !important;
-    border: 1px solid #0e5dff !important;
-    border-radius: 4px !important;
-    font-size: 0.85rem !important;
-    box-sizing: border-box !important;
-    outline: none;
-    background: #fff !important;
-}
+/* NEW: Internal wrapper to handle centering without breaking the <td> */
 
 
 
-/* Base style for all table action buttons - Icon Only */
-/* Override Bootstrap button styles */
-.edit-btn,
-.save-btn,
-.delete-btn,
-.cancel-btn {
-    background-color: transparent !important;
+
+.edit-btn, .save-btn, .delete-btn, .cancel-btn {
     background: transparent !important;
     color: inherit !important;
     border: none !important;
@@ -411,37 +329,20 @@ footer {
     justify-content: center;
     transition: all 0.2s ease;
     outline: none !important;
+    text-decoration: none !important;
 }
 
-    .edit-btn:hover,
-    .save-btn:hover,
-    .delete-btn:hover,
-    .cancel-btn:hover {
+    .edit-btn:hover, .save-btn:hover, .delete-btn:hover, .cancel-btn:hover {
         transform: scale(1.2);
         opacity: 0.7;
     }
 
-
-
-    /* Active state for buttons */
-    .edit-btn:active,
-    .save-btn:active,
-    .delete-btn:active,
-    .cancel-btn:active {
+    .edit-btn:active, .save-btn:active, .delete-btn:active, .cancel-btn:active {
         transform: scale(0.95);
     }
-
-    /* Focus state - subtle outline */
-    .edit-btn:focus,
-    .save-btn:focus,
-    .delete-btn:focus,
-    .cancel-btn:focus {
-        outline: none !important;
-    }
-
-/* ===== PROFILE / MANAGE USER PAGE (Unified) ===== */
+/* ===== SETUP CONTAINER ===== */
 .setup-container {
-    max-width: 1200px; /* Slightly wider than profile to accommodate tables */
+    max-width: 1200px;
     width: 95%;
     margin: 30px auto;
     padding: 30px;
@@ -452,16 +353,13 @@ footer {
     box-sizing: border-box;
 }
 
-    /* Adjust the section header inside a container */
     .setup-container .section-header {
-        padding: 0 0 20px 0; /* Remove internal padding since container has it */
+        padding: 0 0 20px 0;
         box-shadow: none;
         border: none;
         border-radius: 0;
         margin-bottom: 20px;
     }
-
-
 
     .setup-container h2 {
         color: #1B4D3E;
@@ -481,37 +379,34 @@ footer {
         font-size: 1.2rem;
     }
 
-    /* Form groups */
     .setup-container .form-group {
         margin-bottom: 20px;
     }
 
     .setup-container label {
-        font-weight: 600; /* Slightly bolder like table headers */
+        font-weight: 600;
         margin-bottom: 8px;
         color: #444;
         display: block;
         font-size: 0.9rem;
     }
 
-    /* Inputs – Adjusted to be slightly more compact like management pages */
     .setup-container input[type="text"],
     .setup-container input[type="email"],
     .setup-container input[type="password"],
     .setup-container input[type="tel"],
     .setup-container select {
         width: 100%;
-        height: 42px; /* Slightly taller than 38px for form comfort, but consistent */
+        height: 42px;
         padding: 0 16px;
         font-size: 0.95rem;
         border: 1px solid #dce1e7;
-        border-radius: 8px; /* Consistent rounded corners */
-        background-color: #f9fbff; /* Same light tint as management inputs */
+        border-radius: 8px;
+        background-color: #f9fbff;
         transition: all 0.2s ease;
         box-sizing: border-box;
     }
 
-        /* Focus state – same Green Glow as others */
         .setup-container input:focus,
         .setup-container select:focus {
             border-color: #1B4D3E;
@@ -520,7 +415,6 @@ footer {
             background-color: #fff;
         }
 
-    /* Readonly fields – subtle look */
     .setup-container input[readonly] {
         background-color: #f1f3f5 !important;
         color: #666;
@@ -528,7 +422,6 @@ footer {
         border-color: #e9ecef;
     }
 
-    /* Form rows */
     .setup-container .form-row {
         display: flex;
         flex-wrap: wrap;
@@ -540,7 +433,6 @@ footer {
             min-width: 300px;
         }
 
-    /* Buttons – Styled exactly like the "Add" buttons */
     .setup-container .btn-success {
         height: 42px;
         min-width: 180px;
@@ -556,7 +448,7 @@ footer {
     .setup-container .btn-warning {
         height: 42px;
         min-width: 180px;
-        background: #6c757d !important; /* Changed to neutral grey to not clash with green theme */
+        background: #6c757d !important;
         color: #fff !important;
         font-weight: 600;
         border: none;
@@ -571,12 +463,11 @@ footer {
             opacity: 0.9;
         }
 
-/* ===== GLOBAL SETUP CONTAINER ===== */
-/* Global Notification Container */
+/* ===== GLOBAL NOTIFICATION AREA ===== */
 #notification-area {
     position: fixed;
     top: 50px;
-    left: 20px; /* Moved to Left */
+    left: 20px;
     z-index: 9999;
     display: flex;
     flex-direction: column-reverse;
@@ -592,11 +483,10 @@ footer {
     box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     display: none;
     position: relative;
-    left: -40px; /* Starting position for slide-in */
+    left: -40px;
     transition: all 0.3s ease;
 }
 
-/* Professional colors with icons */
 .toast-success {
     background: #2dce89;
     border-left: 8px solid #28b87b;
@@ -607,89 +497,48 @@ footer {
     border-left: 8px solid #d62f50;
 }
 
-/* View/Log Requests pages */
 
-/* Container Headers */
-.details-section-header {
-    background-color: #444; /* Dark grey like image */
-    color: white;
-    padding: 8px 15px;
-    font-weight: bold;
-    font-size: 0.95rem;
-}
-
-.details-section-header.green-header {
-    background-color: #1b4d3e; /* Green like image */
-}
-
-/* =========================================
-   GRID CONTAINER – MATCH DETAILS STYLE
-========================================= */
-/* =====================================================
-   Unified Form Grid (User Info + Activity Details)
-   ===================================================== */
+/* ===== FORM GRID ===== */
 .grid-container {
     display: grid;
-    grid-template-columns: 180px 1fr 180px 1fr;
-    row-gap: 22px;
-    column-gap: 10px;
-    background: #ffffff;
-    padding: 32px 36px;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-    border: 1px solid #eef2f6;
+    grid-template-columns: 160px 1fr 160px 1fr;
+    gap: 12px 15px;
+    align-items: center;
+    margin-top: 30px;
 }
 
-/* Labels */
 .grid-label {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: #000;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    align-self: flex-start;
-    padding-top: 10px;
+    font-weight: bold;
+    color: #333;
+    padding-right: 10px;
 }
 
-/* Inputs / Selects / Textarea */
-.grid-input input,
-.grid-input select,
-.grid-input textarea {
+.grid-input {
     width: 100%;
-    height: 44px;
-    padding: 10px 14px;
-    font-size: 0.9rem;
-    border-radius: 8px;
-    border: 1px solid #d9dee6;
-    background-color: #f5f6f8;
-    box-sizing: border-box;
-    transition: all 0.2s ease;
 }
 
-/* Textarea override */
-.grid-input textarea {
-    height: auto;
-    min-height: 140px;
-    resize: none;
+    .grid-input input[type="text"],
+    .grid-input textarea,
+    .grid-input select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 14px;
+    }
+
+.form-control-readonly {
+    background-color: #eeeeee !important;
+    border: 1px solid #cccccc;
+    cursor: not-allowed;
 }
 
-/* Readonly fields */
-.grid-input input[readonly] {
-    background-color: #eef0f3;
-    color: #555;
+.grid-full-width {
+    grid-column: 1 / span 2;
+    margin-top: 10px;
 }
 
-/* Focus state */
-.grid-input input:focus,
-.grid-input select:focus,
-.grid-input textarea:focus {
-    outline: none;
-    border-color: #2e7d57;
-    background-color: #ffffff;
-    box-shadow: 0 0 0 2px rgba(46, 125, 87, 0.12);
-}
-
-/* Inline input + button (Activity / Location) */
 .activity-inline {
     display: flex;
     align-items: center;
@@ -700,7 +549,6 @@ footer {
         flex: 1;
     }
 
-/* Time inputs (Hour / Minute / AMPM) */
 .time-group {
     display: flex;
     align-items: center;
@@ -711,12 +559,12 @@ footer {
         min-width: 80px;
     }
 
-/* Checkbox alignment */
 .grid-input input[type="checkbox"] {
     width: auto;
     height: auto;
     margin-right: 8px;
 }
+
 .form-section-header {
     background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
     color: white;
@@ -731,9 +579,13 @@ footer {
 
 .details-row {
     display: flex;
-    border-bottom: 1px solid #ccc;
-    background: #f9f9f9;
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f3f6;
 }
+
+    .details-row:last-child {
+        border-bottom: none;
+    }
 
 .details-label {
     width: 140px;
@@ -741,11 +593,41 @@ footer {
     font-weight: bold;
     font-size: 0.9em;
     border-right: 1px solid #ccc;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: black;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding-top: 4px;
 }
 
 .details-content {
     flex: 1;
     padding: 10px;
+    font-size: 0.92rem;
+    color: #1f293a;
+}
+
+    .details-content .form-control {
+        border-radius: 6px;
+        border-color: #d8dee6;
+        background-color: #fbfcfd;
+    }
+
+        .details-content .form-control:focus {
+            border-color: #1B4D3E;
+            box-shadow: 0 0 0 2px rgba(27, 77, 62, 0.12);
+            background-color: #fff;
+        }
+
+    .details-content textarea {
+        padding: 12px;
+        line-height: 1.5;
+    }
+
+.details-row:last-of-type .details-content {
+    padding-top: 20px;
+    border-top: 1px solid #eef2f6;
 }
 
 .details-box {
@@ -755,6 +637,7 @@ footer {
     box-shadow: 0 4px 16px rgba(0,0,0,0.05);
     border: 1px solid #eef2f6;
 }
+
 .search-area {
     background: #fdfdfd;
     border: 1px solid #eee;
@@ -768,7 +651,7 @@ footer {
     font-size: 0.9em;
 }
 
-/* Dashboard Status Card */
+/* ===== DASHBOARD STATUS CARD ===== */
 .status-card {
     border-collapse: collapse;
     font-size: 12px;
@@ -787,35 +670,6 @@ footer {
         border-bottom: 1px solid #f0f0f0;
     }
 
-/* Main Data Grid */
-.main-grid {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    margin-top: 10px;
-}
-
-    .main-grid th {
-        background: #1b4d3e;
-        color: white;
-        padding: 12px 10px;
-        text-align: left;
-        border: 1px solid #003322;
-    }
-
-    .main-grid td {
-        padding: 10px;
-        border: 1px solid #eee;
-    }
-
-    .main-grid tr:nth-child(even) {
-        background: #f9fbf9;
-    }
-
-    .main-grid tr:hover {
-        background: #f1f5f2;
-    }
-
 .btn-search {
     background: #2e7d57;
     color: white;
@@ -825,8 +679,6 @@ footer {
     border-radius: 3px;
 }
 
-    
-/* Grid Layout */
 .details-grid-container {
     background-color: #f9f9f9;
     padding: 15px;
@@ -839,36 +691,19 @@ footer {
     font-size: 0.9rem;
 }
 
-/* Communication Log */
 .comm-log-entry {
     font-size: 0.85rem;
     margin-bottom: 5px;
     color: #555;
 }
 
-/* Forwarding Form */
 .forwarding-form-container {
     padding: 20px;
     background-color: #fff;
     border: 1px solid #ddd;
 }
 
-/* Buttons from Image */
-.btn-forward {
-    background-color: #ddd;
-    border: 1px solid #bbb;
-    font-weight: bold;
-    font-size: 0.8rem;
-    padding: 10px 20px;
-}
 
-.btn-ownership {
-    background-color: #ddd;
-    border: 1px solid #bbb;
-    font-weight: bold;
-    font-size: 0.8rem;
-    padding: 10px 20px;
-}
 
 .details-top-bar {
     background-color: #eee;
@@ -877,6 +712,7 @@ footer {
     font-size: 0.9rem;
 }
 
+/* ===== TOGGLE SWITCH ===== */
 .switch {
     position: relative;
     display: inline-block;
@@ -922,63 +758,59 @@ input:checked + .slider {
         transform: translateX(22px);
     }
 
-/* =====================================
-   NOTICEABLE BUT SAFE FORM REFINEMENT
-===================================== */
-
-/* Give each row visual separation without layout change */
-.details-row {
-    padding: 14px 0;
-    border-bottom: 1px solid #f0f3f6;
+.filter-wrapper {
+    display: flex;
+    margin-bottom: 25px;
+    padding-left: 5px;
 }
 
-    .details-row:last-child {
-        border-bottom: none;
-    }
+/* The outer track - soft and modern */
+.filter-pill-box {
+    display: inline-flex;
+    background: #f1f3f4;
+    padding: 4px;
+    border-radius: 50px; /* Perfect pill shape */
+    position: relative;
+    transition: all 0.3s ease;
+}
 
-/* Labels: clearly secondary, not competing */
-.details-label {
-    font-size: 0.78rem;
+/* The base pill style */
+.filter-pill {
+    padding: 8px 24px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
     font-weight: 600;
-    color: #black;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    padding-top: 4px;
+    font-size: 0.85rem;
+    border-radius: 50px;
+    color: #5f6368;
+    transition: all 0.25s ease;
+    letter-spacing: 0.3px;
+    outline: none;
 }
 
-/* Content area feels cleaner */
-.details-content {
-    font-size: 0.92rem;
-    color: #1f293;
-}
-
-    /* Inputs: calmer, less boxed */
-    .details-content .form-control {
-        border-radius: 6px;
-        border-color: #d8dee6;
-        background-color: #fbfcfd;
+    /* Hover effect */
+    .filter-pill:hover {
+        color: #202124;
     }
 
-        /* Focus is professional and noticeable */
-        .details-content .form-control:focus {
-            border-color: #1B4D3E;
-            box-shadow: 0 0 0 2px rgba(27, 77, 62, 0.12);
-            background-color: #fff;
-        }
-
-    /* Textarea visually separated */
-    .details-content textarea {
-        padding: 12px;
-        line-height: 1.5;
+    /* Universal Active State - The "Floating" Look */
+    .filter-pill.active {
+        background: #ffffff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transform: translateY(-1px);
     }
 
+    /* Subtle colored text for active states to keep it clean but clear */
+    .filter-pill.pill-open.active {
+        color: #1e8e3e !important; /* Material Green */
+    }
 
-/* Action area looks intentional */
-.details-row:last-of-type .details-content {
-    padding-top: 20px;
-    border-top: 1px solid #eef2f6;
-}
+    .filter-pill.pill-closed.active {
+        color: #d93025 !important; /* Material Red */
+    }
 
-/* =========================================
-   USER INFORMATION – 2 COLUMN LAYOUT
-========================================= */
+    .filter-pill.active:first-child {
+        color: #1a73e8; /* Material Blue for 'All' */
+    }
+

@@ -1,0 +1,262 @@
+﻿@model SRM.Models.ViewModels.DashboardVM
+
+@{
+    ViewBag.Title = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="setup-container">
+    <div class="section-header">
+            <h2>Operations Dashboard</h2>
+            <p class="text-muted">Overview of system requests and activity metrics</p>
+        <div class="header-actions">
+            <button class="setup-btn-green" onclick="location.reload();">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-content">
+                <span class="metric-label">Total Requests</span>
+                <span class="metric-value">@Model.TotalRequests</span>
+            </div>
+            <div class="metric-icon blue-bg"><i class="fas fa-list-ul"></i></div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-content">
+                <span class="metric-label">Open / Pending</span>
+                <span class="metric-value">@Model.OpenRequests</span>
+            </div>
+            <div class="metric-icon green-bg"><i class="fas fa-clock"></i></div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-content">
+                <span class="metric-label">Closed</span>
+                <span class="metric-value">@Model.ClosedRequests</span>
+            </div>
+            <div class="metric-icon red-bg"><i class="fas fa-check-double"></i></div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-content">
+                <span class="metric-label">Urgent</span>
+                <span class="metric-value">@Model.HighPriorityRequests</span>
+            </div>
+            <div class="metric-icon orange-bg"><i class="fas fa-bolt"></i></div>
+        </div>
+    </div>
+
+    <div class="dashboard-content-card mt-4">
+        <div class="card-header-sleek">
+            <h3>Recent Requests</h3>
+            <a href="@Url.Action("Index", "Request")" class="view-all-link">View All Activity</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="sleek-dashboard-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Summary</th>
+                        <th>Logged By</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var req in Model.RecentRequests)
+                    {
+                        <tr>
+                            <td class="id-col">#@req.RequestID</td>
+                            <td class="summary-col">@req.ReqSummary</td>
+                            <td><span class="user-tag">@req.RequestLogBy</span></td>
+                            <td>@(req.RequestDate.HasValue ? req.RequestDate.Value.ToString("dd MMM yyyy") : "-")</td>
+                            <td>
+                                <span class="status-pill @(req.status == "C" ? "pill-closed" : "pill-open")">
+                                    @(req.status == "C" ? "Closed" : "Active")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+<style>
+    /* Global Dashboard Styles */
+    .dashboard-wrapper {
+        padding: 1.5rem;
+        background-color: #fcfcfc;
+    }
+
+    .dashboard-title {
+        font-weight: 700;
+        color: #1a1f36;
+        margin-bottom: 0;
+    }
+
+    /* Metric Cards */
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .metric-card {
+        background: #fff;
+        padding: 1.5rem;
+        border-radius: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        border: 1px solid #f0f0f0;
+    }
+
+    .metric-label {
+        display: block;
+        color: #697386;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1a1f36;
+        margin-top: 4px;
+        display: block;
+    }
+
+    .metric-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .blue-bg {
+        background: #e8f0fe;
+        color: #1a73e8;
+    }
+
+    .green-bg {
+        background: #e6f4ea;
+        color: #1e8e3e;
+    }
+
+    .red-bg {
+        background: #fce8e6;
+        color: #d93025;
+    }
+
+    .orange-bg {
+        background: #fff4e5;
+        color: #b06000;
+    }
+
+    /* Content Card & Table */
+    .dashboard-content-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        border: 1px solid #f0f0f0;
+    }
+
+    .card-header-sleek {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #f7f8f9;
+        padding-bottom: 1rem;
+    }
+
+        .card-header-sleek h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+    .sleek-dashboard-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .sleek-dashboard-table th {
+            text-align: left;
+            padding: 12px;
+            color: #697386;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            border-bottom: 2px solid #f7f8f9;
+        }
+
+        .sleek-dashboard-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #f7f8f9;
+            font-size: 0.9rem;
+            color: #3c4257;
+        }
+
+    .id-col {
+        font-weight: 700;
+        color: #1a73e8;
+    }
+
+    .user-tag {
+        background: #f1f3f4;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+
+    /* Status Pills */
+    .status-pill {
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .pill-open {
+        background: #e6f4ea;
+        color: #1e8e3e;
+    }
+
+    .pill-closed {
+        background: #fce8e6;
+        color: #d93025;
+    }
+
+    .view-all-link {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #1a73e8;
+        text-decoration: none;
+    }
+
+    .refresh-btn {
+        border: 1px solid #dcdfe3;
+        background: #fff;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+</style>
