@@ -7,7 +7,7 @@ using SRM.Models.ViewModels; // Import your VM namespace
 
 namespace SRM.Controllers
 {
-    public class MISController : Controller
+    public class MISController : BaseController
     {
         private readonly AppDbContext _db = new AppDbContext();
 

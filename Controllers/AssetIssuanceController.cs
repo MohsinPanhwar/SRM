@@ -10,11 +10,11 @@ using Newtonsoft.Json;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.ComponentModel;
-
+using SRM.Services;
 
 namespace SRM.Controllers
 {
-    public class AssetIssuanceController : Controller
+    public class AssetIssuanceController : BaseController
     {
         private AppDbContext db = new AppDbContext();
 
@@ -114,23 +114,23 @@ namespace SRM.Controllers
         }
         public async Task<JsonResult> GetEmployee(string pno)
         {
-            // 1️⃣ Try API first
-            var apiEmp = await FetchFromPiaSoapApi(pno);
+            // Use centralized service to fetch or retrieve profile
+            var profile = await EmployeeProfileService.GetOrFetchAsync(db, pno);
 
-            if (apiEmp != null)
+            if (profile != null)
             {
                 return Json(new
                 {
                     success = true,
-                    name = apiEmp.emp_name, // Keep these as is if apiEmp is a different DTO
-                    designation = apiEmp.Emp_designation,
-                    department = apiEmp.DEPT,
-                    email = apiEmp.Email,
-                    mobile = apiEmp.mobileno
+                    name = profile.emp_name,
+                    designation = profile.Emp_designation,
+                    department = profile.DEPT,
+                    email = profile.Email,
+                    mobile = profile.mobileno
                 }, JsonRequestBehavior.AllowGet);
             }
 
-            // 2️⃣ Fallback to local DB - Updated to match your Model properties
+            // Fallback to local DB (should be redundant but kept for safety)
             var emp = db.EmployeeProfiles.FirstOrDefault(x => x.Pno == pno);
 
             if (emp == null)
@@ -139,11 +139,11 @@ namespace SRM.Controllers
             return Json(new
             {
                 success = true,
-                name = emp.emp_name,           // Changed from .Name
-                designation = emp.Emp_designation, // Changed from .Designation
-                department = emp.DEPT,          // Changed from .Department
+                name = emp.emp_name,
+                designation = emp.Emp_designation,
+                department = emp.DEPT,
                 email = emp.Email,
-                mobile = emp.mobileno           // Changed from .Mobile
+                mobile = emp.mobileno
             }, JsonRequestBehavior.AllowGet);
         }
         [HttpPost]
@@ -221,51 +221,6 @@ namespace SRM.Controllers
             return RedirectToAction("Issuance");
         }
 
-        private async Task<EmployeeProfile> FetchFromPiaSoapApi(string pno)
-        {
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    var requestData = new FormUrlEncodedContent(new[]
-                    {
-                new KeyValuePair<string, string>("PNO", pno),
-                new KeyValuePair<string, string>("tokenid", "D3C42139AD877C2691902FD2E6889C3E")
-            });
-
-                    string postUrl = "http://piacconnect.piac.com.pk/piamobileApp/services.asmx/SignUP";
-                    var response = await client.PostAsync(postUrl, requestData);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var jsonString = await response.Content.ReadAsStringAsync();
-
-                        var results = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(jsonString);
-                        var emp = results?.FirstOrDefault();
-
-                        if (emp != null)
-                        {
-                            return new EmployeeProfile
-                            {
-                                Pno = emp.ContainsKey("pno") ? emp["pno"] : pno,
-                                emp_name = emp.ContainsKey("name") ? emp["name"] : "N/A",
-                                Emp_designation = emp.ContainsKey("Emp_designation") ? emp["Emp_designation"] : "N/A",
-                                DEPT = emp.ContainsKey("Department") ? emp["Department"] : "N/A",
-                                Email = emp.ContainsKey("email") ? emp["email"] : "",
-                                mobileno = emp.ContainsKey("Phone_Num") ? emp["Phone_Num"] : ""
-                            };
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("API Error: " + ex.Message);
-            }
-
-            return null;
-        }
-
         public ActionResult IssuedAssets(string pno, int? brandId)
         {
             var vm = new IssuedAssetListVM();
@@ -317,7 +272,7 @@ namespace SRM.Controllers
             }
 
             vm.Assets = resultList.OrderByDescending(x => x.entry_date).ToList();
-            return View("~/Views/AssetIssuance/IssuedAssets.cshtml",vm);
+            return View(vm);
         }
         public ActionResult Details(int id)
         {
@@ -366,7 +321,6 @@ namespace SRM.Controllers
         }
 
     }
-
 
 
 

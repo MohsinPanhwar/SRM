@@ -8,7 +8,7 @@ using System.Web.Mvc;
 
 namespace SRM.Controllers
 {
-    public class InventoryBrandController : Controller
+    public class InventoryBrandController : BaseController
     {
         private AppDbContext db = new AppDbContext();
 

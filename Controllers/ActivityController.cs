@@ -9,7 +9,7 @@ using SRM.Models.ViewModels;
 
 namespace SRM.Controllers
 {
-    public class ActivityController : Controller
+    public class ActivityController : BaseController
     {
         private readonly AppDbContext _db = new AppDbContext();
 
@@ -34,16 +34,15 @@ namespace SRM.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult LogNewActivity(FormCollection form)
         {
-            // 1. Get current Program context
             int? globalProgramId = Session["AgentProgramId"] as int?;
 
             try
             {
-                // 2. Parse Dates using the helper
+                // 1. Parse Dates
                 DateTime startDate = ParseDateTime(form["StartDate"], int.Parse(form["StartHour"]), int.Parse(form["StartMinute"]), form["StartAmPm"]);
                 DateTime endDate = ParseDateTime(form["EndDate"], int.Parse(form["EndHour"]), int.Parse(form["EndMinute"]), form["EndAmPm"]);
 
-                // 3. Validation: Date logic
+                // 2. Validation: Date logic
                 if (endDate <= startDate)
                 {
                     TempData["Error"] = "End date/time must be after start date/time.";
@@ -51,29 +50,21 @@ namespace SRM.Controllers
                     return View("~/Views/ActivityManagement/LogNewActivity.cshtml");
                 }
 
-                // 4. Handle Activity ID and Name Lookup (Fix for CS0019)
+                // 3. Handle Activity ID and Name Lookup
                 string activityIdStr = form["ActivityId"];
                 string categoryName = "";
 
                 if (!string.IsNullOrEmpty(activityIdStr))
                 {
-                    // We find the category by comparing the string from the form 
-                    // to the string 'cat_id' in the database
-                    var category = _db.ActivityCategories
-                                       .FirstOrDefault(c => c.cat_id == activityIdStr);
-
+                    var category = _db.ActivityCategories.FirstOrDefault(c => c.cat_id == activityIdStr);
                     if (category != null)
-                    {
                         categoryName = category.cat_name;
-                    }
                 }
 
-                // 5. Build and Save to ActivityMaster
+                // 4. Build and Save ActivityMaster
                 var activity = new ActivityMaster
                 {
-                    // Parse string back to int? for the Activity foreign key column
                     Activity = string.IsNullOrEmpty(activityIdStr) ? (int?)null : int.Parse(activityIdStr),
-
                     Location = form["Location"],
                     ActivityDate = startDate,
                     ActivityEndDate = endDate,
@@ -81,16 +72,59 @@ namespace SRM.Controllers
                     ReportDate = DateTime.Now,
                     Detail = form["ActivityDetail"],
                     program_id = globalProgramId,
-                    status = "O" // Setting default status to 'Open'
-
-                    // Note: If you add 'ActivityName' to your model, uncomment below:
-                    // ActivityName = categoryName 
+                    status = "O"
                 };
 
                 _db.ActivityMasters.Add(activity);
                 _db.SaveChanges();
 
-                TempData["Success"] = "Activity logged successfully!";
+                // 5. Check if SR checkbox was ticked
+                bool createSR = form["CreateServiceRequest"]?.Contains("true") == true;
+
+                if (createSR)
+                {
+                    // Collect SR fields from form
+                    string Priority = form["Priority"];
+                    string[] Area = form.GetValues("Area");
+                    string Summary = form["Summary"];
+                    string Details = form["Details"];
+
+                    // SR Summary is required
+                    if (string.IsNullOrWhiteSpace(Summary))
+                    {
+                        TempData["Error"] = "Request Summary is required when creating a service request.";
+                        ReloadDropdowns(globalProgramId);
+                        return View("~/Views/ActivityManagement/LogNewActivity.cshtml");
+                    }
+
+                    var newRequest = new Request_Master
+                    {
+                        RequestDate = DateTime.Now,
+                        RequestLogBy = Session["AgentPno"]?.ToString() ?? "ADMIN",
+                        RequestFor = Session["AgentPno"]?.ToString(),
+                        program_id = globalProgramId,
+                        Priority = MapPriority(Priority),
+                        parea = Area != null ? string.Join(", ", Area) : "Other",
+                        status = "Q",
+                        ReqSummary = Summary,
+                        ReqDetails = Details,
+                        Location = form["Location"],
+                        RequestedIPAddress = Request.UserHostAddress
+                    };
+
+                    _db.Request_Master.Add(newRequest);
+                    _db.SaveChanges();
+
+                    activity.ServiceRequestID = newRequest.RequestID;
+                    _db.SaveChanges();
+
+                    TempData["Success"] = "Activity logged and service request created successfully!";
+                }
+                else
+                {
+                    TempData["Success"] = "Activity logged successfully!";
+                }
+
                 return RedirectToAction("ShowAllActivities");
             }
             catch (Exception ex)
@@ -278,6 +312,16 @@ namespace SRM.Controllers
 
             DateTime date = DateTime.Parse(dateStr);
             return new DateTime(date.Year, date.Month, date.Day, hour, minute, 0);
+        }
+        private int MapPriority(string p)
+        {
+            switch (p)
+            {
+                case "Critical": return 1;
+                case "Urgent": return 2;
+                case "Important": return 3;
+                default: return 4; // Normal
+            }
         }
         public ActionResult Details(int id)
         {

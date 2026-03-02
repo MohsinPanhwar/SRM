@@ -8,7 +8,7 @@ using SRM.Helpers;
 
 namespace SRM.Controllers
 {
-    public class AdminController : Controller
+    public class AdminController : BaseController
     {
         // GET: Admin
         [HttpPost]

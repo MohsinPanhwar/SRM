@@ -7,34 +7,78 @@
 }
 
 <style>
+   
+
+    /* 2. Main Container */
     .welcome-container {
-        padding: 4rem 2rem;
-        max-width: 800px;
+        padding: 1.5rem 2rem;
+        max-width: 1200px;
         margin: 0 auto;
         text-align: center;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
 
-    .welcome-text {
-        margin-bottom: 0.5rem;
-    }
-
-
     .welcome-emoji {
-        font-size: 3rem;
+        font-size: 2.2rem;
         display: block;
-        margin-bottom: 1rem;
-        /* Changed 'infinite' to '1' and added 'forwards' */
+        margin-bottom: 0.5rem;
         animation: wave 1.5s ease-in-out 1 forwards;
         transform-origin: 70% 70%;
     }
 
+    .user-name {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin: 0 0 1.5rem 0;
+        letter-spacing: -0.5px;
+    }
+
+    /* 3. Centered and Stretched Details Bar */
+    .info-flex-container {
+        display: flex;
+        justify-content: center; /* Centers items horizontally */
+        align-items: center;
+        width: 99.8%;
+        margin: 0 auto; /* Centers the entire bar on the page */
+        background: #ffffff;
+        padding: 15px 0;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #eee;
+    }
+
+    .info-row {
+        flex: 1; /* Each item takes equal width */
+        font-size: 1.1rem;
+        color: #4b5563;
+        text-align: center; /* Centers text inside the column */
+    }
+
+        /* Vertical Dividers - only between items */
+        .info-row:not(:last-child) {
+            border-right: 1px solid #e5e7eb;
+        }
+
+    .info-label {
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-right: 8px;
+    }
+
+    /* 4. Badges/Colors */
+    .admin-badge, .program-badge, .group-badge {
+        color: #1B4D3E;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
     @@keyframes wave {
-        0% {
+        0%, 100% {
             transform: rotate(0deg)
         }
 
-        20% {
+        20%, 60% {
             transform: rotate(7deg)
         }
 
@@ -42,83 +86,9 @@
             transform: rotate(-4deg)
         }
 
-        60% {
-            transform: rotate(7deg)
-        }
-
         80% {
             transform: rotate(-2deg)
         }
-
-        100% {
-            transform: rotate(0deg)
-        }
-    }
-
-    .user-name {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin: 0;
-        letter-spacing: -0.5px;
-    }
-
-    .admin-badge {
-        display: inline-block;
-        margin-top: 10px;
-        padding: 4px 12px;
-        background: #ecfdf5;
-        color: #059669;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    .action-links {
-        margin-top: 2.5rem;
-        display: flex;
-        justify-content: center;
-        gap: 2rem;
-    }
-
-    .minimal-link {
-        color: #6366f1;
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 1.1rem;
-        position: relative;
-        transition: color 0.2s;
-    }
-
-        .minimal-link:after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            display: block;
-            margin-top: 5px;
-            right: 0;
-            background: #6366f1;
-            transition: width 0.3s ease;
-            -webkit-transition: width 0.3s ease;
-        }
-
-        .minimal-link:hover:after {
-            width: 100%;
-            left: 0;
-            background: #4338ca;
-        }
-
-        .minimal-link:hover {
-            color: #4338ca;
-        }
-
-    .banner-image {
-        width: 100%;
-        max-height: 300px;
-        object-fit: cover;
     }
 </style>
 
@@ -128,13 +98,14 @@
          loading="lazy"
          class="banner-image">
 </section>
+<div class="info-flex-container">
+    <div class="info-row">
+        <span class="info-label">Program:</span>
+        <span class="program-badge">@ViewBag.ProgramName</span>
+    </div>
 
-<section class="welcome-container">
-    <span class="welcome-emoji">👋</span>
-
-    <div class="welcome-text">
-        <h2 class="user-name">Welcome, @Model.Name</h2>
-
+    <div class="info-row">
+        <span class="info-label">Role:</span>
         @if (PrivilegeHelper.IsSuperAdmin())
         {
             <span class="admin-badge">Super Admin</span>
@@ -143,8 +114,14 @@
         {
             <span class="admin-badge">@ViewBag.RoleName</span>
         }
-
     </div>
-
+    <div class="info-row">
+        <span class="info-label">Group:</span>
+        <span class="group-badge">@ViewBag.GroupName</span>
+    </div>
+</div>
+<section class="welcome-container">
+    <span class="welcome-emoji">👋</span>
+    <h2 class="user-name">Welcome, @Model.Name - @Model.Pno</h2>
 
 </section>

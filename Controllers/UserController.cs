@@ -10,7 +10,7 @@ using System.Net.Http;
 namespace SRM.Controllers
 {
     [Authorize]
-    public class UserController : Controller
+    public class UserController : BaseController
     {
         private readonly AppDbContext _db = new AppDbContext();
 

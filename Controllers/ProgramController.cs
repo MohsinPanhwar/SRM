@@ -5,7 +5,7 @@ using SRM.Data;
 
 namespace SRM.Controllers
 {
-    public class ProgramController : Controller
+    public class ProgramController : BaseController
     {
         private readonly AppDbContext _db = new AppDbContext();
 

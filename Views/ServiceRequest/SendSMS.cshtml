@@ -4,52 +4,71 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Send SMS</title>
-</head>
-<body>
-    <div class="setup-container">
-        <div class="section-header">
-            <h2>Send SMS</h2>
-        </div>
-
-        @using (Html.BeginForm("ProcessSMS", "Send", FormMethod.Post))
-        {
-            @Html.AntiForgeryToken()
-
-            <div class="form-body" style="padding: 20px;">
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label for="agentPno">Select Recipient:</label>
-                    <select id="agentPno" name="agentPno" class="form-control" required style="width: 100%; padding: 8px;">
-                        <option value="">-- Select an Agent --</option>
-                        @if (ViewBag.AgentList != null)
-                        {
-                            foreach (var agent in (List<Agent>)ViewBag.AgentList)
-                            {
-                                <option value="@agent.Pno">@agent.Name (@agent.Pno)</option>
-                            }
-                        }
-                    </select>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label for="message">Message:</label>
-                    <textarea id="message" name="message" class="form-control" rows="5" required
-                              placeholder="Type your message here..."
-                              style="width: 100%; padding: 8px; height: 150px !important;"></textarea>
-                </div>
-
-                <div class="form-actions" style="display: flex; justify-content: flex-end; width: 100%; margin-top: 20px;">
-                    <button type="submit" class="setup-btn-green">
-                        Send SMS
-                    </button>
-                </div>
-            </div>
-        }
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Send SMS</h2>
     </div>
-</body>
-</html>
+
+    @using (Html.BeginForm("ProcessSMS", "Send", FormMethod.Post, new { id = "smsForm" }))
+    {
+        @Html.AntiForgeryToken()
+
+<div class="form-body">
+    <div class="form-group">
+        <label for="agentPno">Select Recipient:</label>
+        <select id="agentPno" name="agentPno" class="form-control" required onchange="updateMobileDisplay()">
+            <option value="">-- Select an Agent --</option>
+            @if (ViewBag.AgentList != null)
+            {
+                foreach (var agent in (List<Agent>)ViewBag.AgentList)
+                {
+                    <option value="@agent.Pno" data-mobile="@agent.Mobile">
+                        @agent.Name (@agent.Pno)
+                    </option>
+                }
+            }
+        </select>
+    </div>
+
+    <div id="mobileSection" class="form-group" style="display:none;">
+        <label for="targetMobile">Recipient Mobile Number:</label>
+        <input type="text" id="targetMobile" name="targetMobile" class="form-control"
+               placeholder="Enter mobile number..." />
+        <small class="text-muted" style="color:red;">Verify or edit the number before sending.</small>
+    </div>
+
+    <div class="form-group">
+        <label for="message">Message:</label>
+        <textarea id="message" name="message" class="form-control sms-textarea" required
+                  placeholder="Type your message here..."></textarea>
+    </div>
+
+    <div class="form-actions" style="display: flex; justify-content: flex-end;">
+        <button type="submit" class="setup-btn-green">Send SMS</button>
+    </div>
+</div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        function updateMobileDisplay() {
+            var selectedOption = $('#agentPno').find('option:selected');
+            var mobile = selectedOption.data('mobile');
+            var pno = $('#agentPno').val();
+
+            // If a valid Pno is selected (not the empty header option)
+            if (pno !== "") {
+                // Show the field and populate it
+                $('#mobileSection').fadeIn(); // Smooth reveal
+                $('#targetMobile').val(mobile);
+                $('#targetMobile').prop('required', true); // Enable validation
+            } else {
+                // Hide the field and clear it
+                $('#mobileSection').fadeOut();
+                $('#targetMobile').val('');
+                $('#targetMobile').prop('required', false); // Disable validation
+            }
+        }
+    </script>
+}

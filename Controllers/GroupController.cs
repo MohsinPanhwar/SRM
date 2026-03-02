@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace SRM.Controllers
 {
-    public class GroupController : Controller
+    public class GroupController : BaseController
     {
         private readonly AppDbContext db = new AppDbContext();
 

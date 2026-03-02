@@ -6,7 +6,7 @@ using System.Web.Mvc;
 
 namespace SRM.Controllers
 {
-    public class HardwareDispatchController : Controller
+    public class HardwareDispatchController : BaseController
     {
         // GET: HardwareDispatch
         public ActionResult NewHardware()

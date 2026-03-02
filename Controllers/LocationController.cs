@@ -5,7 +5,7 @@ using SRM.Data;
 
 namespace SRM.Controllers
 {
-    public class LocationController : Controller
+    public class LocationController : BaseController
     {
         private readonly AppDbContext _db = new AppDbContext();
 

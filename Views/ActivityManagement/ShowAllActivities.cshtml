@@ -22,49 +22,42 @@
     <div class="section-header">
         <h2>Activity Management</h2>
     </div>
+    @* --- Centered Compact Dashboard Summary --- *@
+<div style="display: flex; justify-content: center; margin: 20px 0;">
 
-    @* --- Dashboard Summary Section --- *@
-    <div style="display: flex; justify-content: center; margin-bottom: 30px;">
-        <table style="width: 450px; border-collapse: collapse; text-align: center; border: 1px solid #ccc; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <thead>
-                <tr style="background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%); color: white;">
-                    <th style="padding: 12px; border: 1px solid #ccc; font-weight: 600;">Status</th>
-                    <th style="padding: 12px; border: 1px solid #ccc; font-weight: 600;">No of Activities</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #ccc;">
-                        <span style="color: #d32f2f; font-weight: bold;">Closed</span>
-                    </td>
-                    <td style="padding: 10px; border: 1px solid #ccc; font-weight: bold;">
-                        @Model.Count(x => x.status == "C")
-                    </td>
-                </tr>
-                <tr style="background-color: #f9f9f9;">
-                    <td style="padding: 10px; border: 1px solid #ccc;">
-                        <span style="color: #2e7d57; font-weight: bold;">Open</span>
-                    </td>
-                    <td style="padding: 10px; border: 1px solid #ccc; font-weight: bold;">
-                        @Model.Count(x => x.status != "C")
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <table class="status-card">
+        <thead>
+            <tr><th colspan="2">Overall Status Summary</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="color: #28a745; font-weight: bold;">Open</td>
+                <td >
+                    @Model.Count(x => x.status == "C")
+                </td>
+            </tr>
+            <tr>
+                <td style="color: #dc3545; font-weight: bold;">Closed</td>
+                <td>
+                    @Model.Count(x => x.status != "C")
+                </td>
+            </tr>
+        </tbody>
+    </table>
 
+</div>
     @* --- Filter and Action Row --- *@
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
 
-    @* Status Filter Toggle *@
-    
-    <div class="filter-wrapper">
-        <div class="filter-pill-box">
-            <button type="button" class="filter-pill active" onclick="filterTable('all', this)">All</button>
-            <button type="button" class="filter-pill pill-open" onclick="filterTable('O', this)">Open</button>
-            <button type="button" class="filter-pill pill-closed" onclick="filterTable('C', this)">Closed</button>
+        @* Status Filter Toggle *@
+
+        <div class="filter-wrapper">
+            <div class="filter-pill-box">
+                <button type="button" class="filter-pill active" onclick="filterTable('all', this)">All</button>
+                <button type="button" class="filter-pill pill-open" onclick="filterTable('O', this)">Open</button>
+                <button type="button" class="filter-pill pill-closed" onclick="filterTable('C', this)">Closed</button>
+            </div>
         </div>
-    </div>
         @* Log New Activity Button *@
         <button type="button" class="setup-btn-green" onclick="location.href='@Url.Action("LogNewActivity", "Activity")'"
                 style="display: flex; align-items: center; margin-right: 5px; padding: 10px 20px;">

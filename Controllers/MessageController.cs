@@ -7,7 +7,7 @@ using SRM.Data;
 
 namespace SRM.Controllers
 {
-    public class MessageController : Controller
+    public class MessageController : BaseController
     {
         private readonly AppDbContext db = new AppDbContext();
 

@@ -59,6 +59,8 @@ namespace SRM.Models
         public string ownership { get; set; }
 
         [StringLength(50)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+
         public string uid { get; set; }
 
         [StringLength(20)]

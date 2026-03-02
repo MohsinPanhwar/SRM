@@ -1,15 +1,16 @@
-﻿using System;
+﻿using SRM.Data;
+using SRM.Models;
+using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using SRM.Data;
-using SRM.Models;
 
 namespace SRM.Controllers
 {
-    public class ViewAllRequestsController : Controller
+    public class ViewAllRequestsController : BaseController
     {
         private readonly AppDbContext _db = new AppDbContext();
 
@@ -31,7 +32,6 @@ namespace SRM.Controllers
             var query = _db.Request_Master.AsQueryable();
 
             // 3. APPLY GLOBAL PROGRAM FILTER
-            // If a specific program is selected, restrict all data to that program
             if (globalProgramId.HasValue)
             {
                 query = query.Where(r => r.program_id == globalProgramId);
@@ -64,21 +64,20 @@ namespace SRM.Controllers
                 }
             }
 
-            // 7. Execute search and assign to the list
-            vm.RequestList = query.OrderByDescending(r => r.RequestID).ToList();
+            // 7. Execute search and assign to the list (use async)
+            vm.RequestList = await query.OrderByDescending(r => r.RequestID).ToListAsync();
 
             // 8. Summary Statistics (Filtered by Global Program)
-            // We apply the program filter to the counts so the Sidebar cards match the Table
             var statsQuery = _db.Request_Master.AsQueryable();
             if (globalProgramId.HasValue)
             {
                 statsQuery = statsQuery.Where(r => r.program_id == globalProgramId);
             }
 
-            vm.QueueCount = statsQuery.Count(r => r.status == "Q");
-            vm.ForwardedCount = statsQuery.Count(r => r.status == "F");
-            vm.ResolvedCount = statsQuery.Count(r => r.status == "R");
-            vm.ClosedCount = statsQuery.Count(r => r.status == "C");
+            vm.QueueCount = await statsQuery.CountAsync(r => r.status == "Q");
+            vm.ForwardedCount = await statsQuery.CountAsync(r => r.status == "F");
+            vm.ResolvedCount = await statsQuery.CountAsync(r => r.status == "R");
+            vm.ClosedCount = await statsQuery.CountAsync(r => r.status == "C");
 
             return View("~/Views/ServiceRequest/ViewAllRequests.cshtml", vm);
         }
@@ -123,11 +122,16 @@ namespace SRM.Controllers
 
             return View("~/Views/ServiceRequest/Details.cshtml", request);
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> ForwardRequest(int id, string Forward_To, string Forward_To_Type, string ForwardedRemarks)
         {
+            // If Forward_To came in empty, try the raw form value
+            if (string.IsNullOrEmpty(Forward_To))
+            {
+                Forward_To = Request.Form["Forward_To_Agent"];
+            }
+
             var req = _db.Request_Master.Find(id);
             if (req == null) return HttpNotFound();
 
@@ -137,8 +141,8 @@ namespace SRM.Controllers
 
             if (Forward_To_Type == "I")
             {
-                var targetEmp = _db.agent.FirstOrDefault(e => e.Pno == Forward_To);
-                targetName = targetEmp?.Name ?? Forward_To;
+                var targetEmp = _db.agent.FirstOrDefault(e => e.Pno.Trim() == Forward_To.Trim());
+                targetName = targetEmp?.Name ?? "Agent (" + Forward_To + ")";
             }
             else if (Forward_To_Type == "G")
             {
@@ -149,12 +153,15 @@ namespace SRM.Controllers
                 }
             }
 
+            // Now targetName is guaranteed to have a value
             string timestamp = DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt");
             string newEntry = $"<div class='log-entry' style='border-left:3px solid #3498db; padding-left:10px; margin-bottom:5px;'>" +
                               $"{timestamp} forwarded to <strong>{targetName}</strong> by <strong>{senderName}</strong>" +
                               $"</div>";
 
-            req.Forward_By = senderPno;
+            // ... (rest of your save logic)
+
+        req.Forward_By = senderPno;
             req.Forward_To = Forward_To;
             req.Forward_To_Type = Forward_To_Type;
             req.ForwardedDate = DateTime.Now;
@@ -196,7 +203,6 @@ namespace SRM.Controllers
 
             return RedirectToAction("Details", new { id });
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> CloseRequest(int id, string ClosingRemarks)
@@ -206,10 +212,24 @@ namespace SRM.Controllers
 
             string timestamp = DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt");
             string agentName = Session["AgentName"]?.ToString() ?? "Admin";
+            string agentPno = Session["AgentPno"]?.ToString() ?? "ADMIN";
+
             string log = $"<div class='log-entry' style='background:#fff5f5; color:red; border-left:3px solid red; padding:5px;'>{timestamp} CLOSED by {agentName}. Remarks: {ClosingRemarks}</div>";
 
+            // 1. Update status
             req.status = "C";
+
+            // 2. CHECK YOUR MODEL PROPERTY NAMES HERE:
+            // If your model uses 'ReqCloseBy', keep it. 
+            // If it uses 'RequestCloseBy' or 'CloseBy', change it below:
+            req.ReqCloseBy = agentPno;
+            req.ReqCloseDate = DateTime.Now;
+
+            // 3. Update History
             req.ReqDetails = (req.ReqDetails ?? "") + log;
+
+            // 4. Force Entity Framework to see the changes
+            _db.Entry(req).State = System.Data.Entity.EntityState.Modified;
 
             _db.Configuration.ValidateOnSaveEnabled = false;
             await _db.SaveChangesAsync();
@@ -220,6 +240,8 @@ namespace SRM.Controllers
             if (workshopEntry != null)
             {
                 workshopEntry.WarrantyDateOut = DateTime.Now.ToString("dd/MM/yyyy");
+                // Ensure this is also marked as modified
+                _db.Entry(workshopEntry).State = System.Data.Entity.EntityState.Modified;
                 await _db.SaveChangesAsync();
             }
 
@@ -269,6 +291,8 @@ namespace SRM.Controllers
 
             req.status = "F";
             req.ReqDetails = (req.ReqDetails ?? "") + logEntry;
+            req.ReqCloseBy = null;
+            req.ReqCloseDate = null;
 
             _db.Configuration.ValidateOnSaveEnabled = false;
             await _db.SaveChangesAsync();

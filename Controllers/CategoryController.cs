@@ -8,7 +8,7 @@ using System.Web.Mvc;
 
 namespace SRM.Controllers
 {
-    public class CategoryController : Controller
+    public class CategoryController : BaseController
     {
         private AppDbContext db = new AppDbContext();
 

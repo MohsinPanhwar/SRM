@@ -2,20 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
-using SRM.Models; // Ensure this matches your Agent model namespace
-using SRM.Data;   // Ensure this matches your AppDbContext namespace
+using SRM.Models;
+using SRM.Data;
 
 namespace SRM.Controllers
 {
-    [Authorize] // Optional: requires login to access
-    public class SendController : Controller
+    [Authorize]
+    public class SendController : BaseController
     {
         private readonly AppDbContext _context = new AppDbContext();
 
         // GET: Send/SendSMS
         public ActionResult SendSMS()
         {
-            // Fetch active agents to populate the recipient dropdown
+            // We fetch the full agent objects to ensure mobileno is available for the View's data-attribute
             var agents = _context.agent
                                  .Where(a => a.Status == "A")
                                  .OrderBy(a => a.Name)
@@ -23,6 +23,7 @@ namespace SRM.Controllers
 
             ViewBag.AgentList = agents;
 
+            // Using your specific view path
             return View("~/Views/ServiceRequest/SendSMS.cshtml");
         }
 
@@ -30,10 +31,28 @@ namespace SRM.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult ProcessSMS(string agentPno, string message)
         {
-            // Placeholder for your SMS API logic
-            System.Diagnostics.Debug.WriteLine($"Recipient: {agentPno}, Message: {message}");
+            if (string.IsNullOrEmpty(agentPno) || string.IsNullOrEmpty(message))
+            {
+                TempData["Error"] = "Recipient and message are required.";
+                return RedirectToAction("SendSMS");
+            }
 
-            TempData["Success"] = "SMS logic initialized.";
+            // 1. Fetch the actual agent to get their phone number for the SMS API
+            var targetAgent = _context.agent.FirstOrDefault(a => a.Pno == agentPno);
+
+            if (targetAgent != null && !string.IsNullOrEmpty(targetAgent.Mobile))
+            {
+                // 2. PLACEHOLDER: Call your SMS Gateway here
+                // Example: MySmsProvider.Send(targetAgent.mobileno, message);
+
+                System.Diagnostics.Debug.WriteLine($"Sending to: {targetAgent.Mobile}, Msg: {message}");
+                TempData["Success"] = $"SMS sent successfully to {targetAgent.Name}!";
+            }
+            else
+            {
+                TempData["Error"] = "Could not find a valid mobile number for this agent.";
+            }
+
             return RedirectToAction("SendSMS");
         }
 
@@ -41,6 +60,22 @@ namespace SRM.Controllers
         {
             if (disposing) _context.Dispose();
             base.Dispose(disposing);
+        }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////
+
+        public ActionResult SendPassword()
+        {
+            // We fetch the full agent objects to ensure mobileno is available for the View's data-attribute
+            var agents = _context.agent
+                                 .Where(a => a.Status == "A")
+                                 .OrderBy(a => a.Name)
+                                 .ToList();
+
+            ViewBag.AgentList = agents;
+
+            // Using your specific view path
+            return View("~/Views/ServiceRequest/SendPassword.cshtml");
         }
     }
 }

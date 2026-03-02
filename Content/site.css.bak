@@ -19,12 +19,11 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    width:95.25%;
     z-index: 1000;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(2deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
+    background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -95,7 +94,6 @@ body {
     top: 100%;
     left: 0;
     margin-top: -2px;
-    /*background: #aa9b31;*/
     background: #ffffff;
     min-width: 180px;
     box-shadow: 0 8px 16px rgba(0,0,0,0.15);
@@ -109,7 +107,7 @@ body {
         display: flex;
         align-items: center;
         padding: 0.75rem 1.25rem;
-        color: black;
+        color: #2d3748;
         font-size: 0.9rem;
         font-weight: 450;
         text-decoration: none;
@@ -117,7 +115,7 @@ body {
     }
 
         .dropdown-content a:hover {
-            background: linear-gradient(2deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
+            background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
             color: white;
             padding-left: 1.45rem;
         }
@@ -140,7 +138,7 @@ body {
 }
 
 .logout-button {
-    background: linear-gradient(2deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
+    background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
     color: white;
     border: 1px solid rgba(255, 255, 255, 0.25);
     padding: 0.6rem 1.4rem;
@@ -161,69 +159,12 @@ body {
         transform: translateY(-1px);
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     }
-@media (max-width: 1024px) {
-    .navbar {
-        padding: 0.5rem 1rem;
-        overflow: visible !important;
-    }
 
-    .nav-left {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        flex: 1;
-        min-width: 0; /* CRITICAL - allows flex child to shrink */
-        margin-right: 10px;
-        overflow: visible;
-    }
-
-    .nav-items {
-        display: flex;
-        gap: 0.35rem;
-        overflow-x: auto; /* scrollable */
-        overflow-y: visible;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 4px;
-        min-width: 0; /* CRITICAL - allows shrinking */
-        flex-shrink: 1;
-    }
-
-        .nav-items::-webkit-scrollbar {
-            display: none;
-        }
-
-    .dropdown {
-        position: static;
-        flex-shrink: 0; /* Prevents buttons from squishing */
-    }
-
-    .dropdown-content {
-        position: fixed;
-        top: 45px;
-        left: auto;
-        z-index: 9999;
-        display: none;
-        /*background: #aa9b31;*/
-        background: #ffffff;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-        min-width: 180px;
-        border-radius: 6px;
-        overflow: hidden;
-    }
-
-    .dropdown:hover .dropdown-content {
-        display: block;
-        animation: fadeInUp 0.2s ease-out;
-    }
-
-    .navbar .logo {
-        flex-shrink: 0;
-    }
-
-    .logout-button {
-        flex-shrink: 0;
-        margin-left: 10px;
-    }
+/* ===== MAIN CONTENT (pushes footer down) ===== */
+.main-container,
+.page-content,
+.content {
+    flex: 1 0 auto;
 }
 
 /* ===== HERO BANNER ===== */
@@ -246,7 +187,7 @@ footer {
     flex-shrink: 0;
     text-align: center;
     padding: 20px 0;
-    background: linear-gradient(2deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
+    background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
     color: #fff;
     width: 100%;
     margin-top: auto;
@@ -302,7 +243,7 @@ footer {
     height: 38px !important;
     min-width: 160px !important;
     padding: 0 20px !important;
-    background: linear-gradient(2deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important;
+    background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important;
     color: #ffffff !important;
     border: none !important;
     border-radius: 6px !important;
@@ -335,7 +276,7 @@ footer {
 }
 
     .crud-table thead {
-        background: linear-gradient(2deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important;
+        background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important;
         border-bottom: 2px solid #e0e0e0;
     }
 
@@ -495,7 +436,7 @@ footer {
     .setup-container .btn-success {
         height: 42px;
         min-width: 180px;
-        background: linear-gradient(2deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important;
+        background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important;
         color: #fff !important;
         font-weight: 600;
         border: none;
@@ -625,7 +566,7 @@ footer {
 }
 
 .form-section-header {
-    background: linear-gradient(2deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
+    background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
     color: white;
     padding: 8px 15px;
     font-weight: bold;
@@ -719,10 +660,9 @@ footer {
 }
 
     .status-card th {
-        color: white;
+        background: #f8f8f8;
         padding: 8px;
         border-bottom: 1px solid #ddd;
-        background: linear-gradient(2deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
     }
 
     .status-card td {
@@ -811,7 +751,7 @@ footer {
     }
 
 input:checked + .slider {
-    background: linear-gradient(2deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
+    background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
 }
 
     input:checked + .slider:before {
@@ -873,53 +813,4 @@ input:checked + .slider {
     .filter-pill.active:first-child {
         color: #1a73e8; /* Material Blue for 'All' */
     }
-
-/* SMS Form Layout */
-.form-body {
-    padding: 20px;
-    background: #fafafa;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-    .form-group label {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 5px;
-        color: #444;
-    }
-
-.sms-textarea {
-    width: 100%; /* Stretch to full width */
-    max-width: 100%; /* Prevent horizontal overflow */
-    padding: 12px;
-    height: 150px !important;
-    resize: vertical; /* Allow stretching down, but not sideways */
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box; /* Ensures padding doesn't add to width */
-}
-* Ensure the form-group parent doesn't restrict it */
-.form-group {
-    width: 100%;
-    margin-bottom: 20px;
-}
-
-
-
-/* Reusing the contact badge from before */
-.contact-badge {
-    display: inline-block;
-    margin-top: 8px;
-    padding: 4px 10px;
-    background: #e1f5fe;
-    color: #0277bd;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    border: 1px solid #b3e5fc;
-}
 

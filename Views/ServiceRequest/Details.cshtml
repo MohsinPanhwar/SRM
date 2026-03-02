@@ -1,20 +1,18 @@
 ﻿@using SRM.Helpers
 @model SRM.Models.Request_Master
-@{
-    ViewBag.Title = "Service Request Details";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+@{ ViewBag.Title = "Service Request Details";
+                Layout = "~/Views/Shared/_Layout.cshtml";
 
-    // Mapping logic to convert DB int back to Display String
-    string displayPriority = "Normal";
-    string priorityColor = "#555"; // Default grey
-    switch (Model.Priority)
-    {
-        case 1: displayPriority = "Critical"; priorityColor = "red"; break;
-        case 2: displayPriority = "Urgent"; priorityColor = "#d9534f"; break;
-        case 3: displayPriority = "Important"; priorityColor = "#f0ad4e"; break;
-        default: displayPriority = "Normal"; priorityColor = "blue"; break;
-    }
-}
+                // Mapping logic to convert DB int back to Display String
+                string displayPriority = "Normal";
+                string priorityColor = "#555"; // Default grey
+                switch (Model.Priority)
+                {
+                    case 1: displayPriority = "Critical"; priorityColor = "red"; break;
+                    case 2: displayPriority = "Urgent"; priorityColor = "#d9534f"; break;
+                    case 3: displayPriority = "Important"; priorityColor = "#f0ad4e"; break;
+                    default: displayPriority = "Normal"; priorityColor = "blue"; break;
+                } }
 
 <div class="setup-container fade-in-up">
     <div class="section-header">
@@ -27,40 +25,38 @@
         <span><strong>Current Status:</strong> <span style="color:#2e7d57; font-weight:bold;">@Model.status</span></span>
         @if (Model.status != "C")
         {
-            <button type="button" class="btn-link" style="color:red; border:none; background:none; cursor:pointer;" onclick="$('#closeModal').fadeIn()">
-                [Click here to Close this request]
-            </button>
-        }
-        else
-        {
-            using (Html.BeginForm("ReopenRequest", "ViewAllRequests", FormMethod.Post, new { style = "display:inline;" }))
+<button type="button" class="btn-link" style="color:red; border:none; background:none; cursor:pointer;" onclick="$('#closeModal').fadeIn()">
+    [Click here to Close this request]
+</button> }
+            else
             {
+                using (Html.BeginForm("ReopenRequest", "ViewAllRequests", FormMethod.Post, new { style = "display:inline;" }))
+                {
 @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.RequestID" />
                                         <button type="submit" class="btn-link" style="color:green; border:none; background:none; cursor:pointer; font-weight:bold;" onclick="return confirm('Are you sure you want to Re-Open this request?')">
                                             [Re-Open Request]
                                         </button>}
 
-                                                    }
+                                }
 
         <div id="closeModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
             <div style="background:white; width:400px; margin:100px auto; padding:20px; border-radius:5px; box-shadow:0 2px 10px rgba(0,0,0,0.3);">
                 <h3 style="margin-top:0; color:#d9534f;">Close Request #@Model.RequestID</h3>
                 @using (Html.BeginForm("CloseRequest", "ViewAllRequests", FormMethod.Post))
                 {
-                    @Html.AntiForgeryToken()
+    @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.RequestID" />
 
-                    <div style="margin-bottom:15px;">
-                        <label style="display:block; margin-bottom:5px;">Final Closing Remarks:</label>
-                        <textarea name="ClosingRemarks" style="width:100%; height:100px; padding:5px;" required placeholder="Describe the resolution..."></textarea>
-                    </div>
+                                    <div style="margin-bottom:15px;">
+                                        <label style="display:block; margin-bottom:5px;">Final Closing Remarks:</label>
+                                        <textarea name="ClosingRemarks" style="width:100%; height:100px; padding:5px;" required placeholder="Describe the resolution..."></textarea>
+                                    </div>
 
-                    <div style="text-align:right;">
-                        <button type="button" onclick="$('#closeModal').fadeOut()" style="padding:5px 15px; background:#ccc; border:none; cursor:pointer;">Cancel</button>
-                        <button type="submit" class="setup-btn-green" style="background:#d9534f; margin-left:5px;">Confirm Close</button>
-                    </div>
-                }
+                                                    <div style="text-align:right;">
+                                                        <button type="button" onclick="$('#closeModal').fadeOut()" style="padding:5px 15px; background:#ccc; border:none; cursor:pointer;">Cancel</button>
+                                                        <button type="submit" class="setup-btn-green" style="background:#d9534f; margin-left:5px;">Confirm Close</button>
+                                                    </div>}
             </div>
         </div>
     </div>
@@ -137,108 +133,90 @@
         <div class="details-box" style="padding: 20px;">
             @using (Html.BeginForm("ForwardRequest", "ViewAllRequests", FormMethod.Post, new { id = "forwardForm" }))
             {
-                @Html.AntiForgeryToken()
-
-                @* CHANGE: Name changed from RequestID to id to match Controller parameter *@
+@Html.AntiForgeryToken() @* CHANGE: Name changed from RequestID to id to match Controller parameter *@
                 <input type="hidden" name="id" value="@Model.RequestID" />
 
-                <div style="margin-bottom: 15px;">
-                    <label style="font-weight:bold; width: 160px; display:inline-block;">Forward to:</label>
-                    <label><input type="radio" name="FType" value="I" checked /> Individual</label>
-                    <label style="margin-left:15px;"><input type="radio" name="FType" value="G" /> Group</label>
-                    <input type="hidden" name="Forward_To_Type" id="Forward_To_Type" value="I" />
-                </div>
-
-                @* Individual Dropdown Row *@
-                <div id="empRow" style="margin-bottom: 15px;">
-                    <label style="font-weight:bold; width: 160px; display:inline-block;">Select Agent:</label>
-                    @Html.DropDownList("Forward_To_Agent", (SelectList)ViewBag.EmployeeList, "Select Employee", new { @class = "forward-select", @style = "width:300px; padding:5px;" })
-                </div>
-
-                @* Group Dropdown Row (Hidden by default) *@
-                <div id="groupRow" style="margin-bottom: 15px; display:none;">
-                    <label style="font-weight:bold; width: 160px; display:inline-block;">Select Group:</label>
-                    @Html.DropDownList("Forward_To_Group", (SelectList)ViewBag.GroupList, "Select Group", new { @class = "forward-select", @style = "width:300px; padding:5px;" })
-                </div>
-
-                @* Hidden field to hold the final selected Pno or Gid for the Controller *@
-                <input type="hidden" name="Forward_To" id="final_forward_to" required />
-
-                @* Added hidden field for remarks if your method expects it *@
-                <input type="hidden" name="ForwardedRemarks" value="" />
-                if (Model.status != "C")
-                {
-                    <div style="text-align: right; border-top: 1px dotted #ccc; padding-top: 15px;">
-                        <button type="submit" class="setup-btn-green">FORWARD</button>
-                        <button type="button" onclick="submitOwnership()" class="setup-btn-green" style="margin-left:10px;">TAKE OWNERSHIP</button>
-                    </div>
-                }
-            }
+                                <div style="margin-bottom: 15px;">
+                                    <label style="font-weight:bold; width: 160px; display:inline-block;">Forward to:</label>
+                                    <label><input type="radio" name="FType" value="I" checked /> Individual</label>
+                                    <label style="margin-left:15px;"><input type="radio" name="FType" value="G" /> Group</label>
+                                    <input type="hidden" name="Forward_To_Type" id="Forward_To_Type" value="I" />
+                                </div> @* Individual Dropdown Row *@
+                                                <div id="empRow" style="margin-bottom: 15px;">
+                                                    <label style="font-weight:bold; width: 160px; display:inline-block;">Select Agent:</label>
+                                                    @Html.DropDownList("Forward_To_Agent", (SelectList)ViewBag.EmployeeList, "Select Employee", new { @class = "forward-select", @style = "width:300px; padding:5px;" })
+                                                </div> @* Group Dropdown Row (Hidden by default) *@
+                                                                <div id="groupRow" style="margin-bottom: 15px; display:none;">
+                                                                    <label style="font-weight:bold; width: 160px; display:inline-block;">Select Group:</label>
+                                                                    @Html.DropDownList("Forward_To_Group", (SelectList)ViewBag.GroupList, "Select Group", new { @class = "forward-select", @style = "width:300px; padding:5px;" })
+                                                                </div> @* Hidden field to hold the final selected Pno or Gid for the Controller *@
+                                                                                <input type="hidden" name="Forward_To" id="final_forward_to" required /> @* Added hidden field for remarks if your method expects it *@
+                                                                                                <input type="hidden" name="ForwardedRemarks" value="" /> if (Model.status != "C")
+                                                                                                                {
+                                                                                                <div style="text-align: right; border-top: 1px dotted #ccc; padding-top: 15px;">
+                                                                                                    <button type="submit" class="setup-btn-green">FORWARD</button>
+                                                                                                    <button type="button" onclick="submitOwnership()" class="setup-btn-green" style="margin-left:10px;">TAKE OWNERSHIP</button>
+                                                                                                </div>                }
+                                                                                                            }
         </div>
         @if (Model.status != "C" && Model.status != "R")
         {
-            <div class="form-section-header">
-                Resolve Service Request
-            </div>
-            <div class="details-box" style="padding: 20px; border: 1px solid #004e92;">
-                @using (Html.BeginForm("ResolveRequest", "ViewAllRequests", FormMethod.Post, new { id = "resolveForm" }))
-                {
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" value="@Model.RequestID" />
+<div class="form-section-header">
+    Resolve Service Request
+</div>
+                <div class="details-box" style="padding: 20px; border: 1px solid #004e92;">
+                    @using (Html.BeginForm("ResolveRequest", "ViewAllRequests", FormMethod.Post, new { id = "resolveForm" }))
+                    {
+    @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.RequestID" />
 
-                    <div class="details-row">
-                        <div class="details-label">* Actual Problem Area</div>
-                        <div class="details-content">
-                            <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="ActualPArea" value="Hardware" /> Hardware</label>
-                            <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="ActualPArea" value="Software" /> Software</label>
-                            <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="ActualPArea" value="Internet" /> Internet</label>
-                            <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="ActualPArea" value="Network" /> Network</label>
-                            <label style="font-weight:normal;"><input type="checkbox" name="ActualPArea" value="Other" /> Other</label>
-                        </div>
-                    </div>
+                                            <div class="details-row">
+                                                <div class="details-label">* Actual Problem Area</div>
+                                                <div class="details-content">
+                                                    <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="ActualPArea" value="Hardware" /> Hardware</label>
+                                                    <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="ActualPArea" value="Software" /> Software</label>
+                                                    <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="ActualPArea" value="Internet" /> Internet</label>
+                                                    <label style="font-weight:normal; margin-right:10px;"><input type="checkbox" name="ActualPArea" value="Network" /> Network</label>
+                                                    <label style="font-weight:normal;"><input type="checkbox" name="ActualPArea" value="Other" /> Other</label>
+                                                </div>
+                                            </div>
 
-                    <div style="text-align: right; border-top: 1px dotted #ccc; padding-top: 15px; margin-top:10px;">
-                        <button type="submit" class="setup-btn-green" style="background:#004e92; border-color:#004e92;">
-                            RESOLVE REQUEST
-                        </button>
-                    </div>
-                }
-            </div>
-        }
+                                                                <div style="text-align: right; border-top: 1px dotted #ccc; padding-top: 15px; margin-top:10px;">
+                                                                    <button type="submit" class="setup-btn-green" style="background:#004e92; border-color:#004e92;">
+                                                                        RESOLVE REQUEST
+                                                                    </button>
+                                                                </div>                }
+                </div>}
     </div>
 </div>
 
 @section scripts {
     <script>
-        // 0. INTERCEPT 
-        PROGRAM SWITCHER (Details Page Context)
-$(document).on('change', 'select[name="programId"]', function (e) {
-    // Stop the Layout's auto-submit
-    e.preventDefault();
-    e.stopImmediatePropagation();
+        // 0. INTERCEPT PROGRAM SWITCHER (Details Page Context)
+        $(document).on('change', 'select[name="programId"]', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
 
-    var selectedProg = $(this).val();
+            var selectedProg = $(this).val();
 
-    // Perform an AJAX call to update the Session without reloading the Details page
-    $.ajax({
-        url: '/Admin/SetGlobalProgram', // Ensure this matches your Controller/Action path
-        type: 'POST',
-        data: {
-            programId: selectedProg,
-            // Capture token if available in the layout form
-            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-        },
-        success: function () {
-            // Once session is updated, redirect to the ViewAllRequests page
-            window.location.href = '@Url.Action("ViewAllRequests", "ViewAllRequests")';
-        },
-        error: function () {
-            // If AJAX fails, fallback to standard form submission
-            $(e.target).closest('form').submit();
-        }
-    });
-});
+            $.ajax({
+                url: '/Admin/SetGlobalProgram',
+                type: 'POST',
+                data: {
+                    programId: selectedProg,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function () {
+                    window.location.href = '@Url.Action("ViewAllRequests", "ViewAllRequests")';
+                },
+                error: function () {
+                    $(e.target).closest('form').submit();
+                }
+            });
+        });
+
         $(document).ready(function () {
+
             // 1. Handle Radio Button Change (Individual vs Group)
             $('input[name="FType"]').change(function () {
                 const val = $(this).val();
@@ -254,8 +232,8 @@ $(document).on('change', 'select[name="programId"]', function (e) {
                 updateFinalValue();
             });
 
-            // 2. Update hidden ID when dropdowns change
-            $('.forward-select').change(function() {
+            // 2. Update hidden field when dropdowns change
+            $('.forward-select').change(function () {
                 updateFinalValue();
             });
 
@@ -267,11 +245,11 @@ $(document).on('change', 'select[name="programId"]', function (e) {
 
             // 3. VALIDATION: Forward Form
             $('#forwardForm').on('submit', function (e) {
-                // If we are currently on the "Forward" action (not Take Ownership)
-                if ($(this).attr('action').indexOf('ForwardRequest') > -1) {
+                // Skip validation if this is a Take Ownership submission
+                if ($(this).data('action') !== 'ownership') {
+                    updateFinalValue(); // ensure hidden field is fresh before check
                     if (!$('#final_forward_to').val()) {
                         e.preventDefault();
-                        // Call the global toast from _Layout
                         showGlobalToast("Please select an Agent or Group to forward this request.", "error");
                     }
                 }
@@ -285,15 +263,21 @@ $(document).on('change', 'select[name="programId"]', function (e) {
                 }
             });
 
+            // 5. Initialize hidden field on page load
             updateFinalValue();
+
+            // 6. Trigger change to ensure hidden field is populated from default dropdown value
+            $('#Forward_To_Agent').trigger('change');
         });
 
-        // 5. Take Ownership Action
+        // 7. Take Ownership — bypasses forward validation, posts to TakeOwnership action
         function submitOwnership() {
-            var form = document.getElementById('forwardForm');
-            // Change action and submit
-            form.action = '@Url.Action("TakeOwnership", "ViewAllRequests")';
-            form.submit();
+            if (confirm("Are you sure you want to take ownership of this request?")) {
+                var form = $('#forwardForm');
+                form.data('action', 'ownership');
+                form.attr('action', '@Url.Action("TakeOwnership", "ViewAllRequests")');
+                form.submit();
+            }
         }
     </script>
 }

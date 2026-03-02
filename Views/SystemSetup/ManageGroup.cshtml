@@ -1,4 +1,9 @@
 ﻿@model SRM.Models.ViewModels.ManageGroupVM
+@{
+    ViewBag.Title = "Manage Groups";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    // We removed 'var programs' because we are getting the ID from the switcher session.
+}
 
 <div id="notification-area"></div>
 
@@ -6,15 +11,15 @@
 <div class=" setup-container">
     <div class="section-header">
         <h2>Manage Groups</h2>
-        
+
         @* Replaced inline styles with action-row class *@
-        
-    <div class="action-row">
-        <input type="text" id="newGroupName" placeholder="Enter Group Name" required />
-        @Html.DropDownList("newManagerName", Model.AgentList, "-- Select Manager --", new { @id = "newManagerName" })
-        @Html.DropDownList("newProgramName", Model.ProgramList, "-- Select Program --", new { @id = "newProgramName" })
-        <button id="addGroupBtn" class="setup-btn-green">+ Add Group</button>
-    </div>
+
+        <div class="action-row">
+            <input type="text" id="newGroupName" placeholder="Enter Group Name" required />
+            @Html.DropDownList("newManagerName", Model.AgentList, "-- Select Manager --", new { @id = "newManagerName" })
+            @Html.DropDownList("newProgramName", Model.ProgramList, "-- Select Program --", new { @id = "newProgramName" })
+            <button id="addGroupBtn" class="setup-btn-green">+ Add Group</button>
+        </div>
     </div>
     <table class="crud-table">
         <thead>
@@ -23,9 +28,9 @@
                 <th>Group Name</th>
                 <th>Manager PNo</th>
                 <th>No. of Members</th>
-                
-                    <th>Actions</th>
-                
+
+                <th>Actions</th>
+
             </tr>
         </thead>
         <tbody id="groupTableBody">
@@ -36,19 +41,20 @@
                     <td class="group-name">@grp.GroupName</td>
                     <td class="manager-name">@grp.Manager</td>
                     <td class="members-count">@grp.MembersCount</td>
-                    
-                        <td class="actions-cell">
-                            <div class="icon-btn-group">
-                                <button class="edit-btn" title="Edit">✏️</button>
-                                <button class="delete-btn" title="Delete">❌</button>
-                            </div>
-                        </td>
-                    
+
+                    <td class="actions-cell">
+                        <div class="icon-btn-group">
+                            <button class="edit-btn" title="Edit">✏️</button>
+                            <button class="delete-btn" title="Delete">❌</button>
+                        </div>
+                    </td>
+
                 </tr>
             }
         </tbody>
     </table>
-</div>@section scripts {
+</div>
+@section scripts {
     <script>
         $(function () {
             // 1. THE TOAST FUNCTION (Must be defined here to work on this page)

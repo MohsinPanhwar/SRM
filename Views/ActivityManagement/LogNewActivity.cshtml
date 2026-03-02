@@ -18,12 +18,12 @@
             @* Row 1: Activity + Location *@
             <div class="grid-label">Activity</div>
             <div class="grid-input" style="display:flex; align-items:center; gap:8px;">
-                @* Activity dropdown *@
-                <select name="ActivityId" id="ActivityId" class="form-control" style="flex: 1; height: 45px !important;">
+                <select name="ActivityId" id="ActivityId" class="form-control" style="flex: 1; height: 45px !important;" required>
                     <option value="">-- Select Activity --</option>
                     @foreach (var item in ViewBag.Activities as List<SRM.Models.ActivityCategories>)
                     {
-        <option value="@item.cat_id">@item.cat_name</option>}
+                        <option value="@item.cat_id">@item.cat_name</option>
+                    }
                 </select>
                 <a href="@Url.Action("ViewAllCategories", "Activity")" style="text-decoration: none;">
                     <button type="button" id="btnAddActivity" title="View All Activities"
@@ -35,14 +35,14 @@
 
             <div class="grid-label">Location</div>
             <div class="grid-input" style="display:flex; align-items:center; gap:8px;">
-                <select name="Location" id="Location" class="form-control" style="flex: 1; height: 45px !important;">
+                <select name="Location" id="Location" class="form-control" style="flex: 1; height: 45px !important;" required>
                     <option value="">-- Select Location --</option>
                     @foreach (var item in ViewBag.Locations as List<SRM.Models.IncidentLocation>)
                     {
-        <option value="@item.LocationCode">@item.LocationName</option>}
+                        <option value="@item.LocationCode">@item.LocationName</option>
+                    }
                 </select>
                 <a href="@Url.Action("ViewAllLocations", "Activity")" style="text-decoration: none;">
-
                     <button type="button" id="btnAddLocation" title="Add New Location"
                             style=" background: linear-gradient(135deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%) !important; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         +
@@ -73,17 +73,19 @@
                 <select name="StartHour" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     @for (int i = 1; i <= 12; i++)
                     {
-        <option value="@i">@i</option>}
+                        <option value="@i">@i</option>
+                    }
                 </select>
                 <span>:</span>
                 <select name="StartMinute" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     @for (int i = 0; i < 60; i += 5)
                     {
-        <option value="@i.ToString("D2")">@i.ToString("D2")</option>}
+                        <option value="@i.ToString("D2")">@i.ToString("D2")</option>
+                    }
                 </select>
-                <select name="StartAmPm" class="form-control" style="width:80px; flex-shrink:0;height: 45px !important;">
+                <select name="StartAmPm" class="form-control" style="width:80px; flex-shrink:0; height: 45px !important;">
                     <option>AM</option>
-                    <option>PM</option>
+                    <option @(DateTime.Now.Hour >= 12 ? "selected" : "")>PM</option>
                 </select>
             </div>
 
@@ -99,41 +101,110 @@
                 <select name="EndHour" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     @for (int i = 1; i <= 12; i++)
                     {
-        <option value="@i">@i</option>}
+                        <option value="@i">@i</option>
+                    }
                 </select>
                 <span>:</span>
                 <select name="EndMinute" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     @for (int i = 0; i < 60; i += 5)
                     {
-        <option value="@i.ToString("D2")">@i.ToString("D2")</option>}
+                        <option value="@i.ToString("D2")">@i.ToString("D2")</option>
+                    }
                 </select>
                 <select name="EndAmPm" class="form-control" style="width: 80px; flex-shrink: 0; height: 45px !important;">
                     <option>AM</option>
-                    <option>PM</option>
+                    <option @(DateTime.Now.Hour >= 12 ? "selected" : "")>PM</option>
                 </select>
             </div>
 
             @* Row 5: Activity Detail *@
             <div class="grid-label" style="align-self: start; margin-top: 18px;">Activity Detail</div>
-
             <div class="grid-input" style="grid-column: 2 / 5;">
                 <textarea name="ActivityDetail" class="form-control"
                           style="width:100%; min-height:120px; resize:none; padding-top: 10px !important; margin-top: 10px;"
-                          placeholder="Enter activity details here..."></textarea>
+                          placeholder="Enter activity details here..." required></textarea>
             </div>
 
-            @* Row 6: Checkbox + Submit spanning columns 2-5 *@
+            @* Row 6: Checkbox Toggle *@
             <div class="grid-label"></div>
             <div class="grid-input" style="grid-column: 2 / 5; display:flex; flex-direction:column; gap:15px; padding-top:5px;">
-                <label style="font-weight:normal; cursor:pointer;">
-                    <input type="checkbox" name="CreateServiceRequest" value="true" />
+                <label style="font-weight:bold; cursor:pointer; color: #2e7d57;">
+                    <input type="checkbox" id="chkCreateSR" name="CreateServiceRequest" value="true" />
                     Create service request for this activity
                 </label>
-                <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
-                    <button type="submit" class="setup-btn-green">📋 Log this activity</button>
+            </div>
+        </div>
+
+        @* --- HIDDEN SERVICE REQUEST SECTION --- *@
+        <div id="srSection" style="display: none; ">
+            <div class="form-section-header" >Service Request Details</div>
+
+            <div class="details-box">
+                <div class="details-row" style="margin-bottom:15px;">
+                    <div class="details-label" style="font-weight:bold;">Priority</div>
+                    <div class="details-content">
+                        <div class="radio-group" style="display:flex; gap:15px;">
+                            <label style="color:#f5365c; font-weight:bold;"><input type="radio" name="Priority" value="Critical" /> Critical</label>
+                            <label><input type="radio" name="Priority" value="Urgent" /> Urgent</label>
+                            <label><input type="radio" name="Priority" value="Important" /> Important</label>
+                            <label><input type="radio" name="Priority" value="Normal" checked /> Normal</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="details-row" style="margin-bottom:15px;">
+                    <div class="details-label" style="font-weight:bold;">* Problem Area</div>
+                    <div class="details-content">
+                        <label style="margin-right:10px;"><input type="checkbox" name="Area" value="Hardware" /> Hardware</label>
+                        <label style="margin-right:10px;"><input type="checkbox" name="Area" value="Software" /> Software</label>
+                        <label style="margin-right:10px;"><input type="checkbox" name="Area" value="Internet" /> Internet</label>
+                        <label><input type="checkbox" name="Area" value="Network" /> Network</label>
+                    </div>
+                </div>
+
+                <div class="details-row" style="margin-bottom:15px;">
+                    <div class="details-label" style="font-weight:bold;">* Request Summary</div>
+                    <div class="details-content">
+                        <input type="text" id="srSummary" name="Summary" class="form-control" style="width:100%; height:40px;" placeholder="Brief summary of the issue" />
+                    </div>
+                </div>
+
+                <div class="details-row">
+                    <div class="details-label" style="font-weight:bold;">Request Details</div>
+                    <div class="details-content">
+                        <textarea name="Details" class="form-control" style="width:100%; height:80px;" placeholder="Additional context for the service desk..."></textarea>
+                    </div>
                 </div>
             </div>
+        </div>
 
+        @* Submit Button *@
+        <div style="display: flex; justify-content: flex-end; margin-top: 30px; padding-bottom: 50px;">
+            <button type="submit" class="setup-btn-green" style="padding: 12px 30px; font-size: 1.1rem;">📋 Log this activity</button>
         </div>
     }
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Watch for changes on the checkbox
+            $('#chkCreateSR').on('change', function () {
+                if ($(this).is(':checked')) {
+                    // Slide down and add validation
+                    $('#srSection').slideDown(400);
+                    $('#srSummary').attr('required', 'required');
+                } else {
+                    // Slide up and remove validation
+                    $('#srSection').slideUp(400);
+                    $('#srSummary').removeAttr('required');
+
+                    // Optional: Clear the fields when unchecking
+                    $('#srSummary').val('');
+                    $('#srSection textarea').val('');
+                    $('#srSection input[type="checkbox"]').prop('checked', false);
+                }
+            });
+        });
+    </script>
+}

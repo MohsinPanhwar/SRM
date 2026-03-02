@@ -9,7 +9,7 @@ using SRM.Models.ViewModels;
 
 namespace SRM.Controllers
 {
-    public class RoleController : Controller
+    public class RoleController : BaseController
     {
         private AppDbContext _db = new AppDbContext();
 

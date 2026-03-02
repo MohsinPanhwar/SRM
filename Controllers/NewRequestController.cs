@@ -10,14 +10,15 @@ using SRM.Data;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Newtonsoft.Json;
+using SRM.Helpers;
+using SRM.Services;
 
 namespace SRM.Controllers
 {
-    public class NewRequestController : Controller
+    public class NewRequestController : BaseController
     {
         // Use your actual Context class name here (e.g., SRMEntities or MyDbContext)
         private AppDbContext _db = new AppDbContext();
-        private readonly string soapUrl = "https://piacconnect.piac.com.pk/piamobileApp/services.asmx";
 
         public async Task<ActionResult> LogNewRequest(string searchPno)
         {
@@ -50,102 +51,19 @@ namespace SRM.Controllers
                 return View(viewPath, new EmployeeProfile());
             }
 
-            // 6. Search Logic
-            var profile = _db.EmployeeProfiles.FirstOrDefault(e => e.Pno == searchPno);
+            // 6. Search Logic - Use centralized service
+            var profile = await EmployeeProfileService.GetOrFetchAsync(_db, searchPno);
 
             if (profile == null)
             {
-                profile = await FetchFromPiaSoapApi(searchPno);
-                if (profile != null)
-                {
-                    _db.EmployeeProfiles.Add(profile);
-                    await _db.SaveChangesAsync();
-                }
-                else
-                {
-                    TempData["Error"] = "Employee not found.";
-                    // Even on error, we must return the view with the filled ViewBag
-                    return View(viewPath, new EmployeeProfile());
-                }
+                TempData["Error"] = "Employee not found.";
+                // Even on error, we must return the view with the filled ViewBag
+                return View(viewPath, new EmployeeProfile());
             }
 
             return View(viewPath, profile);
         }
-        private async Task<EmployeeProfile> FetchFromPiaSoapApi(string pno)
-        {
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    var requestData = new FormUrlEncodedContent(new[]
-                    {
-                new KeyValuePair<string, string>("PNO", pno),
-                new KeyValuePair<string, string>("tokenid", "BFE8DDB76AA373BE816038BD36D0D70F")
-            });
 
-                    string postUrl = "http://piacconnect.piac.com.pk/piamobileApp/services.asmx/SignUP";
-                    var response = await client.PostAsync(postUrl, requestData);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        // This is the string starting with "[{"pno":"60987"..."
-                        var jsonString = await response.Content.ReadAsStringAsync();
-
-                        if (!string.IsNullOrEmpty(jsonString))
-                        {
-                            // Directly parse the JSON (No XDocument needed!)
-                            var results = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(jsonString);
-                            var emp = results?.FirstOrDefault();
-
-                            if (emp != null)
-                            {
-                                return new EmployeeProfile
-                                {
-                                    Pno = emp.ContainsKey("pno") ? emp["pno"] : pno,
-                                    emp_name = emp.ContainsKey("name") ? emp["name"] : "N/A",
-                                    Emp_designation = emp.ContainsKey("Emp_designation") ? emp["Emp_designation"] : "N/A",
-
-                                    // Mapping JSON 'Department' to your 'ATTENDANCE_DEPT_CODE'
-                                    ATTENDANCE_DEPT_CODE = emp.ContainsKey("Department") ? emp["Department"] : "N/A",
-
-                                    // Mapping JSON 'email' to your 'Email'
-                                    Email = emp.ContainsKey("email") ? emp["email"] : "",
-
-                                    // Mapping JSON 'Phone_Num' to your 'mobileno'
-                                    mobileno = emp.ContainsKey("Phone_Num") ? emp["Phone_Num"] : "",
-
-                                    // Mapping JSON 'Emp_NIC' to your existing 'NIC' property
-                                    NIC = emp.ContainsKey("Emp_NIC") ? emp["Emp_NIC"] : "",
-
-                                    // Mapping JSON 'Organization' to your 'Location' property
-                                    Location = emp.ContainsKey("Organization") ? emp["Organization"] : "",
-
-                                    // Mapping JSON dates to your existing DateTime properties
-                                    Emp_dob = emp.ContainsKey("dob") && !string.IsNullOrEmpty(emp["dob"])
-                                              ? DateTime.Parse(emp["dob"]) : (DateTime?)null,
-
-                                    Appointment_Date = emp.ContainsKey("doj") && !string.IsNullOrEmpty(emp["doj"])
-                                                       ? DateTime.Parse(emp["doj"]) : (DateTime?)null,
-
-                                    // Capturing Employee Status into your Status_id or ContractType if you prefer
-                                    Status_id = emp.ContainsKey("status") ? emp["status"] : "",
-                                    ContractType = emp.ContainsKey("person_type") ? emp["person_type"] : "",
-
-                                    // Housekeeping
-                                    UPDATED_ON = DateTime.Now,
-                                    UPDATED_BY = "SYSTEM_API"
-                                };
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("Parsing Error: " + ex.Message);
-            }
-            return null;
-        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> SaveRequest(EmployeeProfile model, string Priority, string[] Area, string Summary, string Details, FormCollection form)
@@ -174,7 +92,7 @@ namespace SRM.Controllers
 
                         // EF tracks these changes automatically
                     }
-
+                    string userIp = Request.UserHostAddress;
                     // 4. Create the Master Request
                     var newRequest = new Request_Master
                     {
@@ -188,7 +106,7 @@ namespace SRM.Controllers
                         ReqSummary = Summary,
                         ReqDetails = Details,
                         Location = model.Location,
-                        RequestedIPAddress = model.ip_address
+                        RequestedIPAddress = userIp
                     };
 
                     _db.Request_Master.Add(newRequest);
