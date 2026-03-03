@@ -346,14 +346,14 @@
             $('#btnSaveUser').click(function () {
                 var emp = {
                     Pno: $('#empId').val(),
-                    Name: $('#name').val(),
-                    Designation: $('#designation').val(),
-                    Department: $('#department').val(),
+                    emp_name: $('#name').val(),           // Changed from 'Name' to 'emp_name'
+                    Emp_designation: $('#designation').val(), // Changed from 'Designation'
+                    DEPT: $('#department').val(),          // Changed from 'Department'
                     Email: $('#email').val(),
-                    Mobile: $('#mobile').val(),
+                    mobileno: $('#mobile').val(),         // Changed from 'Mobile'
                     Office_ext: $('#phoneExt').val(),
-                    Ip_Address: $('#ipAddress').val(),
-                    Roomno: $('#roomNo').val(),
+                    ip_address: $('#ipAddress').val(),     // Changed from 'Ip_Address'
+                    roomno: $('#roomNo').val(),           // Changed from 'Roomno'
                     Location: $('#location').val()
                 };
                 if (!emp.Pno) { showGlobalToast('PNO is required.', 'error'); return; }

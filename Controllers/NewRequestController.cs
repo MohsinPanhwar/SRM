@@ -85,6 +85,7 @@ namespace SRM.Controllers
                     {
                         existingEmp.Email = model.Email;
                         existingEmp.mobileno = model.mobileno;
+                        existingEmp.DEPT = model.DEPT;
                         existingEmp.roomno = model.roomno;
                         existingEmp.Location = model.Location;
                         existingEmp.ip_address = model.ip_address;
