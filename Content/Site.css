@@ -44,10 +44,10 @@ body {
     font-weight: 700;
     letter-spacing: -0.5px;
     text-decoration: none;
-    background: linear-gradient(90deg, #a8e063, #56ab2f);
+    background: linear-gradient(180deg, #d4af37 0%, #f1e0ac 50%, #d9a04a 100%);
+    color: transparent;
     -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    background-clip: text; /* Applies gradient to text */
     transition: transform 0.3s ease;
 }
 
@@ -934,66 +934,9 @@ input:checked + .slider {
     --srm-gray-bg: #f4f7f6;
 }
 
-.mis-wrapper {
-    background-color: var(--srm-gray-bg);
-    padding: 30px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
 
-.mis-header {
-    border-left: 6px solid var(--srm-green-main);
-    padding-left: 20px;
-    margin-bottom: 30px;
-}
 
-    .mis-header h2 {
-        color: var(--srm-green-dark);
-        margin: 0;
-        font-size: 1.8rem;
-        letter-spacing: -0.5px;
-    }
 
-/* Selector Bar */
-.mis-filter-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--srm-white);
-    padding: 20px 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    margin-bottom: 25px;
-}
-
-.filter-group {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-}
-
-.mis-select {
-    padding: 10px 15px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    width: 280px;
-    font-size: 0.95rem;
-}
-
-.btn-generate {
-    background: var(--srm-green-main);
-    color: white;
-    border: none;
-    padding: 10px 25px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.2s, background 0.2s;
-}
-
-    .btn-generate:hover {
-        background: var(--srm-green-mid);
-        transform: translateY(-1px);
-    }
 
 /* Dashboard Grid */
 .mis-grid {
@@ -1082,9 +1025,9 @@ input:checked + .slider {
 
 .kpi-label {
     font-size: 0.75rem;
-    color: #7a8b83;
+    color: #000000;
     text-transform: uppercase;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 1px;
 }
 
@@ -1097,7 +1040,6 @@ input:checked + .slider {
 
 /* Modernized Selector Bar */
 .mis-controls {
-    background: var(--forest-dark);
     color: white;
     padding: 25px 35px;
     border-radius: 20px;

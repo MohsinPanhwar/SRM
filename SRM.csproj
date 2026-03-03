@@ -202,6 +202,9 @@
     <Content Include="Content\Images\Banner.jpeg" />
     <Content Include="Content\Images\Banner1.jpg" />
     <Content Include="Content\Images\BG.jpg" />
+    <Content Include="Content\Images\BG1.jpg" />
+    <Content Include="Content\Images\BG2.jpg" />
+    <Content Include="Content\Images\image.jpg" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />

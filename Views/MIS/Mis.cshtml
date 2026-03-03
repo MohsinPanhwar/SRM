@@ -1,64 +1,57 @@
 ﻿@model SRM.Models.ViewModels.DashboardVM
 @{
+    var vm = Model ?? new SRM.Models.ViewModels.DashboardVM();
+    ViewBag.Title = "MIS Dashboard";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="setup-container">
     <div class="section-header">
         <h2>Management Information System</h2>
-        <small style="color:#666">Analytical Overview for Service Requests & Operations</small>
-        <div class="mis-filter-bar">
-            <div>
-                <span style="font-weight:600; color:#444;">Select Domain Analysis</span>
-            </div>
-            <div class="filter-group">
-                <select id="misCategory" class="mis-select">
-                    <option value="Activities">General Activities Summary</option>
-                    <option value="Requests" selected>Service Request Volume</option>
-                    <option value="Assets">Asset Utilization Distribution</option>
-                    <option value="Incidents">Efficiency & SLA Performance</option>
-                </select>
-                <button class="setup-btn-green" onclick="updateMISData()">
-                    Generate Report
-                </button>
-            </div>
-        </div>
-
     </div>
-
-    <div class="kpi-row">
-        <div class="kpi-card" style="border-left: 5px solid var(--forest-accent);">
-            <span class="kpi-label">Incoming Volume</span>
-            <div class="kpi-value" id="kpiTotal">0</div>
-            <div style="color: #66b088; font-size: 0.8rem;">↑ 12% vs last month</div>
+    <div class="mis-controls">
+        <div class="filter-group">
+            <select id="misCategory" class="mis-select" onchange="updateMISData()">
+                <option value="Activities">Activities Summary</option>
+                <option value="Requests">Request Status</option>
+                <option value="Assets">Asset Issuance</option>
+                <option value="Incidents">Incident Reports</option>
+            </select>
         </div>
-        <div class="kpi-card" style="border-left: 5px solid #ffa500;">
-            <span class="kpi-label">Active Backlog</span>
-            <div class="kpi-value" id="kpiBacklog" style="color:#d38200;">0</div>
-            <div style="color: #888; font-size: 0.8rem;">Requires Attention</div>
+        <button class="setup-btn-green" onclick="updateMISData()">Refresh Dashboard</button>
+    </div>
+    <div class="kpi-row">
+        <div class="kpi-card" style="border-left: 5px solid var(--forest-dark);">
+            <div id="kpiLabel1" class="kpi-label">Category Total</div>
+            <div id="kpiValue1" class="kpi-value">@vm.TotalRequests</div>
+        </div>
+        <div class="kpi-card" style="border-left: 5px solid var(--forest-accent);">
+            <div id="kpiLabel2" class="kpi-label">Primary Metric</div>
+            <div id="kpiValue2" class="kpi-value" style="color: var(--forest-accent);">@vm.OpenRequests</div>
+        </div>
+        <div class="kpi-card" style="border-left: 5px solid #dc3545;">
+            <div id="kpiLabel3" class="kpi-label">Secondary Metric</div>
+            <div id="kpiValue3" class="kpi-value" style="color: #dc3545;">@vm.HighPriorityRequests</div>
         </div>
         <div class="kpi-card" style="border-left: 5px solid var(--neon-green);">
-            <span class="kpi-label">Completion</span>
-            <div class="kpi-value" id="kpiRate">0%</div>
-            <div style="color: #888; font-size: 0.8rem;">Efficiency Score</div>
-        </div>
-        <div class="kpi-card" style="border-left: 5px solid var(--forest-dark);">
-            <span class="kpi-label">Avg. Response</span>
-            <div class="kpi-value">2.4<span style="font-size:1rem; font-weight:400;"> hrs</span></div>
-            <div style="color: #888; font-size: 0.8rem;">Target: < 4hrs</div>
+            <div class="kpi-label">Global Total</div>
+            <div class="kpi-value">@vm.TotalRequests</div>
         </div>
     </div>
-    
+
+
 
     <div class="dashboard-grid">
         <div class="mis-card">
-            <h4 style="margin-bottom:20px; color:var(--forest-dark);">Data Breakdown</h4>
-            <table class="status-card-minimal" style="width:100%;">
+            <h3 class="mis-card-title">Detailed Summary</h3>
+            <table class="mis-table">
+                <thead><tr><th>DESCRIPTION</th><th style="text-align: right;">COUNT</th></tr></thead>
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
         <div class="mis-card">
-            <canvas id="misChart" style="max-height: 400px;"></canvas>
+            <h3 class="mis-card-title">Trend Analysis</h3>
+            <div style="height: 350px;"><canvas id="misChart"></canvas></div>
         </div>
     </div>
 </div>
@@ -68,99 +61,67 @@
     <script>
         let misChart;
 
-        // Auto-load on page start
-        $(document).ready(function () {
-            updateMISData();
-        });
+        $(document).ready(function () { updateMISData(); });
 
-       function updateMISData() {
-    var selectedCategory = document.getElementById("misCategory").value;
+        function updateMISData() {
+            const category = $('#misCategory').val();
 
-    $.ajax({
-        url: '@Url.Action("Overall", "MIS")',
-        type: 'GET',
-        data: { category: selectedCategory },
-        success: function (response) {
-            // Update Table and Charts
-            renderTable(response.labels, response.data);
-            renderChart(response.labels, response.data, selectedCategory);
+            $.getJSON('@Url.Action("Overall", "MIS")', { category: category }, function (res) {
+                // 1. Update KPI Cards
+                updateKPICards(category, res);
 
-            // Populate Quick Stats
-            let total = response.data.reduce((a, b) => a + b, 0);
+                // 2. Update Table
+                renderTable(res.labels, res.data);
 
-            // Assuming the first label in your C# logic is "Open" or "New"
-            let openIndex = response.labels.indexOf("Open");
-            let openCount = openIndex !== -1 ? response.data[openIndex] : 0;
-
-            // Calculate completion rate
-            let closedIndex = response.labels.indexOf("Closed");
-            let closedCount = closedIndex !== -1 ? response.data[closedIndex] : 0;
-            let rate = total > 0 ? Math.round((closedCount / total) * 100) : 0;
-
-            // Inject into cards
-            $('#kpiTotal').text(total.toLocaleString());
-            $('#kpiOpen').text(openCount.toLocaleString());
-            $('#kpiRate').text(rate + "%");
-
-            // If viewing requests, show high priority count (if data available)
-            $('#kpiCritical').text(response.criticalCount || "N/A");
+                // 3. Update Chart
+                renderChart(res.labels, res.data, category);
+            });
         }
-    });
-}
+
+        function updateKPICards(cat, data) {
+            // Change labels based on category
+            if(cat === "Activities") {
+                $('#kpiLabel1').text("Total Activities");
+                $('#kpiLabel2').text("Open Tasks");
+                $('#kpiLabel3').text("Completed");
+            } else if(cat === "Requests") {
+                $('#kpiLabel1').text("Total Requests");
+                $('#kpiLabel2').text("Pending/Open");
+                $('#kpiLabel3').text("Forwarded");
+            } else if(cat === "Assets") {
+                $('#kpiLabel1').text("Total Assets");
+                $('#kpiLabel2').text("Items Issued");
+                $('#kpiLabel3').text("Unique Locations");
+            } else {
+                $('#kpiLabel1').text("Incidents Total");
+                $('#kpiLabel2').text("Resolved");
+                $('#kpiLabel3').text("Unresolved");
+            }
+
+            // Update Values
+            $('#kpiValue1').text(data.kpi3);
+            $('#kpiValue2').text(data.kpi1);
+            $('#kpiValue3').text(data.kpi2);
+        }
 
         function renderTable(labels, data) {
             let html = "";
-            let total = 0;
-            labels.forEach((label, i) => {
-                html += `<tr>
-                            <td>${label}</td>
-                            <td style="text-align:right; font-weight:700;">${data[i]}</td>
-                         </tr>`;
-                total += data[i];
+            labels.forEach((l, i) => {
+                html += `<tr><td>${l}</td><td style="text-align:right; font-weight:700;">${data[i]}</td></tr>`;
             });
-            html += `<tr class="total-row">
-                        <td style="padding:15px 10px;">Grand Total</td>
-                        <td style="text-align:right; padding:15px 10px;">${total}</td>
-                     </tr>`;
             $('#tableBody').html(html);
         }
 
-        function renderChart(labels, data, cat) {
+        function renderChart(labels, data, title) {
             const ctx = document.getElementById('misChart').getContext('2d');
-
-            // Create a Gradient for the Chart
-            let gradient = ctx.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, '#2e7d57');
-            gradient.addColorStop(1, '#a8e063');
-
             if (misChart) misChart.destroy();
-
             misChart = new Chart(ctx, {
-                type: (cat === 'Requests' ? 'bar' : 'doughnut'),
+                type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: cat === 'Requests' ? gradient : ['#0f2f27', '#2e7d57', '#a8e063', '#ffa500'],
-                        borderRadius: 12,
-                        borderWidth: 0,
-                        hoverOffset: 20
-                    }]
+                    datasets: [{ label: title, data: data, backgroundColor: '#2e7d57', borderRadius: 8 }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: (cat !== 'Requests'),
-                            position: 'bottom'
-                        }
-                    },
-                    scales: cat === 'Requests' ? {
-                        y: { display: false },
-                        x: { grid: { display: false }, border: { display: false } }
-                    } : {}
-                }
+                options: { maintainAspectRatio: false }
             });
         }
     </script>

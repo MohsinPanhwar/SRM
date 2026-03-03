@@ -3,33 +3,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 using SRM.Data;
-using SRM.Models.ViewModels; // Import your VM namespace
+using SRM.Models.ViewModels;
 
 namespace SRM.Controllers
 {
-    public class MISController : BaseController
+    public class MISController : Controller
     {
         private readonly AppDbContext _db = new AppDbContext();
 
-        // GET: MIS/Dashboard
+        // 1. THIS LOADS THE PAGE
+        // URL: /MIS/Dashboard
         public ActionResult Dashboard()
         {
-            // Initialize the ViewModel we defined earlier
             var viewModel = new DashboardVM();
-
             try
             {
-                // 1. Get High-Level Stats from Request_Master
                 viewModel.TotalRequests = _db.Request_Master.Count();
-
-                // Assuming 'C' is Closed, anything else is Open
                 viewModel.OpenRequests = _db.Request_Master.Count(r => r.status != "C");
                 viewModel.ClosedRequests = _db.Request_Master.Count(r => r.status == "C");
-
-                // Logic for High Priority (adjust if your priority scale is different)
                 viewModel.HighPriorityRequests = _db.Request_Master.Count(r => r.Priority <= 2);
 
-                // 2. Get Recent Activities (Last 5)
                 viewModel.RecentRequests = _db.Request_Master
                     .OrderByDescending(r => r.RequestDate)
                     .Take(5)
@@ -37,83 +30,98 @@ namespace SRM.Controllers
             }
             catch (Exception ex)
             {
-                // Simple error logging
-                System.Diagnostics.Debug.WriteLine($"Dashboard Error: {ex.Message}");
-                // Ensure list isn't null even on error
+                System.Diagnostics.Debug.WriteLine(ex.Message);
                 viewModel.RecentRequests = new List<SRM.Models.Request_Master>();
             }
 
-            return View("~/Views/MIS/Dashboard.cshtml",viewModel);
+            return View("~/Views/MIS/Dashboard.cshtml", viewModel);
         }
-        // GET: MIS/Index
+        // csharp
         public ActionResult MIS()
         {
-            return View("~/Views/MIS/Mis.cshtml");
-        }
-
-        public ActionResult RequestMaster()
-        {
             var vm = new DashboardVM();
-
             vm.TotalRequests = _db.Request_Master.Count();
-            vm.OpenRequests = _db.Request_Master.Where(r => r.status != "C" || r.status == null).Count();
-            vm.ClosedRequests = _db.Request_Master.Where(r => r.status == "C").Count();
-
-            vm.RequestsByPriority = _db.Request_Master
-                .GroupBy(r => r.Priority ?? 0)
-                .Select(g => new { Priority = g.Key, Count = g.Count() })
-                .ToDictionary(x => x.Priority, x => x.Count);
-
-            vm.RecentRequests = _db.Request_Master
-                                  .OrderByDescending(r => r.RequestDate)
-                                  .Take(10)
-                                  .ToList();
-
-            // ⭐ Most reported by who logged the request
-            vm.MostReportedBy = _db.Request_Master
-                .Where(r => r.RequestLogBy != null)
-                .GroupBy(r => r.RequestLogBy)
-                .Select(g => new EmployeeRequestStats
-                {
-                    Employee = g.Key,
-                    Count = g.Count()
-                })
-                .OrderByDescending(x => x.Count)
-                .Take(5) // top 5
-                .ToList();
-
-            // ⭐ Most resolved by who closed the request
-            vm.MostResolvedBy = _db.Request_Master
-                .Where(r => r.ReqCloseBy != null)
-                .GroupBy(r => r.ReqCloseBy)
-                .Select(g => new EmployeeRequestStats
-                {
-                    Employee = g.Key,
-                    Count = g.Count()
-                })
-                .OrderByDescending(x => x.Count)
-                .Take(5)
-                .ToList();
-
-            // ⭐ Most forwarded by who forwarded
-            vm.MostForwardedBy = _db.Request_Master
-                .Where(r => r.Forward_By != null)
-                .GroupBy(r => r.Forward_By)
-                .Select(g => new EmployeeRequestStats
-                {
-                    Employee = g.Key,
-                    Count = g.Count()
-                })
-                .OrderByDescending(x => x.Count)
-                .Take(5)
-                .ToList();
-
-            return View("~/Views/MIS/Mis.cshtml",vm);
+            vm.OpenRequests = _db.Request_Master.Count(r => r.status != "C");
+            vm.ClosedRequests = _db.Request_Master.Count(r => r.status == "C");
+            vm.HighPriorityRequests = _db.Request_Master.Count(r => r.Priority <= 2);
+            vm.RecentRequests = _db.Request_Master.OrderByDescending(r => r.RequestDate).Take(5).ToList();
+            return View("~/Views/MIS/Mis.cshtml", vm);
         }
-        protected override void Dispose(bool disposing)
+
+        // 2. THIS PROVIDES DATA FOR THE AJAX CALL
+        // URL: /MIS/Overall
+        // Define a small helper class at the top of your Controller or inside the method
+        public class MisResult
+        {
+            public List<string> labels { get; set; } = new List<string>();
+            public List<int> data { get; set; } = new List<int>();
+            public int kpi1 { get; set; }
+            public int kpi2 { get; set; }
+            public int kpi3 { get; set; }
+        }
+
+        [HttpGet]
+        public JsonResult Overall(string category)
+        {
+            // FIX: Use the class instead of an anonymous type
+            var results = new MisResult();
+
+            string cat = string.IsNullOrEmpty(category) ? "Activities" : category.Trim();
+
+            switch (cat)
             {
-                if (disposing) { _db.Dispose(); }
-                base.Dispose(disposing);
+                case "Activities":
+                    int aOpen = _db.ActivityMasters.Count(x => x.status != "C");
+                    int aClosed = _db.ActivityMasters.Count(x => x.status == "C");
+                    results.labels.AddRange(new[] { "Open", "Closed" });
+                    results.data.Add(aOpen);
+                    results.data.Add(aClosed);
+                    results.kpi1 = aOpen;   // Now this is allowed!
+                    results.kpi2 = aClosed;
+                    results.kpi3 = aOpen + aClosed;
+                    break;
+
+                case "Requests":
+                    int rOpen = _db.Request_Master.Count(x => x.status != "C" && x.status != "F");
+                    int rFwd = _db.Request_Master.Count(x => x.status == "F");
+                    int rClosed = _db.Request_Master.Count(x => x.status == "C");
+                    results.labels.AddRange(new[] { "Open", "Forwarded", "Closed" });
+                    results.data.Add(rOpen);
+                    results.data.Add(rFwd);
+                    results.data.Add(rClosed);
+                    results.kpi1 = rOpen;
+                    results.kpi2 = rFwd;
+                    results.kpi3 = rOpen + rFwd + rClosed;
+                    break;
+
+                case "Assets":
+                    results.kpi1 = _db.InvIssueDetails.Count();
+                    results.kpi2 = _db.InvIssueDetails.Select(x => x.Location_ID).Distinct().Count();
+                    results.kpi3 = results.kpi1;
+                    // Add some chart data for assets
+                    results.labels.Add("Total Assets");
+                    results.data.Add(results.kpi1);
+                    break;
+
+                case "Incidents":
+                    int iRes = _db.ActivityMasters.Count(x => x.ServiceRequestID != null && x.status == "C");
+                    int iUnres = _db.ActivityMasters.Count(x => x.ServiceRequestID != null && x.status != "C");
+                    results.labels.AddRange(new[] { "Resolved", "Unresolved" });
+                    results.data.Add(iRes);
+                    results.data.Add(iUnres);
+                    results.kpi1 = iRes;
+                    results.kpi2 = iUnres;
+                    results.kpi3 = iRes + iUnres;
+                    break;
             }
+
+            return Json(results, JsonRequestBehavior.AllowGet);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) { _db.Dispose(); }
+            base.Dispose(disposing);
         }
     }
+}
