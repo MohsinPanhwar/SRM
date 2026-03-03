@@ -1,6 +1,6 @@
-﻿/* ===== GLOBAL RESET & BODY ===== */
+/* ===== GLOBAL RESET & BODY ===== */
 body.login-page {
-    background-image: url('/Content/Images/BG.jpg');
+    background-image: url('/Content/Images/1.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -19,9 +19,9 @@ body.login-page {
 
 /* ===== THE GLASS BOX ===== */
 .login-container {
-    background: rgba(255, 255, 255, 0.05); /* Very faint white */
+    background: rgba(255, 255, 255, 0.01); /* Very faint white */
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(1px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     padding: 20px 40px;
@@ -84,7 +84,7 @@ body.login-page {
 
 .btn-login {
     width: 100%;
-    background-color: #21a257;
+    background: linear-gradient(2deg, #0f2f27 0%, #1b4d3e 50%, #2e7d57 100%);
     color: #ffffff;
     border: none;
     border-radius: 50px;
@@ -98,7 +98,9 @@ body.login-page {
 }
 
     .btn-login:hover {
-        background-color: #1b8a49;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(27, 77, 62, 0.25) !important;
+        filter: brightness(1.1);
     }
 
     .btn-login:disabled {

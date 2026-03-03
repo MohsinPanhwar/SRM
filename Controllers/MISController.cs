@@ -45,14 +45,75 @@ namespace SRM.Controllers
 
             return View("~/Views/MIS/Dashboard.cshtml",viewModel);
         }
-
-        protected override void Dispose(bool disposing)
+        // GET: MIS/Index
+        public ActionResult MIS()
         {
-            if (disposing)
+            return View("~/Views/MIS/Mis.cshtml");
+        }
+
+        public ActionResult RequestMaster()
+        {
+            var vm = new DashboardVM();
+
+            vm.TotalRequests = _db.Request_Master.Count();
+            vm.OpenRequests = _db.Request_Master.Where(r => r.status != "C" || r.status == null).Count();
+            vm.ClosedRequests = _db.Request_Master.Where(r => r.status == "C").Count();
+
+            vm.RequestsByPriority = _db.Request_Master
+                .GroupBy(r => r.Priority ?? 0)
+                .Select(g => new { Priority = g.Key, Count = g.Count() })
+                .ToDictionary(x => x.Priority, x => x.Count);
+
+            vm.RecentRequests = _db.Request_Master
+                                  .OrderByDescending(r => r.RequestDate)
+                                  .Take(10)
+                                  .ToList();
+
+            // ⭐ Most reported by who logged the request
+            vm.MostReportedBy = _db.Request_Master
+                .Where(r => r.RequestLogBy != null)
+                .GroupBy(r => r.RequestLogBy)
+                .Select(g => new EmployeeRequestStats
+                {
+                    Employee = g.Key,
+                    Count = g.Count()
+                })
+                .OrderByDescending(x => x.Count)
+                .Take(5) // top 5
+                .ToList();
+
+            // ⭐ Most resolved by who closed the request
+            vm.MostResolvedBy = _db.Request_Master
+                .Where(r => r.ReqCloseBy != null)
+                .GroupBy(r => r.ReqCloseBy)
+                .Select(g => new EmployeeRequestStats
+                {
+                    Employee = g.Key,
+                    Count = g.Count()
+                })
+                .OrderByDescending(x => x.Count)
+                .Take(5)
+                .ToList();
+
+            // ⭐ Most forwarded by who forwarded
+            vm.MostForwardedBy = _db.Request_Master
+                .Where(r => r.Forward_By != null)
+                .GroupBy(r => r.Forward_By)
+                .Select(g => new EmployeeRequestStats
+                {
+                    Employee = g.Key,
+                    Count = g.Count()
+                })
+                .OrderByDescending(x => x.Count)
+                .Take(5)
+                .ToList();
+
+            return View("~/Views/MIS/Mis.cshtml",vm);
+        }
+        protected override void Dispose(bool disposing)
             {
-                _db.Dispose();
+                if (disposing) { _db.Dispose(); }
+                base.Dispose(disposing);
             }
-            base.Dispose(disposing);
         }
     }
-}

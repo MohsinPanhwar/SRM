@@ -1,17 +1,167 @@
-﻿@{
-    Layout = null;
+﻿@model SRM.Models.ViewModels.DashboardVM
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!DOCTYPE html>
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Management Information System</h2>
+        <small style="color:#666">Analytical Overview for Service Requests & Operations</small>
+        <div class="mis-filter-bar">
+            <div>
+                <span style="font-weight:600; color:#444;">Select Domain Analysis</span>
+            </div>
+            <div class="filter-group">
+                <select id="misCategory" class="mis-select">
+                    <option value="Activities">General Activities Summary</option>
+                    <option value="Requests" selected>Service Request Volume</option>
+                    <option value="Assets">Asset Utilization Distribution</option>
+                    <option value="Incidents">Efficiency & SLA Performance</option>
+                </select>
+                <button class="setup-btn-green" onclick="updateMISData()">
+                    Generate Report
+                </button>
+            </div>
+        </div>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title></title>
-</head>
-<body>
-    <div>
-    
     </div>
-</body>
-</html>
+
+    <div class="kpi-row">
+        <div class="kpi-card" style="border-left: 5px solid var(--forest-accent);">
+            <span class="kpi-label">Incoming Volume</span>
+            <div class="kpi-value" id="kpiTotal">0</div>
+            <div style="color: #66b088; font-size: 0.8rem;">↑ 12% vs last month</div>
+        </div>
+        <div class="kpi-card" style="border-left: 5px solid #ffa500;">
+            <span class="kpi-label">Active Backlog</span>
+            <div class="kpi-value" id="kpiBacklog" style="color:#d38200;">0</div>
+            <div style="color: #888; font-size: 0.8rem;">Requires Attention</div>
+        </div>
+        <div class="kpi-card" style="border-left: 5px solid var(--neon-green);">
+            <span class="kpi-label">Completion</span>
+            <div class="kpi-value" id="kpiRate">0%</div>
+            <div style="color: #888; font-size: 0.8rem;">Efficiency Score</div>
+        </div>
+        <div class="kpi-card" style="border-left: 5px solid var(--forest-dark);">
+            <span class="kpi-label">Avg. Response</span>
+            <div class="kpi-value">2.4<span style="font-size:1rem; font-weight:400;"> hrs</span></div>
+            <div style="color: #888; font-size: 0.8rem;">Target: < 4hrs</div>
+        </div>
+    </div>
+    
+
+    <div class="dashboard-grid">
+        <div class="mis-card">
+            <h4 style="margin-bottom:20px; color:var(--forest-dark);">Data Breakdown</h4>
+            <table class="status-card-minimal" style="width:100%;">
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+        <div class="mis-card">
+            <canvas id="misChart" style="max-height: 400px;"></canvas>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let misChart;
+
+        // Auto-load on page start
+        $(document).ready(function () {
+            updateMISData();
+        });
+
+       function updateMISData() {
+    var selectedCategory = document.getElementById("misCategory").value;
+
+    $.ajax({
+        url: '@Url.Action("Overall", "MIS")',
+        type: 'GET',
+        data: { category: selectedCategory },
+        success: function (response) {
+            // Update Table and Charts
+            renderTable(response.labels, response.data);
+            renderChart(response.labels, response.data, selectedCategory);
+
+            // Populate Quick Stats
+            let total = response.data.reduce((a, b) => a + b, 0);
+
+            // Assuming the first label in your C# logic is "Open" or "New"
+            let openIndex = response.labels.indexOf("Open");
+            let openCount = openIndex !== -1 ? response.data[openIndex] : 0;
+
+            // Calculate completion rate
+            let closedIndex = response.labels.indexOf("Closed");
+            let closedCount = closedIndex !== -1 ? response.data[closedIndex] : 0;
+            let rate = total > 0 ? Math.round((closedCount / total) * 100) : 0;
+
+            // Inject into cards
+            $('#kpiTotal').text(total.toLocaleString());
+            $('#kpiOpen').text(openCount.toLocaleString());
+            $('#kpiRate').text(rate + "%");
+
+            // If viewing requests, show high priority count (if data available)
+            $('#kpiCritical').text(response.criticalCount || "N/A");
+        }
+    });
+}
+
+        function renderTable(labels, data) {
+            let html = "";
+            let total = 0;
+            labels.forEach((label, i) => {
+                html += `<tr>
+                            <td>${label}</td>
+                            <td style="text-align:right; font-weight:700;">${data[i]}</td>
+                         </tr>`;
+                total += data[i];
+            });
+            html += `<tr class="total-row">
+                        <td style="padding:15px 10px;">Grand Total</td>
+                        <td style="text-align:right; padding:15px 10px;">${total}</td>
+                     </tr>`;
+            $('#tableBody').html(html);
+        }
+
+        function renderChart(labels, data, cat) {
+            const ctx = document.getElementById('misChart').getContext('2d');
+
+            // Create a Gradient for the Chart
+            let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, '#2e7d57');
+            gradient.addColorStop(1, '#a8e063');
+
+            if (misChart) misChart.destroy();
+
+            misChart = new Chart(ctx, {
+                type: (cat === 'Requests' ? 'bar' : 'doughnut'),
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: cat === 'Requests' ? gradient : ['#0f2f27', '#2e7d57', '#a8e063', '#ffa500'],
+                        borderRadius: 12,
+                        borderWidth: 0,
+                        hoverOffset: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: (cat !== 'Requests'),
+                            position: 'bottom'
+                        }
+                    },
+                    scales: cat === 'Requests' ? {
+                        y: { display: false },
+                        x: { grid: { display: false }, border: { display: false } }
+                    } : {}
+                }
+            });
+        }
+    </script>
+}
