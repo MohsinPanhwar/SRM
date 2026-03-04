@@ -1,9 +1,8 @@
-﻿using System;
+﻿using SRM.Data;
+using System;
 using System.Linq;
-using System.Web.Mvc;
-using SRM.Data;
-using SRM.Models;
 using System.Web;
+using System.Web.Mvc;
 
 namespace SRM.Controllers
 {
@@ -20,7 +19,7 @@ namespace SRM.Controllers
             Response.Cache.SetExpires(DateTime.UtcNow.AddMinutes(-1));
 
             var pno = Session["AgentPno"] as string;
-            
+
 
             // Fetch the agent from DB - This is our source of truth
             var agent = _db.agent.FirstOrDefault(a => a.Pno == pno);

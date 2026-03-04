@@ -17,7 +17,7 @@
     <div class="login-container">
 
         <div class="login-header">
-            <h1>Service Request Manager</h1>
+            <h1>SRM</h1>
         </div>
 
         @* --- Message Section --- *@
@@ -72,13 +72,14 @@
             </button>
         }
 
-        <div class="auth-footer">
-            <a href="@Url.Action("ForgotPassword", "Account")">Forgot Password?</a>
-
-            <p style="margin-top:20px; font-size: 0.85rem; opacity: 0.6;">
-                Don't have an account? <a href="@Url.Action("Register", "Account")" style="text-decoration:underline;">Create one now</a>
-            </p>
-        </div>
+    <div class="auth-footer">
+        <p style="font-size: 0.9rem; font-weight: 600; color: #978857; letter-spacing: 1px;">
+            INTERNAL SERVICE MANAGEMENT SYSTEM
+        </p>
+        <p style="font-size: 0.8rem;color:white!important; opacity: 0.7; margin-top: 5px;">
+            © @DateTime.Now.Year IT Department. All rights reserved.
+        </p>
+    </div>
 
     </div>
 

@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using SRM.Data;
 using System.Linq;
 using System.Web.Mvc;
-using SRM.Models;
-using SRM.Data;
 
 namespace SRM.Controllers
 {

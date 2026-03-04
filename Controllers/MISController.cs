@@ -1,13 +1,13 @@
-﻿using System;
+﻿using SRM.Data;
+using SRM.Models.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
-using SRM.Data;
-using SRM.Models.ViewModels;
 
 namespace SRM.Controllers
 {
-    public class MISController : Controller
+    public class MISController : BaseController
     {
         private readonly AppDbContext _db = new AppDbContext();
 
@@ -63,52 +63,64 @@ namespace SRM.Controllers
         [HttpGet]
         public JsonResult Overall(string category)
         {
-            // FIX: Use the class instead of an anonymous type
             var results = new MisResult();
-
             string cat = string.IsNullOrEmpty(category) ? "Activities" : category.Trim();
+
+            // --- NEW: Get the Global Filter from Session (Same as GroupController) ---
+            int? globalProgramId = Session["AgentProgramId"] as int?;
 
             switch (cat)
             {
                 case "Activities":
-                    int aOpen = _db.ActivityMasters.Count(x => x.status != "C");
-                    int aClosed = _db.ActivityMasters.Count(x => x.status == "C");
+                    // Filter queries by Global Program ID
+                    var activities = _db.ActivityMasters
+                        .Where(x => !globalProgramId.HasValue || x.program_id == globalProgramId);
+
+                    int aOpen = activities.Count(x => x.status != "C");
+                    int aClosed = activities.Count(x => x.status == "C");
+
                     results.labels.AddRange(new[] { "Open", "Closed" });
-                    results.data.Add(aOpen);
-                    results.data.Add(aClosed);
-                    results.kpi1 = aOpen;   // Now this is allowed!
+                    results.data.AddRange(new[] { aOpen, aClosed });
+                    results.kpi1 = aOpen;
                     results.kpi2 = aClosed;
                     results.kpi3 = aOpen + aClosed;
                     break;
 
                 case "Requests":
-                    int rOpen = _db.Request_Master.Count(x => x.status != "C" && x.status != "F");
-                    int rFwd = _db.Request_Master.Count(x => x.status == "F");
-                    int rClosed = _db.Request_Master.Count(x => x.status == "C");
-                    results.labels.AddRange(new[] { "Open", "Forwarded", "Closed" });
-                    results.data.Add(rOpen);
-                    results.data.Add(rFwd);
-                    results.data.Add(rClosed);
+                    var requests = _db.Request_Master
+                        .Where(x => !globalProgramId.HasValue || x.program_id == globalProgramId);
+
+                    int rOpen = requests.Count(x => x.status != "C" && x.status != "F");
+                    int rResolved = requests.Count(x => x.status == "F");
+                    int rClosed = requests.Count(x => x.status == "C");
+
+                    results.labels.AddRange(new[] { "Open", "Resolved", "Closed" });
+                    results.data.AddRange(new[] { rOpen, rResolved, rClosed });
                     results.kpi1 = rOpen;
-                    results.kpi2 = rFwd;
-                    results.kpi3 = rOpen + rFwd + rClosed;
+                    results.kpi2 = rResolved;
+                    results.kpi3 = rOpen + rResolved + rClosed;
                     break;
 
                 case "Assets":
-                    results.kpi1 = _db.InvIssueDetails.Count();
-                    results.kpi2 = _db.InvIssueDetails.Select(x => x.Location_ID).Distinct().Count();
+                    // Filter Asset Issuance by Program
+                    var assets = _db.InvIssueDetails;
+                    results.kpi1 = assets.Count();
+                    results.kpi2 = assets.Select(x => x.Location_ID).Distinct().Count();
                     results.kpi3 = results.kpi1;
-                    // Add some chart data for assets
                     results.labels.Add("Total Assets");
                     results.data.Add(results.kpi1);
                     break;
 
                 case "Incidents":
-                    int iRes = _db.ActivityMasters.Count(x => x.ServiceRequestID != null && x.status == "C");
-                    int iUnres = _db.ActivityMasters.Count(x => x.ServiceRequestID != null && x.status != "C");
+                    var incidents = _db.ActivityMasters
+                        .Where(x => x.ServiceRequestID != null)
+                        .Where(x => !globalProgramId.HasValue || x.program_id == globalProgramId);
+
+                    int iRes = incidents.Count(x => x.status == "C");
+                    int iUnres = incidents.Count(x => x.status != "C");
+
                     results.labels.AddRange(new[] { "Resolved", "Unresolved" });
-                    results.data.Add(iRes);
-                    results.data.Add(iUnres);
+                    results.data.AddRange(new[] { iRes, iUnres });
                     results.kpi1 = iRes;
                     results.kpi2 = iUnres;
                     results.kpi3 = iRes + iUnres;

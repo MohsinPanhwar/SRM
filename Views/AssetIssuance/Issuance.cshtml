@@ -18,9 +18,7 @@
                 <input type="text" id="pno" class="form-control" style="width:200px;" placeholder="Enter PNO..." />
                 <button id="btnSearch" class="setup-btn-green">🔍 Search &amp; Load</button>
             </div>
-            <button type="button" id="btnShowAssetForm" class="setup-btn-green" style="background-color:#2c3e50;">
-                ➕ Assign Asset to User
-            </button>
+            
         </div>
     </div>
 
@@ -28,25 +26,32 @@
     <div class="form-section-header">User Information</div>
 
     <div class="grid-container">
-        <div class="grid-label">Reported Employee ID</div>
-        <div class="grid-input"><input type="text" id="empId" class="form-control" /></div>
+        <div class="grid-label">Reported Pno.</div>
+        <div class="grid-input">
+            <input type="text" id="empId" class="form-control" readonly style="background-color: #eee;" />
+        </div>
 
         <div class="grid-label">Employee Name</div>
-        <div class="grid-input"><input type="text" id="name" class="form-control" /></div>
+        <div class="grid-input">
+            <input type="text" id="name" class="form-control" readonly style="background-color: #eee;" />
+        </div>
 
         <div class="grid-label">Designation</div>
-        <div class="grid-input"><input type="text" id="designation" class="form-control" /></div>
+        <div class="grid-input">
+            <input type="text" id="designation" class="form-control" readonly style="background-color: #eee;" />
+        </div>
 
         <div class="grid-label">Department</div>
-        <div class="grid-input"><input type="text" id="department" class="form-control" /></div>
-
+        <div class="grid-input">
+            <input type="text" id="department" class="form-control" readonly style="background-color: #eee;" />
+        </div>
         <div class="grid-label">Email</div>
         <div class="grid-input"><input type="text" id="email" class="form-control" /></div>
 
         <div class="grid-label">Mobile No</div>
         <div class="grid-input"><input type="text" id="mobile" class="form-control" /></div>
 
-        <div class="grid-label">Phone-Ext</div>
+        <div class="grid-label">Office-Ext</div>
         <div class="grid-input">
             @Html.TextBoxFor(m => m.Office_Ext, new { @class = "form-control", id = "phoneExt" })
         </div>
@@ -58,14 +63,12 @@
 
         <div class="grid-label">IP-Address</div>
         <div class="grid-input">
-            @Html.TextBoxFor(m => m.IpAddress, new { @class = "form-control", id = "ipAddress" })
+            @Html.TextBoxFor(m => m.IpAddress, new { @class = "form-control", id = "IpAddress" })
         </div>
 
         <div class="grid-label">Location *</div>
         <div class="grid-input">
-            @Html.DropDownListFor(m => m.Location,
-                Model.LocationList,
-                new { @class = "form-control", id = "location" })
+            @Html.TextBoxFor(m => m.Location, new { @class = "form-control", id = "location", @required = "required" })
         </div>
     </div>
 
@@ -320,28 +323,39 @@
                 var pno = $('#pno').val();
                 if (!pno) { showGlobalToast('Please enter a PNO.', 'error'); return; }
 
+                $(this).text('⌛ Loading...');
+
                 $.get('/AssetIssuance/GetEmployee', { pno: pno }, function (res) {
+                    $('#btnSearch').text('🔍 Search & Load');
+
                     if (res.success) {
+                        // Fill Fields
                         $('#empId').val(pno);
                         $('#name').val(res.name);
                         $('#designation').val(res.designation);
                         $('#department').val(res.department);
                         $('#email').val(res.email);
                         $('#mobile').val(res.mobile);
+                        $('#phoneExt').val(res.office_ext);
+                        $('#roomNo').val(res.roomNo);
+                        $('#IpAddress').val(res.IpAddress);
+
+                        // Fix: Target the correct ID for Location Dropdown
+                        $('#location').val(res.Location);
+
+                        // 🔹 AUTOMATICALLY SHOW THE ASSET FORM
+                        $('#assetFormContainer').slideDown(600);
+
                         setEmployeeFieldsReadonly(true);
-                        showGlobalToast('Employee loaded successfully.', 'success');
+                        showGlobalToast('Employee loaded. You can now assign an asset.', 'success');
                     } else {
-                        setEmployeeFieldsReadonly(false);
-                        $('#empId,#name,#designation,#department,#email,#mobile').val('');
+                        // Hide form if search fails
+                        $('#assetFormContainer').slideUp();
+                        $('#empId,#name,#designation,#department,#email,#mobile,#phoneExt,#roomNo,#IpAddress').val('');
                         showGlobalToast('Employee not found.', 'error');
                     }
                 });
             });
-
-            function setEmployeeFieldsReadonly(isReadonly) {
-                $('#empId,#name,#designation,#department,#email,#mobile').prop('readonly', isReadonly);
-            }
-
             // 3. SAVE USER INFO
             $('#btnSaveUser').click(function () {
                 var emp = {

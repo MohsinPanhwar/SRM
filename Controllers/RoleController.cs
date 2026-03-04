@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
-using System.Web.Mvc;
-using SRM.Data;
+﻿using SRM.Data;
 using SRM.Models;
 using SRM.Models.ViewModels;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web.Mvc;
 
 namespace SRM.Controllers
 {

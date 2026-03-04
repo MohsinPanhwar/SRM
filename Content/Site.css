@@ -155,7 +155,7 @@ body {
 
     .logout-button:hover {
         background: white;
-        color: #1b4d3e;
+        color: #1b4d3e
         border-color: white;
         transform: translateY(-1px);
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
@@ -909,167 +909,155 @@ input:checked + .slider {
 }
 
 
+/* ============================================================
+   MIS DASHBOARD - SINGLE SCREEN LAYOUT (NO SCROLL)
+   ============================================================ */
 
-/* Reusing the contact badge from before */
-.contact-badge {
-    display: inline-block;
-    margin-top: 8px;
-    padding: 4px 10px;
-    background: #e1f5fe;
-    color: #0277bd;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    border: 1px solid #b3e5fc;
-}
-
-/*//////////////////MIS Page/////////////////////////*/
-
-/* MIS Dashboard Styles */
-:root {
-    --srm-green-dark: #0f2f27;
-    --srm-green-mid: #1b4d3e;
-    --srm-green-main: #2e7d57;
-    --srm-green-light: #a8e063;
-    --srm-white: #ffffff;
-    --srm-gray-bg: #f4f7f6;
-}
-
-
-
-
-
-/* Dashboard Grid */
-.mis-grid {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 25px;
-}
-
-.mis-card {
-    background: var(--srm-white);
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-}
-
-.mis-card-title {
-    color: var(--srm-green-main);
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-top: 0;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-}
-
-/* Table Styling */
-.mis-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-    .mis-table th {
-        text-align: left;
-        color: #888;
-        font-weight: 500;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #eee;
-    }
-
-    .mis-table td {
-        padding: 15px 0;
-        border-bottom: 1px solid #f9f9f9;
-        font-size: 0.95rem;
-    }
-
-.total-row {
-    background: #f4fbf8;
-    font-weight: 800;
-    color: var(--srm-green-main);
-}
-
-
-        
-
-/* Custom Properties for Consistency */
 :root {
     --forest-dark: #0f2f27;
-    --forest-mid: #1b4d3e;
     --forest-accent: #2e7d57;
     --neon-green: #a8e063;
     --glass-white: rgba(255, 255, 255, 0.95);
-    --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
 
-/* KPI Cards with Glass Effect */
+
+.mis-controls {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+
+.mis-select {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: none;
+    font-weight: 600;
+}
+
+.setup-btn-green {
+    background: var(--neon-green);
+    color: var(--forest-dark);
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Dynamic KPI Row (Handles 3 or 4 cards) */
 .kpi-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 25px;
-    margin-bottom: 35px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-shrink: 0;
 }
 
 .kpi-card {
     background: var(--glass-white);
-    padding: 25px;
-    border-radius: 20px;
+    padding: 10px 15px !important;
+    border-radius: 12px;
     box-shadow: var(--shadow);
-    border: 1px solid rgba(255,255,255,0.3);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
 }
 
-    .kpi-card:hover {
-        transform: translateY(-10px);
-    }
-
 .kpi-label {
-    font-size: 0.75rem;
-    color: #000000;
+    font-size: 0.65rem;
+    color: #666;
     text-transform: uppercase;
     font-weight: 800;
-    letter-spacing: 1px;
 }
 
 .kpi-value {
-    font-size: 2.2rem;
+    font-size: 1.6rem;
     font-weight: 900;
     color: var(--forest-dark);
-    margin: 8px 0;
+    margin: 0;
 }
 
-/* Modernized Selector Bar */
-.mis-controls {
-    color: white;
-    padding: 25px 35px;
-    border-radius: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-}
-
-.btn-generate {
-    background: var(--neon-green);
-    color: var(--forest-dark);
-    font-weight: 700;
-    padding: 12px 30px;
-    border-radius: 12px;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(168, 224, 99, 0.3);
-}
-
-/* Chart & Table Wrapper */
+/* Main Grid */
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 1.8fr;
-    gap: 30px;
+    gap: 15px;
+    flex-grow: 1;
+    min-height: 0;
+    height: calc(100vh - 260px);
 }
 
 .mis-card {
     background: white;
-    padding: 30px;
-    border-radius: 24px;
+    padding: 15px;
+    border-radius: 15px;
     box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
+
+.mis-card-title {
+    color: var(--forest-accent);
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+/* Internal Table Scroll */
+.table-wrapper {
+    flex-grow: 1;
+    overflow-y: auto;
+    border: 1px solid #f8f9fa;
+}
+
+.mis-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+    .mis-table th {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        padding: 10px;
+        border-bottom: 2px solid #eee;
+        z-index: 1;
+    }
+
+    .mis-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #f5f5f5;
+    }
+
+/* Chart Container */
+.mis-card div:has(canvas) {
+    flex-grow: 1;
+    min-height: 0;
+    position: relative;
+}
+
+.view-all-btn {
+    font-size: 0.75rem;
+    color: white; /* Matches your Sage Green chart bar */
+    text-decoration: none;
+    font-weight: 700;
+    padding: 6px 12px;
+    background: #f0f7f4;
+    border: 1px solid #d1e7dd;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+    .view-all-btn:hover {
+        background: #0f2f27; /* Dark Forest */
+        color: #ffffff;
+        border-color: #0f2f27;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }

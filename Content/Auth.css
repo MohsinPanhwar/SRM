@@ -1,6 +1,6 @@
 /* ===== GLOBAL RESET & BODY ===== */
 body.login-page {
-    background-image: url('/Content/Images/1.jpg');
+    background-image: url('/Content/Images/BG5.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -32,12 +32,35 @@ body.login-page {
 
 /* ===== HEADER ===== */
 .login-header h1 {
-    color: #ffffff;
-    font-size: 2.2rem;
-    font-weight: 600;
+    /* 1. Base font styles */
+    font-size: 2.6rem;
+    font-weight: 800;
     line-height: 1.1;
     margin-bottom: 35px;
-    text-align: left;
+    text-align: center;
+
+    /* 2. The Gold Gradient */
+    background: linear-gradient(
+        to bottom, 
+        #cbbb9b 0%, 
+        #f5e396 25%, 
+        #c2a567 50%, 
+        #b58d3c 75%, 
+        #cfaf6c 100%
+    );
+
+    /* 3. Clipping the background to the text */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent; /* Fallback */
+
+    /* 4. Adding "Shine" and Depth */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3), 
+                 0px 0px 1px rgba(255, 255, 255, 0.2);
+    
+    /* 5. Extra Polish */
+    letter-spacing: 0.5px;
 }
 
 /* ===== INPUTS (THE "SUNKEN" LOOK) ===== */

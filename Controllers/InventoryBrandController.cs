@@ -1,9 +1,6 @@
 ﻿using SRM.Data;
 using SRM.Models;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 
 namespace SRM.Controllers
@@ -15,7 +12,7 @@ namespace SRM.Controllers
         // GET
         public ActionResult ViewBrand()
         {
-            return View("~/Views/AssetIssuance/ViewBrand.cshtml",db.invBrand.ToList());
+            return View("~/Views/AssetIssuance/ViewBrand.cshtml", db.invBrand.ToList());
         }
 
         // SAVE (Add + Update)

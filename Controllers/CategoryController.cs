@@ -1,9 +1,6 @@
 ﻿using SRM.Data;
 using SRM.Models;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 
 namespace SRM.Controllers
@@ -16,7 +13,7 @@ namespace SRM.Controllers
         public ActionResult ViewCategory()
         {
             var list = db.invCategory.ToList();
-            return View("~/Views/AssetIssuance/ViewCategory.cshtml",list);
+            return View("~/Views/AssetIssuance/ViewCategory.cshtml", list);
         }
 
         // SAVE

@@ -1,12 +1,11 @@
-﻿using System;
-using System.Linq;
-using System.Web.Mvc;
-using System.Web;
-using System.Data.Entity;
-using System.Security.Cryptography;
+﻿using SRM.Data;
 using SRM.Models;
-using SRM.Data;
 using SRM.Services;
+using System;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Web;
+using System.Web.Mvc;
 
 namespace SRM.Controllers
 {

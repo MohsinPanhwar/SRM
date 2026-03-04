@@ -1,11 +1,9 @@
 ﻿using SRM.Data;
 using SRM.Models;
 using System;
-using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Mvc;
 
 namespace SRM.Controllers
@@ -156,12 +154,12 @@ namespace SRM.Controllers
             // Now targetName is guaranteed to have a value
             string timestamp = DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt");
             string newEntry = $"<div class='log-entry' style='border-left:3px solid #3498db; padding-left:10px; margin-bottom:5px;'>" +
-                              $"{timestamp} forwarded to <strong>{targetName}</strong> by <strong>{senderName}</strong>" +
+                              $"{timestamp} forwarded to {targetName} by {senderName}" +
                               $"</div>";
 
             // ... (rest of your save logic)
 
-        req.Forward_By = senderPno;
+            req.Forward_By = senderPno;
             req.Forward_To = Forward_To;
             req.Forward_To_Type = Forward_To_Type;
             req.ForwardedDate = DateTime.Now;
@@ -261,7 +259,7 @@ namespace SRM.Controllers
 
             string timestamp = DateTime.Now.ToString("dd-MMM-yyyy hh:mm tt");
             string logEntry = $"<div class='log-entry' style='background:#e6f7ff; border-left:3px solid #1890ff; padding:5px; margin-top:5px;'>" +
-                              $"{timestamp} ,resolved by {resolverName}. <strong>Actual Problem Area: {ActualPArea}</strong></div>";
+                              $"{timestamp} ,resolved by {resolverName}. Actual Problem Area: {ActualPArea}</div>";
 
             req.status = "R";
             req.ActualPArea = ActualPArea;

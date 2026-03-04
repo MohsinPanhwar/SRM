@@ -1,5 +1,4 @@
-﻿using SRM.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 namespace SRM.Models.ViewModels
 {
     public class EmployeeRequestStats

@@ -1,7 +1,7 @@
-﻿using System.Linq;
-using System.Web.Mvc;
+﻿using SRM.Data;
 using SRM.Models;
-using SRM.Data;
+using System.Linq;
+using System.Web.Mvc;
 
 namespace SRM.Controllers
 {

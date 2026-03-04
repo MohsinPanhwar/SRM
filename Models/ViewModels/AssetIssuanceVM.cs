@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Web;
+﻿using System.Collections.Generic;
 using System.Web.Mvc;
 
 namespace SRM.Models.ViewModels
 {
-	public class AssetIssuanceVM
-	{
+    public class AssetIssuanceVM
+    {
         public string Pno { get; set; }
         public string Name { get; set; }
         public string Designation { get; set; }
@@ -18,6 +14,7 @@ namespace SRM.Models.ViewModels
         public string Office_Ext { get; set; }
         public string Location { get; set; }
         public string RoomNo { get; set; }
+
 
 
         public string IpAddress { get; set; }

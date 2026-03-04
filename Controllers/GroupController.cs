@@ -1,10 +1,9 @@
-﻿using System;
+﻿using SRM.Data;
+using SRM.Models;
+using SRM.Models.ViewModels;
+using System;
 using System.Linq;
 using System.Web.Mvc;
-using SRM.Models;
-using SRM.Data;
-using SRM.Models.ViewModels;
-using System.Collections.Generic;
 
 namespace SRM.Controllers
 {
@@ -27,7 +26,7 @@ namespace SRM.Controllers
                 {
                     Text = p.Program_Name,
                     Value = p.Program_Name // Note: Usually Value should be p.Program_Id.ToString()
-        }).ToList();
+                }).ToList();
 
             // 2. Populate agents Dropdown (Filtered by Global Program)
             vm.AgentList = db.agent

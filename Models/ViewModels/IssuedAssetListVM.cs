@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using System.Collections.Generic;
 using System.Web.Mvc;
 
 
 namespace SRM.Models.ViewModels
 {
-	public class IssuedAssetListVM
-	{
+    public class IssuedAssetListVM
+    {
         public string SelectedPno { get; set; }
         public int? SelectedBrandId { get; set; }
 
@@ -18,8 +15,8 @@ namespace SRM.Models.ViewModels
 
         // 🔹 Result Table
         public List<InvIssueDetail> Assets { get; set; }
-      
 
-        public List<InvIssueDetail>Location { get; set; }
+
+        public List<InvIssueDetail> Location { get; set; }
     }
 }
