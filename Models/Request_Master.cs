@@ -60,7 +60,6 @@ namespace SRM.Models
 
         [StringLength(50)]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-
         public string uid { get; set; }
 
         [StringLength(20)]
