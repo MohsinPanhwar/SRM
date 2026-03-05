@@ -24,11 +24,10 @@
     <table class="crud-table">
         <thead>
             <tr>
-                <th>Program Name</th>
+                <th style="white-space: nowrap;">Program Name</th>
                 <th>Group Name</th>
                 <th>Manager PNo</th>
-                <th>No. of Members</th>
-
+                <th style="white-space: nowrap;">No. of Members</th>
                 <th>Actions</th>
 
             </tr>
@@ -37,11 +36,10 @@
             @foreach (var grp in Model.ExistingGroups)
             {
                 <tr data-id="@grp.GroupId">
-                    <td class="program-name">@grp.ProgramName</td>
+                    <td class="program-name" style="white-space: nowrap;">@grp.ProgramName</td>
                     <td class="group-name">@grp.GroupName</td>
                     <td class="manager-name">@grp.Manager</td>
                     <td class="members-count">@grp.MembersCount</td>
-
                     <td class="actions-cell">
                         <div class="icon-btn-group">
                             <button class="edit-btn" title="Edit">✏️</button>

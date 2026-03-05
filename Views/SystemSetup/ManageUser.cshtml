@@ -6,52 +6,20 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<style>
-    .fade-in-up {
-        animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    }
-
-    @@keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(15px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .role-group-header {
-        transition: background-color 0.3s ease;
-        background-color: #f8f9fa;
-        font-weight: bold;
-    }
-
-        .role-group-header td {
-            padding: 12px !important;
-            border-bottom: 2px solid #dee2e6;
-            color: #495057;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-        }
-
-    
-</style>
 
 <div class="setup-container fade-in-up">
     <div class="section-header">
         <h2>Manage Users</h2>
         <div class="action-row">
+            @* Added ID for JS targeting *@
             <input type="text" id="PnoSearch" class="form-control" placeholder="Enter PNo (e.g. 51959)" />
             <button type="button" id="btnLookup" class="setup-btn-green">🔍 Find Record</button>
             <button type="button" id="btnToggleAction" class="setup-btn-green">Add New User</button>
         </div>
     </div>
 
-    <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+    @* Container for the slider *@
+    <div id="activeToggleContainer" style="display:flex; justify-content:flex-end; margin-bottom:8px;">
         <div style="display:flex; align-items:center; gap:8px;">
             <label class="switch" style="margin:0;">
                 <input type="checkbox" id="toggleActiveOnly" checked>
@@ -100,7 +68,7 @@
                             <img src="https://systemsupport.piac.com.pk/admin/AgentImages/@(u.Pno).jpg"
                                  width="60" height="60"
                                  style="border-radius:50%; border: 1px solid #ddd; display:block; margin:auto;"
-                                 onerror="this.outerHTML='<div style=\'width:60px;height:60px;border-radius:50%;background:#white;color:white;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:auto;\'>👤</div>'"
+                                 onerror="this.outerHTML='<div style=\'width:60px;height:60px;border-radius:50%;background:#white;color:white;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:auto;\'>👤</div>'" />
                         </td>
                         <td class="td-name-pno"><strong>@u.Name</strong><br /><small class="text-muted">@u.Pno</small></td>
                         <td>
@@ -130,24 +98,25 @@
             <input type="hidden" id="IsNewUserFlag" name="IsNewUser" value="false" />
             <input type="hidden" name="IsAdministrator" id="HiddenIsAdministrator" value="N" />
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Full Name</label>
+            <div class="form-section-header">User Information</div>
+            <div class="grid-container">
+                <div class="grid-label">Full Name *</div>
+                <div class="grid-input">
                     <input type="text" name="Name" id="EditName" class="form-control" required />
                 </div>
-                <div class="form-group">
-                    <label>Email</label>
+
+                <div class="grid-label">Email Address</div>
+                <div class="grid-input">
                     <input type="email" name="Email" id="EditEmail" class="form-control" />
                 </div>
-            </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Mobile</label>
+                <div class="grid-label">Mobile No</div>
+                <div class="grid-input">
                     <input type="text" name="Mobile" id="EditMobile" class="form-control" />
                 </div>
-                <div class="form-group">
-                    <label>Mobile Operator</label>
+
+                <div class="grid-label">Operator</div>
+                <div class="grid-input">
                     <select id="MobileOperator" name="MobileOperator" class="form-control">
                         <option value="">-- Select Operator --</option>
                         @foreach (var op in ViewBag.Operators)
@@ -158,98 +127,109 @@
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>User Type</label>
-                    <div class="radio-group">
-                        <input type="radio" id="typeIndiv" name="UserType" value="U"> Individual
-                        <input type="radio" id="typeGroup" name="UserType" value="G"> Group
+            <div class="form-section-header">Access & Role Permissions</div>
+            <div class="details-box">
+                <div class="details-row">
+                    <div class="details-label">Work Area</div>
+                    <div class="details-content">
+                        <select id="EditWorkArea" name="WorkArea" class="form-control" style="width:100%;">
+                            <option value="">-- Select Work Area --</option>
+                            @foreach (var wa in ViewBag.WorkAreas)
+                            {
+                                <option value="@wa">@wa</option>
+                            }
+                        </select>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>User Group</label>
-                    <select id="GroupDropdown" name="GId" class="form-control">
-                        <option value="">-- Select Group --</option>
-                        @foreach (var g in (List<SelectListItem>)ViewBag.GroupList)
-                        {
-                            <option value="@g.Value">@g.Text</option>
-                        }
-                    </select>
-                </div>
-            </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Work Area</label>
-                    <select id="EditWorkArea" name="WorkArea" class="form-control">
-                        <option value="">-- Select Work Area --</option>
-                        @foreach (var wa in ViewBag.WorkAreas)
-                        {
-                            <option value="@wa">@wa</option>
-                        }
-                    </select>
+                <div class="details-row">
+                    <div class="details-label">User Role</div>
+                    <div class="details-content">
+                        @Html.DropDownList("RoleId", (SelectList)ViewBag.RoleList, "-- Select Role --", new { @class = "form-control", id = "EditRoleId", style = "width:100%;" })
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Program Name</label>
-                    <select id="EditProgramId" name="ProgramId" class="form-control">
-                        <option value="">-- Select Program --</option>
-                        @foreach (var p in (List<SelectListItem>)ViewBag.AllPrograms)
-                        {
-                            <option value="@p.Value">@p.Text</option>
-                        }
-                    </select>
-                </div>
-            </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>User Role</label>
-                    @Html.DropDownList("RoleId", (SelectList)ViewBag.RoleList, "-- Select Role --", new { @class = "form-control", id = "EditRoleId" })
+                <div class="details-row">
+                    <div class="details-label">User Type</div>
+                    <div class="details-content">
+                        <div class="radio-group" style="display:flex; gap:15px;">
+                            <label><input type="radio" id="typeIndiv" name="UserType" value="U"> Individual</label>
+                            <label><input type="radio" id="typeGroup" name="UserType" value="G"> Group</label>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <div class="radio-group">
-                        <input type="radio" id="statusActive" name="Status" value="A"> <span style="color:green">Active</span>
-                        <input type="radio" id="statusInactive" name="Status" value="I"> <span style="color:red">Inactive</span>
+
+                <div class="details-row">
+                    <div class="details-label">Status</div>
+                    <div class="details-content">
+                        <div class="radio-group" style="display:flex; gap:15px;">
+                            <label style="color:#28a745; font-weight:bold;"><input type="radio" id="statusActive" name="Status" value="A"> Active</label>
+                            <label style="color:#dc3545; font-weight:bold;"><input type="radio" id="statusInactive" name="Status" value="I"> Inactive</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="details-row">
+                    <div class="details-label">Program</div>
+                    <div class="details-content">
+                        <select id="EditProgramId" name="ProgramId" class="form-control" style="width:100%;">
+                            <option value="">-- Select Program --</option>
+                            @foreach (var p in (List<SelectListItem>)ViewBag.AllPrograms)
+                            {
+                                <option value="@p.Value">@p.Text</option>
+                            }
+                        </select>
                     </div>
                 </div>
             </div>
 
-            <div class="form-row" style="margin-top: 20px;">
-                <button type="submit" class="btn btn-success" style="flex: 1;">💾 Save Changes</button>
-                <button type="button" id="btnShowPass" class="btn btn-warning" style="flex: 1;">🔑 Reset Password</button>
+            <div class="action-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" id="btnShowPass" class="setup-btn-green" style="background:#6c757d;">🔑 Reset Password</button>
+                <button type="submit" class="setup-btn-green" style="min-width:200px;">💾 Save User Changes</button>
             </div>
-        </form>
     </div>
     @* Password Section *@
-    <div id="passwordFields" style="display:none; margin-top: 20px; padding: 20px; border: 1px solid #ffeeba; background: #fffaf0; border-radius: 8px;">
-        <h4 style="margin-bottom: 15px;">Reset Password</h4>
-        <form id="changePassForm">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="Pno" id="PasswordResetPno" />
+    <div id="passwordFields" style="display:none; margin-top: 20px;">
+        <div class="form-section-header" style="background:#fff3cd; color:#856404; border-color:#ffeeba;"> Reset Password</div>
 
-            <div class="form-group" style="margin-bottom: 10px;">
-                <label>New Password</label>
-                <input type="password" name="newPassword" id="newPassword" class="form-control" required autocomplete="new-password" />
-                <ul id="passwordRequirements" style="list-style: none; padding: 0; margin: 5px 0; font-size: 0.85em;">
-                    <li id="reqLength" style="color: #d9534f;">● At least 6 characters</li>
-                    <li id="reqUpper" style="color: #d9534f;">● At least one uppercase letter (A-Z)</li>
-                    <li id="reqNumber" style="color: #d9534f;">● At least one number (0-9)</li>
-                </ul>
-            </div>
+        <div class="grid-container" style="border-color:#ffeeba; background: #fffdf7; display: grid; grid-template-columns: 200px 1fr; gap: 15px; padding: 20px 20px 20px 15px; border: 1px solid #ffeeba; border-top: none; border-radius: 0 0 8px 8px;">
+            <form id="changePassForm" style="display: contents;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Pno" id="PasswordResetPno" />
 
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Confirm Password</label>
-                <input type="password" name="confirmPassword" id="confirmPassword" class="form-control" required />
-                <div id="matchError" style="color: #d9534f; font-size: 0.8em; display: none; margin-top: 5px;">
-                    Passwords do not match!
+                <div class="grid-label" style="align-self: start; padding-top: 8px;">New Password</div>
+                <div class="grid-input">
+                    <input type="password" name="newPassword" id="newPassword" class="form-control"
+                           style="width:100%; border-color: #ffeeba;" value="" autocomplete="new-password" required />
+
+                    @* Requirements List *@
+                    <div id="passwordRequirements" style="margin-top:12px; font-size: 0.85em; display: flex; flex-direction: column; gap: 6px;">
+                        <span id="reqLength" style="color: #d9534f;">● At least 6 characters</span>
+                        <span id="reqUpper" style="color: #d9534f;">● At least one uppercase letter (A-Z)</span>
+                        <span id="reqNumber" style="color: #d9534f;">● At least one number (0-9)</span>
+                    </div>
                 </div>
-            </div>
 
-            <button type="submit" id="btnUpdatePass" class="setup-btn-green" style="width: 100%;" disabled>Update Password</button>
-        </form>
+                <div class="grid-label">Confirm Pass</div>
+                <div class="grid-input">
+                    <input type="password" name="confirmPassword" id="confirmPassword" class="form-control"
+                           style="width:100%; border-color: #ffeeba;" value="" autocomplete="new-password" required />
+
+                    @* Single Checkbox for both fields *@
+                    <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="chkShowPasswords" style="width: 16px; height: 16px; cursor: pointer;" />
+                        <label for="chkShowPasswords" style="font-size: 0.9em; color: #856404; font-weight: 500; cursor: pointer; margin: 0;">Show Passwords</label>
+                    </div>
+
+                    <div id="matchError" style="color: #d9534f; font-size: 0.8em; display: none; margin-top: 5px; font-weight: 500;">⚠️ Passwords do not match!</div>
+                </div>
+
+                <div style="grid-column: 1 / span 2; display: flex; justify-content: flex-end; margin-top: 15px; border-top: 1px solid #ffeeba; padding-top: 20px;">
+                    <button type="submit" id="btnUpdatePass" class="setup-btn-green" style="width: 200px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" disabled>Update Password</button>
+                </div>
+            </form>
+        </div>
     </div>
-
     @section scripts {
         <script>
     $(document).ready(function () {
@@ -267,17 +247,13 @@
         const $confirmPass = $('#confirmPassword');
         const $submitPassBtn = $('#btnUpdatePass');
 
-        // --- 2. PASSWORD REAL-TIME VALIDATION (THE FIX) ---
-
+        // --- 2. PASSWORD VALIDATION ---
         $newPass.on('input', function () {
             const val = $(this).val();
-
-            // Logic: Min 6, 1 Upper, 1 Number
             const isLengthValid = val.length >= 6;
             const isUpperValid = /[A-Z]/.test(val);
             const isNumberValid = /[0-9]/.test(val);
 
-            // Update UI with Green/Red colors
             updateStatus('#reqLength', isLengthValid, "At least 6 characters");
             updateStatus('#reqUpper', isUpperValid, "At least one uppercase letter (A-Z)");
             updateStatus('#reqNumber', isNumberValid, "At least one number (0-9)");
@@ -285,14 +261,11 @@
             validatePasswordForm(isLengthValid && isUpperValid && isNumberValid);
         });
 
-        $confirmPass.on('input', function () {
-            validatePasswordForm();
-        });
+        $confirmPass.on('input', function () { validatePasswordForm(); });
 
         function updateStatus(selector, isValid, text) {
             const $el = $(selector);
             if (isValid) {
-                // Inline style with !important to override any CSS files
                 $el.attr('style', 'color: #2e7d57 !important; font-weight: bold;').html('✓ ' + text);
             } else {
                 $el.attr('style', 'color: #d9534f !important; font-weight: normal;').html('● ' + text);
@@ -302,12 +275,7 @@
         function validatePasswordForm(requirementsMet) {
             const pass = $newPass.val();
             const confirm = $confirmPass.val();
-
-            // Re-calculate if not provided
-            const allReqs = requirementsMet ?? (
-                pass.length >= 6 && /[A-Z]/.test(pass) && /[0-9]/.test(pass)
-            );
-
+            const allReqs = requirementsMet ?? (pass.length >= 6 && /[A-Z]/.test(pass) && /[0-9]/.test(pass));
             const match = (pass === confirm && confirm !== "");
 
             if (confirm !== "" && !match) {
@@ -317,56 +285,58 @@
                 $('#matchError').hide();
                 if(match) $confirmPass.css('border-color', '#2e7d57');
             }
-
-            // Enable button only if 6 chars + Upper + Number + Match
             $submitPassBtn.prop('disabled', !(allReqs && match));
         }
-
-        // Handle Password Form Submit
+        $(document).on('change', '#chkShowPasswords', function() {
+    const isChecked = $(this).is(':checked');
+    const type = isChecked ? 'text' : 'password';
+    
+    // Select both fields and change their type
+    $('#newPassword, #confirmPassword').attr('type', type);
+});
         $('#changePassForm').on('submit', function (e) {
             e.preventDefault();
-            var formData = $(this).serialize();
-            $.post('@Url.Action("ChangePassword", "User")', formData, function (response) {
+            $.post('@Url.Action("ChangePassword", "User")', $(this).serialize(), function (response) {
                 if (response.success) {
                     alert("Password updated successfully!");
                     $('#passwordFields').fadeOut();
                     $('#changePassForm')[0].reset();
-                    // Reset requirements to red
-                    updateStatus('#reqLength', false, "At least 6 characters");
-                    updateStatus('#reqUpper', false, "At least one uppercase letter (A-Z)");
-                    updateStatus('#reqNumber', false, "At least one number (0-9)");
-                } else {
-                    alert("Error: " + response.message);
-                }
+                } else { alert("Error: " + response.message); }
             });
         });
 
-        // --- 3. VIEW TOGGLING ---
+        // --- 3. VIEW TOGGLING (FIXED) ---
         function toggleView(showForm, isNewUser = false) {
             if (showForm) {
-                $('#userListSection').hide();
+                // Hide List, Slider, and Search bar
+                $('#userListSection, #activeToggleContainer, #searchControls').hide();
+
                 $('#userDetailsForm').fadeIn();
-                $('#btnToggleAction').text('Back to List');
+                $('#btnToggleAction').text('⬅ Back to List');
+
                 $('#IsNewUserFlag').val(isNewUser ? "true" : "false");
                 if (isNewUser) {
                     $('#manageUserForm')[0].reset();
                     $('#MainHiddenPno').val($('#PnoSearch').val().trim());
-                    $('#typeIndiv').prop('checked', true).trigger('change');
+                    $('#typeIndiv').prop('checked', true);
                     $('#passwordFields').hide();
                 }
             } else {
+                // Show List, Slider, and Search bar
                 $('#userDetailsForm, #passwordFields').hide();
-                $('#userListSection').fadeIn();
+                $('#userListSection, #activeToggleContainer, #searchControls').fadeIn();
+
                 $('#btnToggleAction').text('Add New User').removeClass('btn-secondary').addClass('setup-btn-green');
             }
         }
 
         $('#btnToggleAction').click(function () {
+            // Reliable check for visibility
             if ($('#userDetailsForm').is(':visible')) {
                 toggleView(false);
             } else {
                 var pVal = $('#PnoSearch').val().trim();
-                if (!pVal) { alert("Enter PNo first."); return; }
+                if (!pVal) { alert("Enter PNo in the search box first."); return; }
                 if ($('tr[data-pno="' + pVal + '"]').length > 0) {
                     alert("User already exists in the list.");
                     return;
@@ -397,22 +367,10 @@
                     }));
                     location.reload();
                 } else {
-                    showGlobalToast(res.message, "error");
-                    $submitBtn.prop('disabled', false).text('💾 Save Changes');
+                    alert(res.message);
+                    $submitBtn.prop('disabled', false).text('💾 Save User Changes');
                 }
             });
-        });
-
-        $(document).on('click', '.btn-delete-user', function() {
-            var pno = $(this).data('pno');
-            if (confirm("Permanently delete user " + pno + "?")) {
-                $.post('@Url.Action("DeleteUser", "User")', { pno: pno }, function(res) {
-                    if(res.success) {
-                        sessionStorage.setItem("pendingToast", JSON.stringify({ message: "User Deleted", type: "error" }));
-                        location.reload();
-                    } else alert(res.message);
-                });
-            }
         });
 
         $('#btnLookup').click(function () {
@@ -429,17 +387,15 @@
                     $('#EditRoleId').val(res.data.RoleId);
                     $('#EditProgramId').val(res.data.ProgramId);
                     $('#HiddenIsAdministrator').val(res.data.IsAdministrator);
-                    if (res.data.UserType === "G") {
-                        $('#typeGroup').prop('checked', true);
-                        $('#GroupDropdown').prop('disabled', false).val(res.data.Gid).css('background-color', '#fff');
-                    } else {
-                        $('#typeIndiv').prop('checked', true);
-                        $('#GroupDropdown').prop('disabled', true).val('').css('background-color', '#eee');
-                    }
+
+                    if (res.data.UserType === "G") $('#typeGroup').prop('checked', true);
+                    else $('#typeIndiv').prop('checked', true);
+
                     if (res.data.Status === "A" || res.data.Status === "Y") $('#statusActive').prop('checked', true);
                     else $('#statusInactive').prop('checked', true);
+
                     toggleView(true, false);
-                } else alert(res.message);
+                } else { alert(res.message); }
             });
         });
 
@@ -455,13 +411,11 @@
             const activeOnly = $(this).is(':checked');
             $('#allUsersTableBody tr').not('.role-group-header').each(function () {
                 const statusText = $(this).find('.td-status').text().trim();
-                if (activeOnly) { $(this).toggle(statusText === 'Active'); }
-                else { $(this).show(); }
+                $(this).toggle(!activeOnly || statusText === 'Active');
             });
             $('#allUsersTableBody tr.role-group-header').each(function () {
-                const $header = $(this);
-                const hasVisibleRows = $header.nextUntil('.role-group-header').filter(':visible').length > 0;
-                $header.toggle(hasVisibleRows);
+                const hasVisibleRows = $(this).nextUntil('.role-group-header').filter(':visible').length > 0;
+                $(this).toggle(hasVisibleRows);
             });
         });
 
