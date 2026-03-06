@@ -30,7 +30,7 @@
     </div>
 
     <div id="userListSection">
-        <table class="crud-table" id="allUsersTable">
+        <table class="crud-table " id="allUsersTable">
             <thead>
                 <tr>
                     <th>Image</th>
@@ -232,7 +232,8 @@
     </div>
     @section scripts {
         <script>
-    $(document).ready(function () {
+            $(document).ready(function () {
+                
         // --- 1. INITIALIZATION & TOASTS ---
         const pendingToast = sessionStorage.getItem("pendingToast");
         if (pendingToast) {
