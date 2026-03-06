@@ -1,18 +1,20 @@
-/* ===== GLOBAL / RESET ===== */
-html {
+html, body {
     height: 100%;
 }
-
 body {
-    min-height: 100vh;
     margin: 0;
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: #f7f7f7;
-    padding-top: 62px;
+    padding-top: 62px; /* navbar height */
 }
-
+.main-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
 /* ===== NAVBAR ===== */
 .navbar {
     position: absolute;
@@ -251,6 +253,7 @@ footer {
     width: 100%;
     margin-top: auto;
 }
+
 
 /* ===== CENTRALIZED SECTION HEADER ===== */
 .section-header {

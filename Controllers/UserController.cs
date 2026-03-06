@@ -51,8 +51,14 @@ namespace SRM.Controllers
             // 4. Populate ViewBags
             ViewBag.RoleListSource = sortedRoles;
             ViewBag.RoleList = new SelectList(sortedRoles, "Role_Id", "Role_Name");
-            ViewBag.GroupList = _db.groups.Select(g => new SelectListItem { Value = g.gid.ToString(), Text = g.gname }).ToList();
-
+        
+            ViewBag.GroupList = _db.groups
+                .Where(g => !agentProgramId.HasValue || g.program_id == agentProgramId) // Ensure column name matches your DB (e.g., program_id)
+                .Select(g => new SelectListItem
+                {
+                    Value = g.gid.ToString(),
+                    Text = g.gname
+                }).ToList();
             // Filtered programs (for table/display context)
             var filteredPrograms = agentProgramId.HasValue
                 ? _db.Programs.Where(p => p.Program_Id == agentProgramId).ToList()

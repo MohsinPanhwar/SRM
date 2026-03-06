@@ -158,6 +158,13 @@
                         </div>
                     </div>
                 </div>
+                <div class="details-row" id="groupDropdownRow" style="display:none;">
+                    <div class="details-label">Select Group</div>
+                    <div class="details-content">
+                        @* Use the GroupList already in your ViewBag *@
+                        @Html.DropDownList("Gid", (IEnumerable<SelectListItem>)ViewBag.GroupList, "-- Select Group Name --", new { @class = "form-control", id = "EditGroupId", style = "width:100%;" })
+                    </div>
+                </div>
 
                 <div class="details-row">
                     <div class="details-label">Status</div>
@@ -295,7 +302,16 @@
     
     // Select both fields and change their type
     $('#newPassword, #confirmPassword').attr('type', type);
-});
+        });
+                // Toggle Group Dropdown based on User Type radio buttons
+                $('input[name="UserType"]').on('change', function () {
+                    if ($('#typeGroup').is(':checked')) {
+                        $('#groupDropdownRow').slideDown();
+                    } else {
+                        $('#groupDropdownRow').slideUp();
+                        $('#EditGroupId').val(''); // Clear selection if switching back to Individual
+                    }
+                });
         $('#changePassForm').on('submit', function (e) {
             e.preventDefault();
             $.post('@Url.Action("ChangePassword", "User")', $(this).serialize(), function (response) {
@@ -308,26 +324,24 @@
         });
 
         // --- 3. VIEW TOGGLING (FIXED) ---
-        function toggleView(showForm, isNewUser = false) {
+                function toggleView(showForm, isNewUser = false) {
             if (showForm) {
-                // Hide List, Slider, and Search bar
                 $('#userListSection, #activeToggleContainer, #searchControls').hide();
-
                 $('#userDetailsForm').fadeIn();
                 $('#btnToggleAction').text('⬅ Back to List');
 
                 $('#IsNewUserFlag').val(isNewUser ? "true" : "false");
+        
                 if (isNewUser) {
                     $('#manageUserForm')[0].reset();
                     $('#MainHiddenPno').val($('#PnoSearch').val().trim());
                     $('#typeIndiv').prop('checked', true);
+                    $('#groupDropdownRow').hide(); // <-- ADD THIS LINE
                     $('#passwordFields').hide();
                 }
             } else {
-                // Show List, Slider, and Search bar
                 $('#userDetailsForm, #passwordFields').hide();
                 $('#userListSection, #activeToggleContainer, #searchControls').fadeIn();
-
                 $('#btnToggleAction').text('Add New User').removeClass('btn-secondary').addClass('setup-btn-green');
             }
         }
@@ -390,8 +404,15 @@
                     $('#EditProgramId').val(res.data.ProgramId);
                     $('#HiddenIsAdministrator').val(res.data.IsAdministrator);
 
-                    if (res.data.UserType === "G") $('#typeGroup').prop('checked', true);
-                    else $('#typeIndiv').prop('checked', true);
+                    if (res.data.UserType === "G") {
+                        $('#typeGroup').prop('checked', true);
+                        $('#groupDropdownRow').show(); // Show the div row
+                        $('#EditGroupId').val(res.data.Gid); // Select their specific group
+                    } else {
+                        $('#typeIndiv').prop('checked', true);
+                        $('#groupDropdownRow').hide(); // Hide the div row
+                        $('#EditGroupId').val('');     // Reset selection
+                    }
 
                     if (res.data.Status === "A" || res.data.Status === "Y") $('#statusActive').prop('checked', true);
                     else $('#statusInactive').prop('checked', true);
