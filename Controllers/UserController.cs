@@ -82,7 +82,55 @@ namespace SRM.Controllers
 
             return View("~/Views/SystemSetup/ManageUser.cshtml", allUsers);
         }
+        // GET: User/ManageProfile
+        public ActionResult ManageProfile()
+        {
+            var pno = Session["AgentPno"] as string;
+            if (string.IsNullOrEmpty(pno))
+                return RedirectToAction("Login", "Account");
 
+            var agent = _db.agent.FirstOrDefault(a => a.Pno == pno);
+            if (agent == null) return HttpNotFound();
+
+            // Populate dropdowns for the profile form
+            ViewBag.WorkAreas = _db.Locations.Select(l => l.Location_Description).Distinct().OrderBy(x => x).ToList();
+            ViewBag.Operators = _db.agent.Where(a => !string.IsNullOrEmpty(a.MobileOperator))
+                                    .Select(a => a.MobileOperator).Distinct().ToList();
+
+            return View("~/Views/SystemSetup/ManageProfile.cshtml", agent);
+        }
+        // POST: User/UpdateProfile
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult UpdateProfile(Agent model)
+        {
+            try
+            {
+                var sessionPno = Session["AgentPno"] as string;
+                if (string.IsNullOrEmpty(sessionPno))
+                    return Json(new { success = false, message = "Session expired." });
+
+                // Security: Always fetch based on Session, NOT the model's Pno
+                var agent = _db.agent.FirstOrDefault(a => a.Pno == sessionPno);
+                if (agent == null) return Json(new { success = false, message = "User not found." });
+
+                // Update ONLY allowed fields
+                agent.Name = model.Name;
+                agent.Email = model.Email;
+                agent.Mobile = model.Mobile;
+                agent.MobileOperator = model.MobileOperator;
+                agent.WorkArea = model.WorkArea;
+                agent.LastUpdate = DateTime.Now;
+
+                _db.SaveChanges();
+
+                return Json(new { success = true, message = "Profile updated successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
+        }
         [OutputCache(Duration = 3600, VaryByParam = "pno")]
         public async Task<ActionResult> GetUserImage(string pno)
         {
@@ -206,7 +254,6 @@ namespace SRM.Controllers
             }
             catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public JsonResult ChangePassword(string Pno, string newPassword, string confirmPassword)
@@ -216,24 +263,36 @@ namespace SRM.Controllers
                 return Json(new { success = false, message = "Session expired." });
 
             var currentUser = _db.agent.FirstOrDefault(a => a.Pno == currentUserPno);
-            bool isAuthorized = (currentUser != null && currentUser.IsAdministrator == "Y");
 
-            if (!isAuthorized)
-                return Json(new { success = false, message = "Unauthorized. Admin access required." });
+            var targetPno = string.IsNullOrEmpty(Pno) ? currentUserPno : Pno;
 
+            var targetAgent = _db.agent.FirstOrDefault(a => a.Pno == targetPno); if (targetAgent == null) return Json(new { success = false, message = "User not found." });
+
+            // Updated Logic: Is Admin OR is the user changing their own password?
+            bool isAuthorized = currentUser != null &&
+                (currentUser.IsAdministrator == "Y" || currentUserPno == targetPno);
+            if (!isAuthorized) { 
+                var debugInfo = $"[SessionPno: {currentUserPno}, TargetPno: {Pno}, IsAdmin: {currentUser?.IsAdministrator}]";
+            return Json(new { success = false, message = "Unauthorized access. " + debugInfo });
+               
+            }
             if (newPassword != confirmPassword)
                 return Json(new { success = false, message = "Passwords do not match." });
 
-            var agent = _db.agent.FirstOrDefault(a => a.Pno == Pno);
-            if (agent == null) return Json(new { success = false, message = "User not found." });
-
-            agent.Password = HashPassword(newPassword);
-            agent.LastUpdate = DateTime.Now;
+           
+            targetAgent.Password = HashPassword(newPassword);
+            targetAgent.LastUpdate = DateTime.Now;
             _db.SaveChanges();
 
             return Json(new { success = true, message = "Password updated successfully." });
         }
+        private string NormalizePno(string pno)
+        {
+            if (string.IsNullOrWhiteSpace(pno))
+                return "";
 
+            return pno.Trim().ToUpper().Replace("P", "");
+        }
         private string HashPassword(string password)
         {
             using (var sha256 = new System.Security.Cryptography.SHA256Managed())

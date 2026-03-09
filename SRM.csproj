@@ -258,6 +258,7 @@
     <Content Include="Views\AssetIssuance\IssuedAssets.cshtml" />
     <Content Include="Views\AssetIssuance\ViewCategory.cshtml" />
     <Content Include="Views\AssetIssuance\ViewBrand.cshtml" />
+    <Content Include="Views\SystemSetup\ManageProfile.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

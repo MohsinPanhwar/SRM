@@ -194,7 +194,7 @@
                 <button type="button" id="btnShowPass" class="setup-btn-green" style="background:#6c757d;">🔑 Reset Password</button>
                 <button type="submit" class="setup-btn-green" style="min-width:200px;">💾 Save User Changes</button>
             </div>
-            </form>
+        </form>
     </div>
     @* Password Section *@
     <div id="passwordFields" style="display:none; margin-top: 20px;">
@@ -240,209 +240,212 @@
     </div>
     @section scripts {
         <script>
-            $(document).ready(function () {
-                
-        // --- 1. INITIALIZATION & TOASTS ---
-        const pendingToast = sessionStorage.getItem("pendingToast");
-        if (pendingToast) {
-            const toastData = JSON.parse(pendingToast);
-            if (typeof showGlobalToast === "function") {
-                showGlobalToast(toastData.message, toastData.type);
+        $(document).ready(function () {
+
+            // --- 1. INITIALIZATION & TOASTS ---
+            const pendingToast = sessionStorage.getItem("pendingToast");
+            if (pendingToast) {
+                const toastData = JSON.parse(pendingToast);
+                if (typeof showGlobalToast === "function") {
+                    showGlobalToast(toastData.message, toastData.type);
+                }
+                sessionStorage.removeItem("pendingToast");
             }
-            sessionStorage.removeItem("pendingToast");
-        }
 
-        const $newPass = $('#newPassword');
-        const $confirmPass = $('#confirmPassword');
-        const $submitPassBtn = $('#btnUpdatePass');
+            const $newPass = $('#newPassword');
+            const $confirmPass = $('#confirmPassword');
+            const $submitPassBtn = $('#btnUpdatePass');
 
-        // --- 2. PASSWORD VALIDATION ---
-        $newPass.on('input', function () {
-            const val = $(this).val();
-            const isLengthValid = val.length >= 6;
-            const isUpperValid = /[A-Z]/.test(val);
-            const isNumberValid = /[0-9]/.test(val);
+            // --- 2. PASSWORD VALIDATION ---
+            $newPass.on('input', function () {
+                const val = $(this).val();
+                const isLengthValid = val.length >= 6;
+                const isUpperValid = /[A-Z]/.test(val);
+                const isNumberValid = /[0-9]/.test(val);
 
-            updateStatus('#reqLength', isLengthValid, "At least 6 characters");
-            updateStatus('#reqUpper', isUpperValid, "At least one uppercase letter (A-Z)");
-            updateStatus('#reqNumber', isNumberValid, "At least one number (0-9)");
+                updateStatus('#reqLength', isLengthValid, "At least 6 characters");
+                updateStatus('#reqUpper', isUpperValid, "At least one uppercase letter (A-Z)");
+                updateStatus('#reqNumber', isNumberValid, "At least one number (0-9)");
 
-            validatePasswordForm(isLengthValid && isUpperValid && isNumberValid);
-        });
+                validatePasswordForm(isLengthValid && isUpperValid && isNumberValid);
+            });
 
-        $confirmPass.on('input', function () { validatePasswordForm(); });
+            $confirmPass.on('input', function () { validatePasswordForm(); });
 
-        function updateStatus(selector, isValid, text) {
-            const $el = $(selector);
-            if (isValid) {
-                $el.attr('style', 'color: #2e7d57 !important; font-weight: bold;').html('✓ ' + text);
-            } else {
-                $el.attr('style', 'color: #d9534f !important; font-weight: normal;').html('● ' + text);
+            function updateStatus(selector, isValid, text) {
+                const $el = $(selector);
+                if (isValid) {
+                    $el.attr('style', 'color: #2e7d57 !important; font-weight: bold;').html('✓ ' + text);
+                } else {
+                    $el.attr('style', 'color: #d9534f !important; font-weight: normal;').html('● ' + text);
+                }
             }
-        }
 
-        function validatePasswordForm(requirementsMet) {
-            const pass = $newPass.val();
-            const confirm = $confirmPass.val();
-            const allReqs = requirementsMet ?? (pass.length >= 6 && /[A-Z]/.test(pass) && /[0-9]/.test(pass));
-            const match = (pass === confirm && confirm !== "");
+            function validatePasswordForm(requirementsMet) {
+                const pass = $newPass.val();
+                const confirm = $confirmPass.val();
+                const allReqs = requirementsMet ?? (pass.length >= 6 && /[A-Z]/.test(pass) && /[0-9]/.test(pass));
+                const match = (pass === confirm && confirm !== "");
 
-            if (confirm !== "" && !match) {
-                $('#matchError').show();
-                $confirmPass.css('border-color', '#d9534f');
-            } else {
-                $('#matchError').hide();
-                if(match) $confirmPass.css('border-color', '#2e7d57');
+                if (confirm !== "" && !match) {
+                    $('#matchError').show();
+                    $confirmPass.css('border-color', '#d9534f');
+                } else {
+                    $('#matchError').hide();
+                    if (match) $confirmPass.css('border-color', '#2e7d57');
+                }
+                $submitPassBtn.prop('disabled', !(allReqs && match));
             }
-            $submitPassBtn.prop('disabled', !(allReqs && match));
-        }
-        $(document).on('change', '#chkShowPasswords', function() {
-    const isChecked = $(this).is(':checked');
-    const type = isChecked ? 'text' : 'password';
-    
-    // Select both fields and change their type
-    $('#newPassword, #confirmPassword').attr('type', type);
-        });
-                // Toggle Group Dropdown based on User Type radio buttons
-                $('input[name="UserType"]').on('change', function () {
-                    if ($('#typeGroup').is(':checked')) {
-                        $('#groupDropdownRow').slideDown();
+
+            $(document).on('change', '#chkShowPasswords', function () {
+                const isChecked = $(this).is(':checked');
+                const type = isChecked ? 'text' : 'password';
+                $('#newPassword, #confirmPassword').attr('type', type);
+            });
+
+            $('input[name="UserType"]').on('change', function () {
+                if ($('#typeGroup').is(':checked')) {
+                    $('#groupDropdownRow').slideDown();
+                } else {
+                    $('#groupDropdownRow').slideUp();
+                    $('#EditGroupId').val('');
+                }
+            });
+
+            $('#changePassForm').on('submit', function (e) {
+                e.preventDefault();
+                $.post('@Url.Action("ChangePassword", "User")', $(this).serialize(), function (response) {
+                    if (response.success) {
+                        alert("Password updated successfully!");
+                        $('#passwordFields').fadeOut();
+                        $('#changePassForm')[0].reset();
+                    } else { alert("Error: " + response.message); }
+                });
+            });
+
+            // --- 3. VIEW TOGGLING ---
+            function toggleView(showForm, isNewUser = false) {
+                if (showForm) {
+                    $('#userListSection, #activeToggleContainer, #searchControls').hide();
+                    $('#userDetailsForm').fadeIn();
+                    $('#btnToggleAction').text('⬅ Back to List');
+                    $('#IsNewUserFlag').val(isNewUser ? "true" : "false");
+
+                    if (isNewUser) {
+                        $('#manageUserForm')[0].reset();
+                        $('#MainHiddenPno').val($('#PnoSearch').val().trim());
+                        $('#typeIndiv').prop('checked', true);
+                        $('#groupDropdownRow').hide();
+                        $('#passwordFields').hide();
                     } else {
-                        $('#groupDropdownRow').slideUp();
-                        $('#EditGroupId').val(''); // Clear selection if switching back to Individual
+                        // Logic for Edit Mode (Existing User)
+                        $('#passwordFields').hide();
+                    }
+                } else {
+                    $('#userDetailsForm, #passwordFields').hide();
+                    $('#userListSection, #activeToggleContainer, #searchControls').fadeIn();
+                    $('#btnToggleAction').text('Add New User').removeClass('btn-secondary').addClass('setup-btn-green');
+                }
+            }
+
+            $('#btnToggleAction').click(function () {
+                if ($('#userDetailsForm').is(':visible')) {
+                    toggleView(false);
+                } else {
+                    var pVal = $('#PnoSearch').val().trim();
+                    if (!pVal) { alert("Enter PNo in the search box first."); return; }
+                    if ($('tr[data-pno="' + pVal + '"]').length > 0) {
+                        alert("User already exists in the list.");
+                        return;
+                    }
+                    toggleView(true, true);
+                }
+            });
+
+            // --- 4. USER CRUD ---
+            function updateAdminStatus() {
+                var selectedRoleText = $('#EditRoleId option:selected').text().trim().toLowerCase();
+                $('#HiddenIsAdministrator').val(selectedRoleText.includes('admin') ? 'Y' : 'N');
+            }
+
+            $(document).on('change', '#EditRoleId', updateAdminStatus);
+
+            $('#manageUserForm').submit(function (e) {
+                e.preventDefault();
+                updateAdminStatus();
+                const $submitBtn = $(this).find('button[type="submit"]');
+                $submitBtn.prop('disabled', true).text('Processing...');
+
+                $.post('@Url.Action("ManageUser", "User")', $(this).serialize(), function (res) {
+                    if (res.success) {
+                        sessionStorage.setItem("pendingToast", JSON.stringify({
+                            message: $('#IsNewUserFlag').val() === "true" ? "User Created!" : "Changes Saved!",
+                            type: "success"
+                        }));
+                        location.reload();
+                    } else {
+                        alert(res.message);
+                        $submitBtn.prop('disabled', false).text('💾 Save User Changes');
                     }
                 });
-        $('#changePassForm').on('submit', function (e) {
-            e.preventDefault();
-            $.post('@Url.Action("ChangePassword", "User")', $(this).serialize(), function (response) {
-                if (response.success) {
-                    alert("Password updated successfully!");
-                    $('#passwordFields').fadeOut();
-                    $('#changePassForm')[0].reset();
-                } else { alert("Error: " + response.message); }
             });
-        });
 
-        // --- 3. VIEW TOGGLING (FIXED) ---
-                function toggleView(showForm, isNewUser = false) {
-            if (showForm) {
-                $('#userListSection, #activeToggleContainer, #searchControls').hide();
-                $('#userDetailsForm').fadeIn();
-                $('#btnToggleAction').text('⬅ Back to List');
-
-                $('#IsNewUserFlag').val(isNewUser ? "true" : "false");
-        
-                if (isNewUser) {
-                    $('#manageUserForm')[0].reset();
-                    $('#MainHiddenPno').val($('#PnoSearch').val().trim());
-                    $('#typeIndiv').prop('checked', true);
-                    $('#groupDropdownRow').hide(); // <-- ADD THIS LINE
-                    $('#passwordFields').hide();
-                }
-            } else {
-                $('#userDetailsForm, #passwordFields').hide();
-                $('#userListSection, #activeToggleContainer, #searchControls').fadeIn();
-                $('#btnToggleAction').text('Add New User').removeClass('btn-secondary').addClass('setup-btn-green');
-            }
-        }
-
-        $('#btnToggleAction').click(function () {
-            // Reliable check for visibility
-            if ($('#userDetailsForm').is(':visible')) {
-                toggleView(false);
-            } else {
+            $('#btnLookup').click(function () {
                 var pVal = $('#PnoSearch').val().trim();
-                if (!pVal) { alert("Enter PNo in the search box first."); return; }
-                if ($('tr[data-pno="' + pVal + '"]').length > 0) {
-                    alert("User already exists in the list.");
-                    return;
-                }
-                toggleView(true, true);
-            }
-        });
+                if (!pVal) return;
+                $.get('@Url.Action("GetUserByPno", "User")', { pno: pVal }, function (res) {
+                    if (res.success) {
+                        $('#MainHiddenPno, #PasswordResetPno').val(pVal);
+                        $('#EditName').val(res.data.Name);
+                        $('#EditEmail').val(res.data.Email);
+                        $('#EditMobile').val(res.data.Mobile);
+                        $('#MobileOperator').val(res.data.MobileOperator);
+                        $('#EditWorkArea').val(res.data.WorkArea);
+                        $('#EditRoleId').val(res.data.RoleId);
+                        $('#EditProgramId').val(res.data.ProgramId);
+                        $('#HiddenIsAdministrator').val(res.data.IsAdministrator);
 
-        // --- 4. USER CRUD ---
-        function updateAdminStatus() {
-            var selectedRoleText = $('#EditRoleId option:selected').text().trim().toLowerCase();
-            $('#HiddenIsAdministrator').val(selectedRoleText.includes('admin') ? 'Y' : 'N');
-        }
+                        if (res.data.UserType === "G") {
+                            $('#typeGroup').prop('checked', true);
+                            $('#groupDropdownRow').show();
+                            $('#EditGroupId').val(res.data.Gid);
+                        } else {
+                            $('#typeIndiv').prop('checked', true);
+                            $('#groupDropdownRow').hide();
+                            $('#EditGroupId').val('');
+                        }
 
-        $(document).on('change', '#EditRoleId', updateAdminStatus);
+                        if (res.data.Status === "A" || res.data.Status === "Y") $('#statusActive').prop('checked', true);
+                        else $('#statusInactive').prop('checked', true);
 
-        $('#manageUserForm').submit(function (e) {
-            e.preventDefault();
-            updateAdminStatus();
-            const $submitBtn = $(this).find('button[type="submit"]');
-            $submitBtn.prop('disabled', true).text('Processing...');
-
-            $.post('@Url.Action("ManageUser", "User")', $(this).serialize(), function (res) {
-                if (res.success) {
-                    sessionStorage.setItem("pendingToast", JSON.stringify({
-                        message: $('#IsNewUserFlag').val() === "true" ? "User Created!" : "Changes Saved!",
-                        type: "success"
-                    }));
-                    location.reload();
-                } else {
-                    alert(res.message);
-                    $submitBtn.prop('disabled', false).text('💾 Save User Changes');
-                }
+                        toggleView(true, false);
+                    } else { alert(res.message); }
+                });
             });
-        });
 
-        $('#btnLookup').click(function () {
-            var pVal = $('#PnoSearch').val().trim();
-            if (!pVal) return;
-            $.get('@Url.Action("GetUserByPno", "User")', { pno: pVal }, function (res) {
-                if (res.success) {
-                    $('#MainHiddenPno, #PasswordResetPno').val(pVal);
-                    $('#EditName').val(res.data.Name);
-                    $('#EditEmail').val(res.data.Email);
-                    $('#EditMobile').val(res.data.Mobile);
-                    $('#MobileOperator').val(res.data.MobileOperator);
-                    $('#EditWorkArea').val(res.data.WorkArea);
-                    $('#EditRoleId').val(res.data.RoleId);
-                    $('#EditProgramId').val(res.data.ProgramId);
-                    $('#HiddenIsAdministrator').val(res.data.IsAdministrator);
-
-                    if (res.data.UserType === "G") {
-                        $('#typeGroup').prop('checked', true);
-                        $('#groupDropdownRow').show(); // Show the div row
-                        $('#EditGroupId').val(res.data.Gid); // Select their specific group
-                    } else {
-                        $('#typeIndiv').prop('checked', true);
-                        $('#groupDropdownRow').hide(); // Hide the div row
-                        $('#EditGroupId').val('');     // Reset selection
-                    }
-
-                    if (res.data.Status === "A" || res.data.Status === "Y") $('#statusActive').prop('checked', true);
-                    else $('#statusInactive').prop('checked', true);
-
-                    toggleView(true, false);
-                } else { alert(res.message); }
+            $(document).on('click', '.btn-select-user', function () {
+                var pno = $(this).data('pno');
+                $('#PnoSearch').val(pno);
+                $('#btnLookup').trigger('click');
             });
-        });
 
-        $(document).on('click', '.btn-select-user', function() {
-            $('#PnoSearch').val($(this).data('pno'));
-            $('#btnLookup').trigger('click');
-        });
+            $('#btnShowPass').click(function () { $('#passwordFields').slideToggle(); });
 
-        $('#btnShowPass').click(function () { $('#passwordFields').slideToggle(); });
-
-        // --- 5. FILTERING ---
-        $('#toggleActiveOnly').on('change', function () {
-            const activeOnly = $(this).is(':checked');
-            $('#allUsersTableBody tr').not('.role-group-header').each(function () {
-                const statusText = $(this).find('.td-status').text().trim();
-                $(this).toggle(!activeOnly || statusText === 'Active');
+            // --- 5. FILTERING ---
+            $('#toggleActiveOnly').on('change', function () {
+                const activeOnly = $(this).is(':checked');
+                $('#allUsersTableBody tr').not('.role-group-header').each(function () {
+                    const statusText = $(this).find('.td-status').text().trim();
+                    $(this).toggle(!activeOnly || statusText === 'Active');
+                });
+                $('#allUsersTableBody tr.role-group-header').each(function () {
+                    const hasVisibleRows = $(this).nextUntil('.role-group-header').filter(':visible').length > 0;
+                    $(this).toggle(hasVisibleRows);
+                });
             });
-            $('#allUsersTableBody tr.role-group-header').each(function () {
-                const hasVisibleRows = $(this).nextUntil('.role-group-header').filter(':visible').length > 0;
-                $(this).toggle(hasVisibleRows);
-            });
-        });
 
-        $('#toggleActiveOnly').trigger('change');
-    });
+            $('#toggleActiveOnly').trigger('change');
+
+        });
         </script>
     }

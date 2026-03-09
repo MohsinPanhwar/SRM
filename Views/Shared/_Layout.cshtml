@@ -22,18 +22,21 @@
 
 
                 <div class="dropdown">
-                    @if (PrivilegeHelper.IsSuperAdmin())
-                    {
+                    
                         <button class="dropbtn">System Setup</button>
                         <div class="dropdown-content">
-                            <a href="@Url.Action("ManagePrograms", "Program")">Manage Program</a>
-                            <a href="@Url.Action("ManageUser", "User")">Manage User</a>
-                            <a href="@Url.Action("ManageGroup", "Group")">Manage Group</a>
-                            <a href="@Url.Action("ManageLocation", "Location")">Manage Work Area</a>
-                            <a href="@Url.Action("ManageRole", "Role")">Manage Role</a>
-                            <a href="@Url.Action("MessageBoard", "Message")">Message Board</a>
+                            @if (PrivilegeHelper.IsSuperAdmin())
+                            {
+                                <a href="@Url.Action("ManagePrograms", "Program")">Manage Program</a>
+                                <a href="@Url.Action("ManageUser", "User")">Manage User</a>
+                                <a href="@Url.Action("ManageGroup", "Group")">Manage Group</a>
+                                <a href="@Url.Action("ManageLocation", "Location")">Manage Work Area</a>
+                                <a href="@Url.Action("ManageRole", "Role")">Manage Role</a>
+                                <a href="@Url.Action("MessageBoard", "Message")">Message Board</a>
+                            }
+                            <a href="@Url.Action("ManageProfile", "User")">Manage Profile</a>
                         </div>
-                    }
+                    
                 </div>
                 @if (PrivilegeHelper.IsSuperAdmin())
                 {
