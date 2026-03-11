@@ -97,100 +97,65 @@
     </div>
 </div>
 @section scripts {
-    <script>
+<script>
 $(document).ready(function () {
-
     // --- 1. PROFILE UPDATE (AJAX) ---
     $('#profileForm').submit(function (e) {
-
         e.preventDefault();
-
         const $submitBtn = $(this).find('button[type="submit"]');
         $submitBtn.prop('disabled', true).text('Updating...');
-
         $.post('@Url.Action("UpdateProfile", "User")', $(this).serialize(), function (res) {
-
             if (res.success) {
-
                 if (typeof showGlobalToast === "function") {
                     showGlobalToast(res.message || "Profile updated successfully!", "success");
                 }
-
             } else {
-
                 if (typeof showGlobalToast === "function") {
                     showGlobalToast(res.message || "Failed to update profile.", "error");
                 }
-
             }
-
             $submitBtn.prop('disabled', false).text('💾 Update Profile');
-
         });
-
     });
-
 
     // --- 2. PASSWORD TOGGLE & VALIDATION ---
     const $newPass = $('#newPassword');
     const $confirmPass = $('#confirmPassword');
     const $submitPassBtn = $('#btnUpdatePass');
 
-    // Show / Hide Password Section
     $('#btnShowPass').click(function () {
         $('#passwordFields').slideToggle();
     });
 
-
-    // Password requirement validation
     $newPass.on('input', function () {
-
         const val = $(this).val();
         const isLengthValid = val.length >= 6;
         const isUpperValid = /[A-Z]/.test(val);
         const isNumberValid = /[0-9]/.test(val);
-
         updateStatus('#reqLength', isLengthValid, "At least 6 characters");
         updateStatus('#reqUpper', isUpperValid, "At least one uppercase letter (A-Z)");
         updateStatus('#reqNumber', isNumberValid, "At least one number (0-9)");
-
         validatePasswordForm(isLengthValid && isUpperValid && isNumberValid);
-
     });
 
     $confirmPass.on('input', function () {
         validatePasswordForm();
     });
 
-
     function updateStatus(selector, isValid, text) {
-
         const $el = $(selector);
-
         if (isValid) {
-            $el.attr('style','color:#2e7d57 !important; font-weight:bold;')
-               .html('✓ ' + text);
+            $el.attr('style','color:#2e7d57 !important; font-weight:bold;').html('✓ ' + text);
         } else {
-            $el.attr('style','color:#d9534f !important;')
-               .html('● ' + text);
+            $el.attr('style','color:#d9534f !important;').html('● ' + text);
         }
-
     }
 
-
     function validatePasswordForm(requirementsMet) {
-
         const pass = $newPass.val();
         const confirm = $confirmPass.val();
-
-        const allReqs = requirementsMet ?? (
-            pass.length >= 6 &&
-            /[A-Z]/.test(pass) &&
-            /[0-9]/.test(pass)
-        );
-
+        const allReqs = requirementsMet ?? (pass.length >= 6 && /[A-Z]/.test(pass) && /[0-9]/.test(pass));
         const match = (pass === confirm && confirm !== "");
-
         if (confirm !== "" && !match) {
             $('#matchError').show();
             $confirmPass.css('border-color','#d9534f');
@@ -198,55 +163,35 @@ $(document).ready(function () {
             $('#matchError').hide();
             if(match) $confirmPass.css('border-color','#2e7d57');
         }
-
         $submitPassBtn.prop('disabled', !(allReqs && match));
-
     }
-
 
     // --- 3. CHANGE PASSWORD SUBMIT ---
     $('#changePassForm').on('submit', function (e) {
-
         e.preventDefault();
-
         const $btn = $('#btnUpdatePass');
         $btn.prop('disabled', true).text('Updating...');
-
         $.post('@Url.Action("ChangePassword", "User")', $(this).serialize(), function (response) {
-
             if (response.success) {
-
                 if (typeof showGlobalToast === "function") {
                     showGlobalToast(response.message || "Password updated successfully!", "success");
                 }
-
                 $('#passwordFields').fadeOut();
                 $('#changePassForm')[0].reset();
-
             } else {
-
                 if (typeof showGlobalToast === "function") {
                     showGlobalToast(response.message || "Failed to update password.", "error");
                 }
-
             }
-
             $btn.prop('disabled', false).text('🔑 Update Password');
-
         });
-
     });
-
 
     // --- 4. SHOW / HIDE PASSWORD TEXT ---
     $(document).on('change','#chkShowPasswords', function () {
-
         const type = $(this).is(':checked') ? 'text' : 'password';
-
         $('#newPassword, #confirmPassword').attr('type', type);
-
     });
-
 });
-    </script>
+</script>
 }

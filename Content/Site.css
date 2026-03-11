@@ -227,23 +227,22 @@ body {
         margin-left: 10px;
     }
 }
-
-/* ===== HERO BANNER ===== */
 .home-banner {
     width: 100%;
-    height: 340px;
+    /* Remove fixed height */
+    height: auto; 
+    /* Set a ratio: 100 / 30 is roughly your original 340px height */
+    aspect-ratio: 125 / 30; 
     overflow: hidden;
     margin: 0;
 }
 
-    .home-banner img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-
-/* ===== FOOTER ===== */
+.home-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}/* ===== FOOTER ===== */
 footer {
     flex-shrink: 0;
     text-align: center;
