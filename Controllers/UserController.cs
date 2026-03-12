@@ -99,8 +99,9 @@ namespace SRM.Controllers
 
             return View("~/Views/SystemSetup/ManageProfile.cshtml", agent);
         }
-        // POST: User/UpdateProfile
-        [HttpPost]
+
+    // POST: User/UpdateProfile
+    [HttpPost]
         [ValidateAntiForgeryToken]
         public JsonResult UpdateProfile(Agent model)
         {

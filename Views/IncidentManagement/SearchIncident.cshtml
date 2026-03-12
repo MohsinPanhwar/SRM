@@ -1,0 +1,99 @@
+﻿@model IEnumerable<dynamic>
+@{
+    ViewBag.Title = "Incident Search";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .incident-row {
+        transition: opacity 0.4s ease;
+        opacity: 1;
+    }
+
+    .form-section-header {
+        background-color: #1a4d1a;
+        color: white;
+        padding: 8px 15px;
+        font-weight: bold;
+        margin-top: 15px;
+        letter-spacing: 1px;
+    }
+</style>
+
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Incident Search & Analytics</h2>
+        <div class="action-row">
+            @* Renamed to Back to List and redirected as requested *@
+            <button type="button" class="setup-btn-green" onclick="location.href='@Url.Action("LogNewIncident", "Incident")'">
+                &larr; Back to List
+            </button>
+        </div>
+    </div>
+
+    <div class="form-section-header">SEARCH FILTERS</div>
+
+    @using (Html.BeginForm("SearchIncident", "Incident", FormMethod.Get))
+    {
+        <div class="grid-container" style="align-items: center; padding: 20px 0;">
+            <div class="grid-label">Incident Type</div>
+            <div class="grid-input" style="grid-column: span 3; display: flex; gap: 10px;">
+                @* Dropdown showing only closed incidents with counts *@
+                @Html.DropDownList("incidentId", (IEnumerable<SelectListItem>)ViewBag.IncidentGroups, "--- Select Closed Incident ---", new { @class = "form-control", style = "width: 85%;" })
+
+                <button type="submit" class="setup-btn-green">
+                    &#x1F50D; Search
+                </button>
+            </div>
+        </div>
+    }
+
+    <div class="form-section-header">INCIDENT HISTORY (CLOSED)</div>
+
+    <div style="overflow-x: auto; margin-top:10px;">
+        @* Using the dashboard classes for the consistent table look *@
+        <table class="crud-table smart-table" id="searchTable" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">Sno</th>
+                    <th>Incident Category</th>
+                    <th>Location</th>
+                    <th>Incident Date</th>
+                    <th>Reported By</th>
+                    <th style="width: 100px; text-align: center;">Status</th>
+                    <th style="width: 80px; text-align: center;">View Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr class="incident-row">
+                            <td style="font-weight: bold; text-align: center;">@item.sno</td>
+                            <td style="text-transform: uppercase; font-weight: 600; color: #2c3e50;">@item.inctype</td>
+                            <td>@item.Location</td>
+                            <td style="font-size: 0.9em; white-space: nowrap;">
+                                @(item.IncidentDate != null ? item.IncidentDate.ToString("dd-MMM-yyyy hh:mm tt") : "N/A")
+                            </td>
+                            <td>@item.ReportBy</td>
+                            <td style="text-align: center;">
+                                @if (item.status == "C")
+                                {
+                                    @* Green tick icon for closed incidents *@
+                                    <span style="color: green; font-size: 1.2em; font-weight: bold;" title="Closed">✔</span>
+                                }
+                            </td>
+                            <td style="text-align: center;">
+                                @* Navigate to IncidentDetails page *@
+                                <a href="@Url.Action("ShowAllIncident", "Incident", new { id = item.sno })" style="text-decoration: none; font-size: 1.3em;">🔍</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                
+            </tbody>
+        </table>
+    </div>
+</div>
+

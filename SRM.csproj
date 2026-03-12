@@ -151,6 +151,7 @@
     <Compile Include="Controllers\HardwareDispatchController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\IncidentController.cs" />
     <Compile Include="Controllers\InventoryBrandController.cs" />
     <Compile Include="Controllers\LocationController.cs" />
     <Compile Include="Controllers\MessageController.cs" />
@@ -172,7 +173,9 @@
     <Compile Include="Models\AllRequestViewModel.cs" />
     <Compile Include="Models\Brand.cs" />
     <Compile Include="Models\Category.cs" />
+    <Compile Include="Models\IncidentCategories.cs" />
     <Compile Include="Models\IncidentLocation.cs" />
+    <Compile Include="Models\IncidentMaster.cs" />
     <Compile Include="Models\InvIssueDetail.cs" />
     <Compile Include="Models\NewIncoming.cs" />
     <Compile Include="Models\EmployeeProfile.cs" />
@@ -184,6 +187,7 @@
     <Compile Include="Models\ViewModels\ActivityVM.cs" />
     <Compile Include="Models\ViewModels\AssetIssuanceVM.cs" />
     <Compile Include="Models\ViewModels\DashboardVM.cs" />
+    <Compile Include="Models\ViewModels\IncidentVM.cs" />
     <Compile Include="Models\ViewModels\IssuedAssetListVM.cs" />
     <Compile Include="Models\ViewModels\ManageGroupVM.cs" />
     <Compile Include="Models\ViewModels\ManageRoleVM.cs" />
@@ -259,6 +263,11 @@
     <Content Include="Views\AssetIssuance\ViewCategory.cshtml" />
     <Content Include="Views\AssetIssuance\ViewBrand.cshtml" />
     <Content Include="Views\SystemSetup\ManageProfile.cshtml" />
+    <Content Include="Views\IncidentManagement\IncidentDetails.cshtml" />
+    <Content Include="Views\IncidentManagement\LogNewIncident.cshtml" />
+    <Content Include="Views\IncidentManagement\ManageIncidentCategories.cshtml" />
+    <Content Include="Views\IncidentManagement\SearchIncident.cshtml" />
+    <Content Include="Views\IncidentManagement\ShowAllIncident.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
