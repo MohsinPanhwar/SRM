@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
   <Import Project="packages\EntityFramework.6.4.4\build\EntityFramework.props" Condition="Exists('packages\EntityFramework.6.4.4\build\EntityFramework.props')" />
+  <Import Project="packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -51,9 +51,6 @@
     </Reference>
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>packages\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.IdentityModel.Abstractions, Version=6.32.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -137,34 +134,66 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
+      <HintPath>packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\ActivityController.cs" />
+    <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Controllers\AssetIssuanceController.cs" />
+    <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\CategoryController.cs" />
     <Compile Include="Controllers\GroupController.cs" />
+    <Compile Include="Controllers\HardwareDispatchController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\IncidentController.cs" />
     <Compile Include="Controllers\InventoryBrandController.cs" />
     <Compile Include="Controllers\LocationController.cs" />
+    <Compile Include="Controllers\MessageController.cs" />
+    <Compile Include="Controllers\MISController.cs" />
+    <Compile Include="Controllers\NewRequestController.cs" />
     <Compile Include="Controllers\ProgramController.cs" />
+    <Compile Include="Controllers\RoleController.cs" />
+    <Compile Include="Controllers\SendController.cs" />
     <Compile Include="Controllers\UserController.cs" />
+    <Compile Include="Controllers\ViewAllRequestsController.cs" />
     <Compile Include="Data\AppDbContext.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\PrivilegeHelper.cs" />
+    <Compile Include="Models\ActivityCategories.cs" />
+    <Compile Include="Models\ActivityMaster.cs" />
     <Compile Include="Models\Agent.cs" />
+    <Compile Include="Models\AllRequestViewModel.cs" />
     <Compile Include="Models\Brand.cs" />
     <Compile Include="Models\Category.cs" />
+    <Compile Include="Models\IncidentCategories.cs" />
+    <Compile Include="Models\IncidentLocation.cs" />
+    <Compile Include="Models\IncidentMaster.cs" />
+    <Compile Include="Models\InvIssueDetail.cs" />
+    <Compile Include="Models\NewIncoming.cs" />
     <Compile Include="Models\EmployeeProfile.cs" />
     <Compile Include="Models\Groups.cs" />
-    <Compile Include="Models\InvIssueDetail.cs" />
     <Compile Include="Models\Locations.cs" />
     <Compile Include="Models\Program_Setup.cs" />
+    <Compile Include="Models\Request_Master.cs" />
+    <Compile Include="Models\Role.cs" />
+    <Compile Include="Models\ViewModels\ActivityVM.cs" />
     <Compile Include="Models\ViewModels\AssetIssuanceVM.cs" />
+    <Compile Include="Models\ViewModels\DashboardVM.cs" />
+    <Compile Include="Models\ViewModels\IncidentVM.cs" />
     <Compile Include="Models\ViewModels\IssuedAssetListVM.cs" />
     <Compile Include="Models\ViewModels\ManageGroupVM.cs" />
+    <Compile Include="Models\ViewModels\ManageRoleVM.cs" />
+    <Compile Include="Models\ViewModels\ManageUserVM.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\EmployeeProfileService.cs" />
     <Compile Include="Services\JwtTokenService.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -173,16 +202,19 @@
     <Content Include="Content\bootstrap-theme.min.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
-    <Content Include="Content\Images\Banner.jpeg" />
-    <Content Include="Content\Images\BG.jpg" />
-    <Content Include="Content\Images\image.jpg" />
-    <Content Include="Content\Images\PIA_SRM.jpg" />
+    <Content Include="Content\Images\Banner.jpg" />
+    <Content Include="Content\Images\Banner1.jpg" />
+    <Content Include="Content\Images\Banner2.jpg" />
+    <Content Include="Content\Images\Banner3.png" />
+    <Content Include="Content\Images\Banner6.jpg" />
+    <Content Include="Content\Images\BG5.jpg" />
+    <Content Include="Content\Site.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
-    <Content Include="Content\Site.css" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include=".env" />
     <None Include="Scripts\jquery-3.4.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.4.1.js" />
     <Content Include="Scripts\jquery-3.4.1.min.js" />
@@ -202,7 +234,6 @@
       <DependentUpon>Web.config</DependentUpon>
     </Content>
     <Content Include="Views\Web.config" />
-    <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\Account\Login.cshtml" />
     <Content Include="Views\Account\Register.cshtml" />
@@ -211,15 +242,35 @@
     <Content Include="Views\SystemSetup\ManageUser.cshtml" />
     <Content Include="Views\SystemSetup\ManageGroup.cshtml" />
     <Content Include="Views\SystemSetup\ManageLocation.cshtml" />
-    <Content Include="Views\Category\Index.cshtml" />
-    <Content Include="Views\InventoryBrand\Index.cshtml" />
+    <Content Include="Views\SystemSetup\ManageRole.cshtml" />
+    <Content Include="Views\ServiceRequest\LogNewRequest.cshtml" />
+    <Content Include="Views\ServiceRequest\ViewAllRequests.cshtml" />
+    <Content Include="Views\ServiceRequest\Details.cshtml" />
+    <Content Include="Views\SystemSetup\MessageBoard.cshtml" />
+    <Content Include="Views\ServiceRequest\SendSMS.cshtml" />
+    <Content Include="Views\ServiceRequest\SendPassword.cshtml" />
+    <Content Include="Views\Hardware Dispatch\HardwareDispatch.cshtml" />
+    <Content Include="Views\ActivityManagement\LogNewActivity.cshtml" />
+    <Content Include="Views\ActivityManagement\ShowAllActivities.cshtml" />
+    <Content Include="Views\ActivityManagement\ViewAllCategories.cshtml" />
+    <Content Include="Views\ActivityManagement\ViewAllLocations.cshtml" />
+    <Content Include="Views\ActivityManagement\ActivityDetails.cshtml" />
+    <Content Include="Views\MIS\Dashboard.cshtml" />
+    <Content Include="Views\MIS\Mis.cshtml" />
+    <Content Include="Views\AssetIssuance\Details.cshtml" />
     <Content Include="Views\AssetIssuance\Issuance.cshtml" />
     <Content Include="Views\AssetIssuance\IssuedAssets.cshtml" />
-    <Content Include="Views\AssetIssuance\Details.cshtml" />
+    <Content Include="Views\AssetIssuance\ViewCategory.cshtml" />
+    <Content Include="Views\AssetIssuance\ViewBrand.cshtml" />
+    <Content Include="Views\SystemSetup\ManageProfile.cshtml" />
+    <Content Include="Views\IncidentManagement\IncidentDetails.cshtml" />
+    <Content Include="Views\IncidentManagement\LogNewIncident.cshtml" />
+    <Content Include="Views\IncidentManagement\ManageIncidentCategories.cshtml" />
+    <Content Include="Views\IncidentManagement\SearchIncident.cshtml" />
+    <Content Include="Views\IncidentManagement\ShowAllIncident.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Views\User\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff2" />
@@ -266,9 +317,9 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
+    <Error Condition="!Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
     <Error Condition="!Exists('packages\EntityFramework.6.4.4\build\EntityFramework.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\EntityFramework.6.4.4\build\EntityFramework.props'))" />
     <Error Condition="!Exists('packages\EntityFramework.6.4.4\build\EntityFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\EntityFramework.6.4.4\build\EntityFramework.targets'))" />
-    <Error Condition="!Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
   </Target>
   <Import Project="packages\EntityFramework.6.4.4\build\EntityFramework.targets" Condition="Exists('packages\EntityFramework.6.4.4\build\EntityFramework.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

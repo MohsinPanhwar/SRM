@@ -3,6 +3,17 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Custom Environment Variables and Secrets
+.env
+*.env
+.env.local
+.env.*.local
+
+# Sensitive local settings
+[App_Data]/
+appsettings.Development.json
+appsettings.Local.json
+
 # User-specific files
 *.rsuser
 *.suo

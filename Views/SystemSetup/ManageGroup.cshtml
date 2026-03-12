@@ -1,127 +1,196 @@
 ﻿@model SRM.Models.ViewModels.ManageGroupVM
-
 @{
     ViewBag.Title = "Manage Groups";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    // We removed 'var programs' because we are getting the ID from the switcher session.
 }
+
+<div id="notification-area"></div>
+
+
 <div class=" setup-container">
     <div class="section-header">
         <h2>Manage Groups</h2>
+
         @* Replaced inline styles with action-row class *@
+
         <div class="action-row">
-            @Html.DropDownList("newProgramName", Model.ProgramList, "-- Select Program --", new { @id = "newProgramName" })
             <input type="text" id="newGroupName" placeholder="Enter Group Name" required />
             @Html.DropDownList("newManagerName", Model.AgentList, "-- Select Manager --", new { @id = "newManagerName" })
+            @Html.DropDownList("newProgramName", Model.ProgramList, "-- Select Program --", new { @id = "newProgramName" })
             <button id="addGroupBtn" class="setup-btn-green">+ Add Group</button>
         </div>
     </div>
-
-    <table class="crud-table">
+    <table class="crud-table smart-table">
         <thead>
             <tr>
-                <th>Program Name</th>
+                <th style="white-space: nowrap;">Program Name</th>
                 <th>Group Name</th>
                 <th>Manager PNo</th>
-                <th>No. of Members</th>
+                <th style="white-space: nowrap;">No. of Members</th>
                 <th>Actions</th>
+
             </tr>
         </thead>
         <tbody id="groupTableBody">
             @foreach (var grp in Model.ExistingGroups)
             {
                 <tr data-id="@grp.GroupId">
-                    <td class="program-name">@grp.ProgramName</td>
+                    <td class="program-name" style="white-space: nowrap;">@grp.ProgramName</td>
                     <td class="group-name">@grp.GroupName</td>
                     <td class="manager-name">@grp.Manager</td>
                     <td class="members-count">@grp.MembersCount</td>
                     <td class="actions-cell">
-                        <button class="edit-btn" title="Edit">✏️</button>
-                        <button class="delete-btn" title="Delete">❌</button>
+                        <div class="icon-btn-group">
+                            <button class="edit-btn" title="Edit">✏️</button>
+                            <button class="delete-btn" title="Delete">❌</button>
+                        </div>
                     </td>
+
                 </tr>
             }
         </tbody>
     </table>
 </div>
-    @section scripts {
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script>
-$(function(){
+@section scripts {
+    <script>
+        $(function () {
+            // 1. THE TOAST FUNCTION (Must be defined here to work on this page)
+            function showGlobalToast(message, type = 'success') {
+                // Create container if it doesn't exist (failsafe)
+                if ($('#notification-area').length === 0) {
+                    $('body').append('<div id="notification-area"></div>');
+                }
 
-    // 1. ADD NEW GROUP
-    $('#addGroupBtn').click(function(){
-        var data = {
-            GroupId: 0,
-            ProgramName: $('#newProgramName').val(),
-            GroupName: $('#newGroupName').val().trim(),
-            Manager: $('#newManagerName').val()
-        };
+                const id = 'toast-' + Date.now();
+                const icon = type === 'success' ? '✅' : '🗑️';
+                const toastClass = type === 'success' ? 'toast-success' : 'toast-error';
 
-        if(!data.ProgramName || !data.GroupName){
-            alert('Program and Group Name are required');
-            return;
-        }
+                const html = `
+                    <div id="${id}" class="toast-msg ${toastClass}" style="display:none; position:relative; left:-40px; opacity:0;">
+                        <span style="margin-right:10px;">${icon}</span>
+                        <span>${message}</span>
+                    </div>`;
 
-        $.post('@Url.Action("SaveGroup","Group")', data, function(res){
-            if(res.success) location.reload();
-            else alert(res.message);
-        });
-    });
+                $('#notification-area').append(html);
 
-    // 2. INLINE EDIT (Removed form-control, added edit-input)
-    $(document).on('click', '.edit-btn', function(){
-        var row = $(this).closest('tr');
+                $(`#${id}`).show().animate({ left: "0px", opacity: "1" }, 300)
+                           .delay(1000)
+                           .fadeOut(function () { $(this).remove(); });
+            }
 
-        var program = row.find('.program-name').text().trim();
-        var group = row.find('.group-name').text().trim();
-        var manager = row.find('.manager-name').text().trim();
 
-        // Swap to custom edit-input class (matching Programs/WorkAreas)
-        row.find('.program-name').html(`<input type="text" class="edit-input" value="${program}" />`);
-        row.find('.group-name').html(`<input type="text" class="edit-input" value="${group}" />`);
-        row.find('.manager-name').html(`<input type="text" class="edit-input" value="${manager}" />`);
 
-        // Swap Action Buttons to match others
-        row.find('.actions-cell').html(`
-            <button class="save-btn">💾</button>
-            <button class="cancel-btn">🚫</button>
-        `);
-    });
+            // 3. ADD NEW GROUP (Instant Table Update)
+            $('#addGroupBtn').click(function () {
+                var data = {
+                    GroupId: 0,
+                    ProgramName: $('#newProgramName').val(),
+                    GroupName: $('#newGroupName').val().trim(),
+                    Manager: $('#newManagerName').val()
+                };
 
-    // 3. SAVE INLINE EDIT
-    $(document).on('click', '.save-btn', function(){
-        var row = $(this).closest('tr');
-        var id = row.data('id');
+                if (!data.ProgramName || !data.GroupName) {
+                    showGlobalToast('Program and Group Name are required', 'error');
+                    return;
+                }
 
-        var data = {
-            GroupId: id,
-            ProgramName: row.find('.program-name input').val().trim(),
-            GroupName: row.find('.group-name input').val().trim(),
-            Manager: row.find('.manager-name input').val().trim()
-        };
+                $.post('@Url.Action("SaveGroup","Group")', data, function (res) {
+                    if (res.success) {
+                        showGlobalToast("Group added successfully!", "success");
 
-        if(!data.ProgramName || !data.GroupName){
-            alert('Required fields cannot be empty');
-            return;
-        }
+                        // Append new row instantly
+                        var newRow = `
+                            <tr data-id="${res.group.gid}" style="display:none;">
+                                <td class="program-name">${data.ProgramName}</td>
+                                <td class="group-name">${data.GroupName}</td>
+                                <td class="manager-name">${data.Manager}</td>
+                                <td class="members-count">0</td>
+                                <td class="actions-cell">
+                                    <div class="icon-btn-group">
+                                        <button class="edit-btn" title="Edit">✏️</button>
+                                        <button class="delete-btn" title="Delete">❌</button>
+                                    </div>
+                                </td>
+                            </tr>`;
 
-        $.post('@Url.Action("SaveGroup","Group")', data, function(res){
-            if(res.success) location.reload();
-            else alert(res.message);
-        });
-    });
+                        var $nr = $(newRow);
+                        $('#groupTableBody').append($nr);
+                        $nr.fadeIn(800).css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
 
-    // 4. CANCEL & DELETE (Logic remains same, styling follows CSS)
-    $(document).on('click', '.cancel-btn', function(){ location.reload(); });
-
-    $(document).on('click', '.delete-btn', function(){
-        var row = $(this).closest('tr');
-        if(confirm('Delete this group?')){
-            $.post('@Url.Action("DeleteGroup","Group")', { id: row.data('id') }, function(res){
-                if(res.success) row.remove();
+                        $('#newGroupName').val(''); // Clear input
+                    } else {
+                        showGlobalToast(res.message, "error");
+                    }
+                });
             });
-        }
-    });
-});
-        </script>
-    }
+
+            // 4. SAVE INLINE EDIT
+            $(document).on('click', '.save-btn', function () {
+                var row = $(this).closest('tr');
+                var pName = row.find('.program-name input').val();
+                var gName = row.find('.group-name input').val();
+                var mName = row.find('.manager-name input').val();
+
+                var data = {
+                    GroupId: row.data('id'),
+                    ProgramName: pName,
+                    GroupName: gName,
+                    Manager: mName
+                };
+
+                $.post('@Url.Action("SaveGroup","Group")', data, function (res) {
+                    if (res.success) {
+                        revertRow(row, pName, gName, mName);
+                        showGlobalToast("Changes saved!", "success");
+                        row.css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
+                    } else {
+                        showGlobalToast(res.message, "error");
+                    }
+                });
+            });
+
+            // 5. DELETE GROUP
+            $(document).on('click', '.delete-btn', function () {
+                var row = $(this).closest('tr');
+                if (confirm('Delete this group?')) {
+                    $.post('@Url.Action("DeleteGroup","Group")', { id: row.data('id') }, function (res) {
+                        if (res.success) {
+                            row.css('background-color', '#fff5f5').fadeOut(600, function () {
+                                $(this).remove();
+                                showGlobalToast("Group deleted", "error");
+                            });
+                        } else {
+                            showGlobalToast(res.message, "error");
+                        }
+                    });
+                }
+            });
+
+            // --- UI HELPERS ---
+            $(document).on('click', '.edit-btn', function () {
+                var row = $(this).closest('tr');
+                row.data('old-p', row.find('.program-name').text());
+                row.data('old-g', row.find('.group-name').text());
+                row.data('old-m', row.find('.manager-name').text());
+
+                row.find('.program-name').html(`<input type="text" value="${row.data('old-p')}" />`);
+                row.find('.group-name').html(`<input type="text" value="${row.data('old-g')}" />`);
+                row.find('.manager-name').html(`<input type="text" value="${row.data('old-m')}" />`);
+                row.find('.actions-cell').html('<button class="save-btn">💾</button><button class="cancel-btn">🚫</button>');
+            });
+
+            $(document).on('click', '.cancel-btn', function () {
+                var row = $(this).closest('tr');
+                revertRow(row, row.data('old-p'), row.data('old-g'), row.data('old-m'));
+            });
+
+            function revertRow(row, p, g, m) {
+                row.find('.program-name').text(p);
+                row.find('.group-name').text(g);
+                row.find('.manager-name').text(m);
+                row.find('.actions-cell').html('<div class="icon-btn-group"><button class="edit-btn">✏️</button><button class="delete-btn">❌</button></div>');
+            }
+        });
+    </script>
+}

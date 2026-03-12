@@ -1,0 +1,164 @@
+﻿@model IEnumerable<dynamic>
+@{
+    ViewBag.Title = "Activity Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    /* The magic for smoothness */
+    .activity-row {
+        transition: opacity 0.4s ease, transform 0.4s ease;
+        opacity: 1;
+        transform: scaleY(1);
+    }
+
+        /* State when a row is filtered out */
+        .activity-row.filtered-out {
+            opacity: 0;
+            transform: scaleY(0);
+            display: none; /* We will handle this in JS with a delay */
+        }
+</style>
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Activity Management</h2>
+    </div>
+    @* --- Centered Compact Dashboard Summary --- *@
+<div style="display: flex; justify-content: center; margin: 20px 0;">
+
+    <table class="status-card">
+        <thead>
+            <tr><th colspan="2">Overall Status Summary</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="color: #28a745; font-weight: bold;">Open</td>
+                <td >
+                    @Model.Count(x => x.status == "C")
+                </td>
+            </tr>
+            <tr>
+                <td style="color: #dc3545; font-weight: bold;">Closed</td>
+                <td>
+                    @Model.Count(x => x.status != "C")
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+    @* --- Filter and Action Row --- *@
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+
+        @* Status Filter Toggle *@
+
+        <div class="filter-wrapper">
+            <div class="filter-pill-box">
+                <button type="button" class="filter-pill active" onclick="filterTable('all', this)">All</button>
+                <button type="button" class="filter-pill pill-open" onclick="filterTable('O', this)">Open</button>
+                <button type="button" class="filter-pill pill-closed" onclick="filterTable('C', this)">Closed</button>
+            </div>
+        </div>
+        @* Log New Activity Button *@
+        <button type="button" class="setup-btn-green" onclick="location.href='@Url.Action("LogNewActivity", "Activity")'"
+                style="display: flex; align-items: center; margin-right: 5px; padding: 10px 20px;">
+            <span style="margin-right:8px; font-size: 1.2em; font-weight: bold;">+</span>
+            Log New Activity
+        </button>
+    </div>
+
+    @* --- Main Activities Table --- *@
+        <table class="crud-table smart-table" id="activitiesTable" >
+            <thead>
+                <tr>
+                    <th style="width: 60px;">Sno</th>
+                    <th>Activity</th>
+                    <th>Location</th>
+                    <th>Activity Date</th>
+                    <th>Reported By / Date</th>
+                    <th style="width: 100px; text-align: center;">Status</th>
+                    <th style="width: 80px; text-align: center;">Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding: 40px; color: #888;">
+                            No activities found for the selected program.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model)
+                    {
+                        @* Added class and data-attribute for JS filtering *@
+                        <tr class="activity-row" data-status="@item.status">
+                            <td style="font-weight: bold; color: #666;">@item.sno</td>
+                            <td style="text-transform: uppercase; font-weight: 600; color: #2c3e50;">
+                                @item.ActivityName
+                            </td>
+                            <td>@item.LocationName</td>
+                            <td style="font-size: 0.9em; white-space: nowrap;">
+                                @(item.ActivityDate != null ? item.ActivityDate.ToString("dd-MMM-yyyy hh:mm tt") : "N/A")
+                            </td>
+                            <td style="line-height: 1.4;">
+                                <span style="color: #2e7d57; font-weight: bold; font-size: 0.9em;">@item.ReportBy</span><br />
+                                <span style="color: #888; font-size: 0.8em;">
+                                    on @(item.ReportDate != null ? item.ReportDate.ToString("dd-MMM-yyyy hh:mm tt") : "")
+                                </span>
+                            </td>
+                            <td style="text-align: center; font-weight: bold; font-size: 0.9em; text-transform: uppercase;">
+                                @if (item.status == "C")
+                                {
+                                    <span style="color: #d32f2f;">Closed</span>
+                                }
+                                else
+                                {
+                                    <span style="color: #2e7d32;">Open</span>
+                                }
+                            </td>
+                            <td style="text-align: center;">
+                                <a href="@Url.Action("Details", "Activity", new { id = item.sno })"
+                                   style="text-decoration: none; font-size: 1.3em;"
+                                   title="View Details">🔍</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+
+@section scripts {
+    <script>
+        
+        function filterTable(status, btn) {
+            // 1. Swap active class
+            $('.filter-pill').removeClass('active');
+            $(btn).addClass('active');
+
+            // 2. Smooth Filtering Logic
+            $('.activity-row').each(function () {
+                var $row = $(this);
+                var rowStatus = $row.attr('data-status');
+
+                if (status === 'all' || rowStatus === status) {
+                    // Show the row: first make it exist, then fade it in
+                    $row.show().css('opacity', '0').animate({ opacity: 1 }, 300);
+                } else {
+                    // Hide the row: fade it out, then display none
+                    $row.animate({ opacity: 0 }, 300, function () {
+                        $row.hide();
+                    });
+                }
+            });
+        }
+
+    $(document).ready(function () {
+        $('#activitiesTable').css('opacity', '1'); // Triggered by your existing CSS
+    });
+
+    </script>
+}

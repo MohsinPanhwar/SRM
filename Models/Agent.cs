@@ -72,6 +72,8 @@ namespace SRM.Models
         public string UserType { get; set; }
 
         [Column("uid")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+
         [StringLength(200)]
         public string Uid { get; set; }
 

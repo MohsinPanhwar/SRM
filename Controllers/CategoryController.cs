@@ -1,22 +1,19 @@
 ﻿using SRM.Data;
 using SRM.Models;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 
 namespace SRM.Controllers
 {
-    public class CategoryController : Controller
+    public class CategoryController : BaseController
     {
         private AppDbContext db = new AppDbContext();
 
         // GET
-        public ActionResult Index()
+        public ActionResult ViewCategory()
         {
             var list = db.invCategory.ToList();
-            return View(list);
+            return View("~/Views/AssetIssuance/ViewCategory.cshtml", list);
         }
 
         // SAVE

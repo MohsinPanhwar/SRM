@@ -1,0 +1,209 @@
+﻿@model SRM.Models.EmployeeProfile
+@{
+    ViewBag.Title = "Log New Request";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // This ID comes from the Program_Setup table via the Controller
+    var workshopId = ViewBag.WorkshopId?.ToString() ?? "0";
+
+}
+
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Log New Request</h2>
+    </div>
+
+    @* 1. Search Section *@
+    <div class="action-row" style="margin-bottom:20px; padding:15px; background:#fdfdfd; border:1px solid #eee; border-radius:4px;">
+        @using (Html.BeginForm("LogNewRequest", "NewRequest", FormMethod.Get, new { @class = "form-inline" }))
+        {
+            <label class="control-label" style="margin-right:10px;"><strong>Reported Employee ID:</strong></label>
+            <input type="text" name="searchPno" value="@Model.Pno" class="form-control" style="width:200px; display:inline-block;" placeholder="Enter P-No..." required />
+            <button type="submit" class="setup-btn-green">🔍 Search & Load</button>
+        }
+    </div>
+
+    @using (Html.BeginForm("SaveRequest", "NewRequest", FormMethod.Post, new { id = "logRequestForm" }))
+    {
+        @Html.AntiForgeryToken()
+
+        @* 2. User Information Section (All fields restored) *@
+        <div class="form-section-header">User Information</div>
+        <div class="grid-container">
+            <div class="grid-label">Reported P-no</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.Pno, new { @readonly = "readonly", @style = "background:#eee;" })
+            </div>
+
+            <div class="grid-label">Employee Name</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.emp_name, new { @readonly = "readonly", @style = "background:#eee;" })
+            </div>
+
+            <div class="grid-label">Designation</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.Emp_designation, new { @readonly = "readonly", @style = "background:#eee;" })
+            </div>
+
+            <div class="grid-label">Department</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.DEPT, new { @readonly = "readonly", @style = "background:#eee;" })
+            </div>
+
+            <div class="grid-label">Email</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.Email)
+            </div>
+
+            <div class="grid-label">Mobile No</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.mobileno)
+            </div>
+
+            <div class="grid-label">Office-Ext</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.Office_ext)
+            </div>
+
+            <div class="grid-label">Room No *</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.roomno, new { @required = "required" })
+            </div>
+
+            <div class="grid-label">IP-Address</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.ip_address)
+            </div>
+
+            <div class="grid-label">Location *</div>
+            <div class="grid-input">
+                @Html.TextBoxFor(m => m.Location, new { @required = "required" })
+            </div>
+        </div>
+
+        @* 3. Workshop Section (Styled to match other sections) *@
+        <div id="workshopSection" style="display: none;">
+            <div class="form-section-header">Workshop Service Memo Details</div>
+            <div class="details-box">
+                <div class="details-row">
+                    <div class="details-label">Product / Model</div>
+                    <div class="details-content" style="display:flex; gap:10px;">
+                        <input type="text" name="ProductName" placeholder="Product Name" class="form-control" />
+                        <input type="text" name="ModelName" placeholder="Model" class="form-control" />
+                    </div>
+                </div>
+                <div class="details-row">
+                    <div class="details-label">Serial No / LNIATA</div>
+                    <div class="details-content" style="display:flex; gap:10px;">
+                        <input type="text" name="SerialNo" id="SerialNo" placeholder="Serial No" class="form-control" />
+                        <input type="text" name="LNIATA" placeholder="LNIATA" class="form-control" />
+                    </div>
+                </div>
+                <div class="details-row">
+                    <div class="details-label">Specs (RAM/HDD)</div>
+                    <div class="details-content" style="display:flex; gap:10px;">
+                        <input type="text" name="Ram" placeholder="RAM" class="form-control" />
+                        <input type="text" name="HDD" placeholder="HDD" class="form-control" />
+                    </div>
+                </div>
+                <div class="details-row" style="align-items:center;">
+                    <div class="details-label" style="align-self:center;">Fault Description</div>
+                    <div class="details-content">
+                    <textarea name="Fault" class="form-control" rows="2" style="width:100%; padding-top:10px; line-height:2.5;"></textarea>
+                    </div>
+                </div>
+                <div class="details-row" style="align-items:center;">
+                    <div class="details-label" style="align-self:center;">Status</div>
+                    <div class="details-content">
+                        <textarea name="Status" class="form-control" rows="2" style="width: 100%; padding-top: 10px; line-height: 2.5;"></textarea>
+                    </div>
+                </div>
+                <div class="details-row" style="align-items:center;">
+                    <div class="details-label" style="align-self:center;">Data Back up</div>
+                    <div class="details-content" style="display:flex; gap:10px;">
+                        <textarea name="DataBackup" class="form-control" rows="2" style="width: 100%; padding-top: 10px; line-height: 2.5;"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @* 4. General Request Details *@
+        <div class="form-section-header">Service Request Details</div>
+        <div class="details-box">
+            <div class="details-row">
+                <div class="details-label">Priority</div>
+                <div class="details-content">
+                    <div class="radio-group" style="display:flex; gap:15px;">
+                        <label style="color:#f5365c; font-weight:bold;"><input type="radio" name="Priority" value="Critical" /> Critical</label>
+                        <label><input type="radio" name="Priority" value="Urgent" /> Urgent</label>
+                        <label><input type="radio" name="Priority" value="Important" /> Important</label>
+                        <label><input type="radio" name="Priority" value="Normal" checked /> Normal</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="details-row">
+                <div class="details-label">* Problem Area</div>
+                <div class="details-content">
+                    <label style="margin-right:10px;"><input type="checkbox" name="Area" value="Hardware" /> Hardware</label>
+                    <label style="margin-right:10px;"><input type="checkbox" name="Area" value="Software" /> Software</label>
+                    <label style="margin-right:10px;"><input type="checkbox" name="Area" value="Internet" /> Internet</label>
+                    <label><input type="checkbox" name="Area" value="Network" /> Network</label>
+                </div>
+            </div>
+
+            <div class="details-row">
+                <div class="details-label">* Request Summary</div>
+                <div class="details-content">
+                    <input type="text" name="Summary" class="form-control" style="width:100%;" required />
+                </div>
+            </div>
+
+            <div class="details-row">
+                <div class="details-label">Request Details</div>
+                <div class="details-content">
+                    <textarea name="Details" class="form-control" style="width:100%; height:80px;"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-footer" style="margin-top: 20px; text-align: right; padding: 20px;">
+            <button type="submit" class="setup-btn-green" style="min-width:200px;">💾 Save Request</button>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+    var workshopId = '@workshopId';
+    var currentProgramId = '@(ViewBag.CurrentProgramId ?? "0")'; // Add this
+
+    var $globalSwitcher = $('#globalProgramForm select[name="programId"]');
+
+    function checkWorkshopVisibility() {
+        var currentVal = $globalSwitcher.length > 0 ? $globalSwitcher.val() : currentProgramId;
+
+        if (currentVal == workshopId && workshopId != "0") {
+            $('#workshopSection').show();
+        } else {
+            $('#workshopSection').hide();
+        }
+    }
+
+    checkWorkshopVisibility();
+
+    $('#logRequestForm').on('submit', function (e) {
+        if ($('#workshopSection').is(':visible')) {
+            if ($('#SerialNo').val().trim() === "") {
+                e.preventDefault();
+                alert("Serial Number is required for Workshop items.");
+            }
+        }
+        if ($('input[name="Area"]:checked').length === 0) {
+            e.preventDefault();
+            alert("Please select at least one Problem Area.");
+        }
+    });
+});
+    </script>
+}

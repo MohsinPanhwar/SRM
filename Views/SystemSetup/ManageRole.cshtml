@@ -1,0 +1,256 @@
+﻿@model SRM.Models.ViewModels.ManageRoleVM
+
+@{
+    ViewBag.Title = "Manage Roles";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Manage Roles</h2>
+        <div class="action-row">
+            <input type="hidden" id="roleId" value="0" />
+            <input type="text" id="roleName" class="role-name-input" placeholder="Enter role name..." />
+        </div>
+    </div>
+
+    @* Unified Privilege Container *@
+    <div class="role-form-container">
+
+        <div id="formStatus" class="status-bar">
+            <span class="status-icon">🔒</span>
+            <span class="status-text">Form Locked. Enter a name to create or select a role to view.</span>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group flex-1">
+                <label><strong>Program Name</strong></label>
+                <select id="programSelect" class="form-control-custom">
+                    <option value="">-- Select Program --</option>
+                    @foreach (var prog in (SelectList)ViewBag.Programs)
+                    {
+                        <option value="@prog.Value">@prog.Text</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <h4 class="section-sub-title">Set Privileges</h4>
+
+        <div class="privilege-grid">
+            <div class="privilege-group">
+                <label class="group-title">User & System</label>
+                <label><input type="checkbox" class="priv-cb" id="CanAddEditEngineer" disabled> Add/Edit Engineer</label>
+                <label><input type="checkbox" class="priv-cb" id="CanAddEditGroups" disabled> Add/Edit Groups</label>
+                <label><input type="checkbox" class="priv-cb" id="CanAddEditAsset" disabled> Add/Edit Asset</label>
+                <label><input type="checkbox" class="priv-cb" id="CanHardware" disabled> Hardware Module</label>
+            </div>
+
+            <div class="privilege-group">
+                <label class="group-title">Request Handling</label>
+                <label><input type="checkbox" class="priv-cb" id="CanLogNewRequest" disabled> Log New Request</label>
+                <label><input type="checkbox" class="priv-cb" id="CanAddNewIncident" disabled> Add New Incident</label>
+                <label><input type="checkbox" class="priv-cb" id="CanViewIncident" disabled> View Incident</label>
+                <label><input type="checkbox" class="priv-cb" id="CanReopenAny" disabled> Reopen Any Request</label>
+                <label><input type="checkbox" class="priv-cb" id="CanLogNOC" disabled> Log NOC</label>
+            </div>
+
+            <div class="privilege-group">
+                <label class="group-title">View Requests</label>
+                <label><input type="checkbox" class="priv-cb" id="CanViewForwardAny" disabled> View/Forward Any</label>
+                <label><input type="checkbox" class="priv-cb" id="CanOnlyViewAny" disabled> Only View Any</label>
+                <label><input type="checkbox" class="priv-cb" id="CanViewForwardOwn" disabled> View/Forward Own</label>
+                <label><input type="checkbox" class="priv-cb" id="CanViewOwnGroup" disabled> View Own Group</label>
+            </div>
+
+            <div class="privilege-group">
+                <label class="group-title">Others</label>
+                <label><input type="checkbox" class="priv-cb" id="CanSendSMS" disabled> Send SMS</label>
+                <label><input type="checkbox" class="priv-cb" id="CanSendPassword" disabled> Send Password</label>
+                <label><input type="checkbox" class="priv-cb" id="CanViewReports" disabled> View Reports</label>
+                <label><input type="checkbox" class="priv-cb" id="CanViewEditMessage" disabled> View/Edit Message</label>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button id="addRoleBtn" class="setup-btn-green">➕ Add Role</button>
+            <button id="resetFormBtn" class="setup-btn-green">Reset Form</button>
+        </div>
+    </div>
+
+    <table class="crud-table smart-table role-list-table">
+        <thead>
+            <tr>
+                <th>Role ID</th>
+                <th>Role Name</th>
+                <th>Program</th>
+                <th>Users</th>
+                <th class="actions-header">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="roleTableBody">
+            @if (Model.ExistingRoles != null)
+            {
+                foreach (var role in Model.ExistingRoles)
+                {
+                    <tr data-id="@role.RoleId">
+                        <td>@role.RoleId</td>
+                        <td class="role-name">@role.RoleName</td>
+                        <td class="program-name">@role.ProgramName</td>
+                        <td>@role.UserCount</td>
+                        <td class="actions-cell">
+                            <div class="icon-btn-group">
+                                <button class="edit-btn" title="Edit">✏️</button>
+                                <button class="delete-btn" title="Delete">❌</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+@section scripts {
+    <script>
+$(function () {
+    // 1. TOAST HELPER
+    function showGlobalToast(message, type = 'success') {
+        const id = 'toast-' + Date.now();
+        const icon = type === 'success' ? '✅' : '❌';
+        const toastClass = type === 'success' ? 'toast-success' : 'toast-error';
+        const html = `<div id="${id}" class="toast-msg ${toastClass}" style="display:none; position:relative; left:-40px; opacity:0;">
+                        <span style="margin-right:10px;">${icon}</span>
+                        <span>${message}</span>
+                      </div>`;
+        if ($('#notification-area').length === 0) $('body').append('<div id="notification-area"></div>');
+        $('#notification-area').append(html);
+        $(`#${id}`).show().animate({ left: "0px", opacity: "1" }, 300).delay(1000).fadeOut(function () { $(this).remove(); });
+    }
+
+    // 2. FORM CONTROL
+    function resetForm(isUpdate = false, name = "", programId = null) {
+        const $status = $('#formStatus');
+        const $addBtn = $('#addRoleBtn');
+        const $checks = $('.priv-cb');
+
+        $checks.prop('disabled', false);
+        $addBtn.show();
+
+        if (isUpdate) {
+            $status.addClass('status-editing');
+            $status.find('.status-icon').text('📝');
+            $status.find('.status-text').html(`Editing: <strong>${name}</strong>`);
+            $addBtn.text('💾 Update Role');
+            $('#programSelect').val(programId || '');
+        } else {
+            $status.removeClass('status-editing').removeClass('status-viewing');
+            $status.find('.status-icon').text('➕');
+            $status.find('.status-text').text("Add New Role");
+            $('#roleId').val('0');
+            $('#roleName').val('');
+            $('#programSelect').val('');
+            $checks.prop('checked', false);
+            $addBtn.text('➕ Add Role');
+        }
+    }
+
+    // 3. EDIT ACTION
+    $(document).on('click', '.edit-btn', function () {
+        const id = $(this).closest('tr').data('id');
+        $.get('@Url.Action("GetRoleDetails", "Role")', { id: id }, function (res) {
+            if (res.success) {
+                $('#roleId').val(res.data.RoleId);
+                $('#roleName').val(res.data.RoleName);
+                $('#programSelect').val(res.data.program_Id || '');
+                $('.priv-cb').each(function () {
+                    $(this).prop('checked', res.data[this.id] === true);
+                });
+                resetForm(true, res.data.RoleName, res.data.program_Id);
+                $("html, body").animate({ scrollTop: 0 }, "fast");
+            } else {
+                showGlobalToast(res.message || "Error loading role", "error");
+            }
+        });
+    });
+
+    // 4. SAVE / UPDATE
+    $('#addRoleBtn').click(function () {
+        const name = $('#roleName').val().trim();
+        const id = $('#roleId').val();
+        const programId = $('#programSelect').val() || null;
+
+        if (!name) {
+            showGlobalToast("Please enter a role name.", "error");
+            return;
+        }
+
+        const formData = { RoleId: id, RoleName: name, program_Id: programId };
+        $('.priv-cb').each(function () {
+            formData[this.id] = $(this).is(':checked');
+        });
+
+        $.post('@Url.Action("SaveRole", "Role")', formData, function (res) {
+            if (res.success) {
+                showGlobalToast(id == "0" ? "Role created!" : "Role updated!");
+
+                if (id == "0") {
+                    // NEW ROLE: Append a fresh row to the table
+                    const programName = $('#programSelect option:selected').text();
+                    const newRow = `
+                        <tr data-id="${res.role.RoleId}">
+                            <td>${res.role.RoleId}</td>
+                            <td class="role-name">${name}</td>
+                            <td class="program-name">${programName}</td>
+                            <td>0</td>
+                            <td class="actions-cell">
+                                <div class="icon-btn-group">
+                                    <button class="edit-btn" title="Edit">✏️</button>
+                                    <button class="delete-btn" title="Delete">❌</button>
+                                </div>
+                            </td>
+                        </tr>`;
+
+                    const $nr = $(newRow);
+                    $('#roleTableBody').append($nr);
+                    $nr.css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
+                } else {
+                    // EDITING ROLE: Update the existing row
+                    const $row = $(`tr[data-id="${id}"]`);
+                    const programName = $('#programSelect option:selected').text();
+                    $row.find('.role-name').text(name);
+                    $row.find('.program-name').text(programName);
+                    $row.css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
+                }
+
+                resetForm(false); // Clear the form back to "Add" mode
+            } else {
+                showGlobalToast(res.message, "error");
+            }
+        });
+    });
+
+    // 5. DELETE
+    $(document).on('click', '.delete-btn', function () {
+        const row = $(this).closest('tr');
+        if (confirm('Delete this role?')) {
+            $.post('@Url.Action("DeleteRole", "Role")', { id: row.data('id') }, function (res) {
+                if (res.success) {
+                    row.fadeOut(600, function() { $(this).remove(); });
+                    showGlobalToast("Role deleted", "error");
+                } else {
+                    showGlobalToast(res.message, "error");
+                }
+            });
+        }
+    });
+
+    // 6. RESET FORM
+    $('#resetFormBtn').click(function() {
+        resetForm(false);
+    });
+
+    // Initialize form on load
+    resetForm(false);
+});
+    </script>
+}

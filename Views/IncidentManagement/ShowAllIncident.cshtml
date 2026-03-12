@@ -1,0 +1,163 @@
+﻿@model IEnumerable<dynamic>
+@{
+    ViewBag.Title = "Incident Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Smoothing transitions for row filtering */
+    .incident-row {
+        transition: opacity 0.4s ease, transform 0.4s ease;
+        opacity: 1;
+        transform: scaleY(1);
+    }
+
+        .incident-row.filtered-out {
+            opacity: 0;
+            transform: scaleY(0);
+            display: none;
+        }
+</style>
+
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Incident Management</h2>
+    </div>
+
+    @* --- Dashboard Summary (Matches Activity Style) --- *@
+    <div style="display: flex; justify-content: center; margin: 20px 0;">
+        <table class="status-card">
+            <thead>
+                <tr><th colspan="2">Incident Status Summary</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="color: #2e7d32; font-weight: bold;">Open Incidents</td>
+                    <td>
+                        @* Placeholder count: Logic to be added in Controller later *@
+                        @(Model != null ? Model.Count(x => x.status != "C") : 0)
+                    </td>
+                </tr>
+                <tr>
+                    <td style="color: #d32f2f; font-weight: bold;">Closed Incidents</td>
+                    <td>
+                        @(Model != null ? Model.Count(x => x.status == "C") : 0)
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    @* --- Filter and Action Row --- *@
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+
+        @* Status Filter Pills *@
+        <div class="filter-wrapper">
+            <div class="filter-pill-box">
+                <button type="button" class="filter-pill active" onclick="filterIncidents('all', this)">All</button>
+                <button type="button" class="filter-pill pill-open" onclick="filterIncidents('O', this)">Open</button>
+                <button type="button" class="filter-pill pill-closed" onclick="filterIncidents('C', this)">Closed</button>
+            </div>
+        </div>
+
+        @* Action Button *@
+        <button type="button" class="setup-btn-green" onclick="location.href='@Url.Action("LogNewIncident", "Incident")'"
+                style="display: flex; align-items: center; padding: 10px 20px;">
+            <span style="margin-right:8px; font-size: 1.2em; font-weight: bold;">+</span>
+            Log New Incident
+        </button>
+    </div>
+
+    @* --- Main Incidents Table --- *@
+    <div style="overflow-x: auto;">
+        <table class="crud-table" id="incidentsTable" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">ID</th>
+                    <th>Incident Category</th>
+                    <th>Location</th>
+                    <th>Incident Date</th>
+                    <th>Logged By / Date</th>
+                    <th style="width: 100px; text-align: center;">Status</th>
+                    <th style="width: 80px; text-align: center;">Details</th>
+                </tr>
+            </thead>
+            <tbody id="incidentTableBody">
+                @if (Model == null || !Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding: 40px; color: #888;">
+                            No incidents found.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr class="incident-row" data-status="@item.status">
+                            <td style="font-weight: bold; color: #666;">@item.IncidentID</td>
+                            <td style="text-transform: uppercase; font-weight: 600; color: #2c3e50;">
+                                @item.CategoryName
+                            </td>
+                            <td>@item.LocationName</td>
+                            <td style="font-size: 0.9em; white-space: nowrap;">
+                                @(item.IncidentDate != null ? item.IncidentDate.ToString("dd-MMM-yyyy hh:mm tt") : "N/A")
+                            </td>
+                            <td style="line-height: 1.4;">
+                                <span style="color: #2e7d57; font-weight: bold; font-size: 0.9em;">@item.ReportBy</span><br />
+                                <span style="color: #888; font-size: 0.8em;">
+                                    on @(item.ReportDate != null ? item.ReportDate.ToString("dd-MMM-yyyy") : "")
+                                </span>
+                            </td>
+                            <td style="text-align: center; font-weight: bold; font-size: 0.9em; text-transform: uppercase;">
+                                @if (item.status == "C")
+                                {
+                                    <span style="color: #d32f2f;">Closed</span>
+                                }
+                                else
+                                {
+                                    <span style="color: #2e7d32;">Open</span>
+                                }
+                            </td>
+                            <td style="text-align: center;">
+                                <a href="@Url.Action("Details", "Incident", new { id = item.IncidentID })"
+                                   style="text-decoration: none; font-size: 1.3em;"
+                                   title="View Details">🔍</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function filterIncidents(status, btn) {
+            // Update active pill styling
+            $('.filter-pill').removeClass('active');
+            $(btn).addClass('active');
+
+            // Filtering logic with animations
+            $('.incident-row').each(function () {
+                var $row = $(this);
+                var rowStatus = $row.attr('data-status');
+
+                if (status === 'all' || rowStatus === status) {
+                    $row.show().css('opacity', '0').animate({ opacity: 1 }, 300);
+                } else {
+                    $row.animate({ opacity: 0 }, 300, function () {
+                        $row.hide();
+                    });
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            // Initial table fade-in effect
+            $('#incidentsTable').hide().fadeIn(800);
+        });
+    </script>
+}

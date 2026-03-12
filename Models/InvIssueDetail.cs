@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -43,7 +42,7 @@ namespace SRM.Models
         // Use [Column("Location")] if that is where the ID '5' is stored.
         // ══════════════════════════════════════════════════════════════
 
-       
+
 
         // ══════════════════════════════════════════════════════════════
         // FIX 3: DATA TYPES & OPTIONAL FIELDS

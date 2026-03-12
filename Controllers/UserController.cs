@@ -1,112 +1,213 @@
-﻿using System;
-using System.Linq;
-using System.Web.Mvc;
-using SRM.Data;
+﻿using SRM.Data;
 using SRM.Models;
-using System.Security.Claims;
-using System.Collections.Generic;
+using System;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Web.Mvc;
 
 namespace SRM.Controllers
 {
     [Authorize]
-    public class UserController : Controller
+    public class UserController : BaseController
     {
         private readonly AppDbContext _db = new AppDbContext();
 
+        private static readonly HttpClient _httpClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(2)
+        };
+
+        // GET: ManageUser
         public ActionResult ManageUser()
         {
             var pno = Session["AgentPno"] as string;
             if (string.IsNullOrEmpty(pno))
                 return RedirectToAction("Login", "Account");
 
-            var agent = _db.agent.FirstOrDefault(a => a.Pno == pno);
-            if (agent == null)
-                return HttpNotFound();
+            int? agentProgramId = Session["AgentProgramId"] as int?;
 
-            return View("~/Views/SystemSetup/ManageUser.cshtml", agent);
+            // 1. Fetch filtered users
+            var filteredUsers = _db.agent
+                .Where(a => !agentProgramId.HasValue || a.ProgramId == agentProgramId)
+                .ToList();
+
+            // 2. Fetch and sort roles
+            var rolesInProgram = agentProgramId.HasValue
+                ? _db.Role.Where(r => r.program_Id == agentProgramId).ToList()
+                : _db.Role.ToList();
+
+            var sortedRoles = rolesInProgram
+                .OrderByDescending(r => r.Role_Name.Contains("Admin"))
+                .ThenBy(r => r.Role_Name)
+                .ToList();
+
+            // 3. Sort users by role hierarchy
+            var allUsers = filteredUsers
+                .OrderBy(a => sortedRoles.FindIndex(r => r.Role_Id == a.RoleId))
+                .ThenBy(a => a.Name)
+                .ToList();
+
+            // 4. Populate ViewBags
+            ViewBag.RoleListSource = sortedRoles;
+            ViewBag.RoleList = new SelectList(sortedRoles, "Role_Id", "Role_Name");
+        
+            ViewBag.GroupList = _db.groups
+                .Where(g => !agentProgramId.HasValue || g.program_id == agentProgramId) // Ensure column name matches your DB (e.g., program_id)
+                .Select(g => new SelectListItem
+                {
+                    Value = g.gid.ToString(),
+                    Text = g.gname
+                }).ToList();
+            // Filtered programs (for table/display context)
+            var filteredPrograms = agentProgramId.HasValue
+                ? _db.Programs.Where(p => p.Program_Id == agentProgramId).ToList()
+                : _db.Programs.ToList();
+
+            ViewBag.Programs = filteredPrograms
+                .Select(p => new SelectListItem { Value = p.Program_Id.ToString(), Text = p.Program_Name })
+                .ToList();
+
+            // All programs (for the form dropdown — always unfiltered)
+            ViewBag.AllPrograms = _db.Programs
+                .Select(p => new SelectListItem { Value = p.Program_Id.ToString(), Text = p.Program_Name })
+                .ToList();
+
+            ViewBag.WorkAreas = _db.Locations.Select(l => l.Location_Description).Distinct().OrderBy(x => x).ToList();
+            ViewBag.Operators = _db.agent.Where(a => !string.IsNullOrEmpty(a.MobileOperator)).Select(a => a.MobileOperator).Distinct().ToList();
+
+            ViewBag.ProgramName = agentProgramId.HasValue
+                ? _db.Programs.FirstOrDefault(p => p.Program_Id == agentProgramId)?.Program_Name ?? "Program"
+                : "All Programs";
+
+            return View("~/Views/SystemSetup/ManageUser.cshtml", allUsers);
         }
+        // GET: User/ManageProfile
+        public ActionResult ManageProfile()
+        {
+            var pno = Session["AgentPno"] as string;
+            if (string.IsNullOrEmpty(pno))
+                return RedirectToAction("Login", "Account");
 
+            var agent = _db.agent.FirstOrDefault(a => a.Pno == pno);
+            if (agent == null) return HttpNotFound();
+
+            // Populate dropdowns for the profile form
+            ViewBag.WorkAreas = _db.Locations.Select(l => l.Location_Description).Distinct().OrderBy(x => x).ToList();
+            ViewBag.Operators = _db.agent.Where(a => !string.IsNullOrEmpty(a.MobileOperator))
+                                    .Select(a => a.MobileOperator).Distinct().ToList();
+
+            return View("~/Views/SystemSetup/ManageProfile.cshtml", agent);
+        }
+        // POST: User/UpdateProfile
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ManageUser(Agent model)
+        public JsonResult UpdateProfile(Agent model)
         {
-            var agent = _db.agent.FirstOrDefault(a => a.Pno == model.Pno);
-            if (agent != null)
+            try
             {
+                var sessionPno = Session["AgentPno"] as string;
+                if (string.IsNullOrEmpty(sessionPno))
+                    return Json(new { success = false, message = "Session expired." });
+
+                // Security: Always fetch based on Session, NOT the model's Pno
+                var agent = _db.agent.FirstOrDefault(a => a.Pno == sessionPno);
+                if (agent == null) return Json(new { success = false, message = "User not found." });
+
+                // Update ONLY allowed fields
                 agent.Name = model.Name;
                 agent.Email = model.Email;
                 agent.Mobile = model.Mobile;
-                agent.MobileOperator = Request.Form["MobileOperator"];
-                agent.Status = Request.Form["Status"];
-                agent.UserType = Request.Form["UserType"];
+                agent.MobileOperator = model.MobileOperator;
+                agent.WorkArea = model.WorkArea;
                 agent.LastUpdate = DateTime.Now;
 
                 _db.SaveChanges();
-                TempData["Success"] = "User details updated successfully!";
+
+                return Json(new { success = true, message = "Profile updated successfully!" });
             }
-            else
+            catch (Exception ex)
             {
-                TempData["Error"] = "User not found.";
+                return Json(new { success = false, message = "Error: " + ex.Message });
             }
-            return RedirectToAction("ManageUser", new { pno = model.Pno });
+        }
+        [OutputCache(Duration = 3600, VaryByParam = "pno")]
+        public async Task<ActionResult> GetUserImage(string pno)
+        {
+            if (!string.IsNullOrEmpty(pno))
+            {
+                try
+                {
+                    string url = $"https://systemsupport.piac.com.pk/admin/AgentImages/{pno}.jpg";
+                    var response = await _httpClient.GetAsync(url);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var bytes = await response.Content.ReadAsByteArrayAsync();
+                        return File(bytes, "image/jpeg");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("Error: " + ex.Message);
+                }
+            }
+
+            var grey = Convert.FromBase64String(
+                "iVBORw0KGgoAAAANSUhEUgAAACMAAAAjCAIAAAC0Xo7tAAAAGklEQVR42mNk+M9Qz0BFAAIAAf//AzAEAADkAgQBHON6AAAAAElFTkSuQmCC"
+            );
+            return File(grey, "image/png");
         }
 
+        // POST: ManageUser (Save/Update)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ChangePassword(string Pno, string newPassword, string confirmPassword)
+        public JsonResult ManageUser(Agent model)
         {
-            // 1. Extract the claim value from JWT
-            var adminClaim = (User.Identity as ClaimsIdentity)?.FindFirst("IsAdmin")?.Value;
-
-            // 2. Flexible Verification: 
-            // Checks if JWT says "Y" or "True", OR checks the Session backup
-            bool isAuthorized = (adminClaim == "Y" || adminClaim == "True") ||
-                                (Session["IsAdmin"]?.ToString() == "True" || Session["IsAdmin"]?.ToString() == "Y");
-
-            if (!isAuthorized)
+            try
             {
-                // Debug hint: Includes the actual value found to help you see what's wrong
-                TempData["Error"] = $"Unauthorized. Admin access required. (Found: {adminClaim ?? "None"})";
-                return RedirectToAction("ManageUser");
-            }
+                bool isCreateMode = Request.Form["IsNewUser"] == "true";
+                var agent = _db.agent.FirstOrDefault(a => a.Pno == model.Pno);
 
-            // 3. Validation
-            if (string.IsNullOrEmpty(newPassword) || newPassword != confirmPassword)
-            {
-                TempData["Error"] = "Passwords are empty or do not match.";
-                return RedirectToAction("ManageUser");
-            }
+                if (isCreateMode && agent != null)
+                    return Json(new { success = false, message = "Duplicate Entry: PNo " + model.Pno + " already exists." });
 
-            // 4. Update Database
-            var agent = _db.agent.FirstOrDefault(a => a.Pno == Pno);
-            if (agent != null)
-            {
-                agent.Password = HashPassword(newPassword);
-                agent.LastUpdate = DateTime.UtcNow;
+                bool isNewRecord = (agent == null);
+                if (isNewRecord) agent = new Agent { Pno = model.Pno };
+
+                agent.Name = model.Name;
+                agent.Email = model.Email;
+                agent.Mobile = model.Mobile;
+                agent.RoleId = model.RoleId;
+                agent.ProgramId = model.ProgramId;
+                agent.MobileOperator = model.MobileOperator;
+                agent.WorkArea = model.WorkArea;
+                agent.UserType = Request.Form["UserType"];
+                agent.Status = Request.Form["Status"];
+                agent.LastUpdate = DateTime.Now;
+                agent.IsAdministrator = Request.Form["IsAdministrator"] ?? "N";
+
+                if (model.RoleId != null)
+                {
+                    var selectedRole = _db.Role.FirstOrDefault(r => r.Role_Id == model.RoleId);
+                    if (selectedRole != null)
+                        agent.Privilege = selectedRole.Privilege.ToString();
+                }
+
+                if (agent.UserType == "G")
+                {
+                    string selectedGid = Request.Form["GId"];
+                    if (!string.IsNullOrEmpty(selectedGid)) agent.Gid = int.Parse(selectedGid);
+                }
+                else { agent.Gid = null; }
+
+                if (isNewRecord) _db.agent.Add(agent);
                 _db.SaveChanges();
-                TempData["Success"] = "Password reset successfully for " + Pno;
-            }
-            else
-            {
-                TempData["Error"] = "User record not found.";
-            }
 
-            return RedirectToAction("ManageUser");
-        }
-
-        #region Helpers
-        private string HashPassword(string password)
-        {
-            using (var sha256 = new System.Security.Cryptography.SHA256Managed())
+                return Json(new { success = true, isNew = isNewRecord });
+            }
+            catch (Exception ex)
             {
-                var salt = new byte[16];
-                using (var rng = new System.Security.Cryptography.RNGCryptoServiceProvider()) { rng.GetBytes(salt); }
-                var pbkdf2 = new System.Security.Cryptography.Rfc2898DeriveBytes(password, salt, 10000);
-                byte[] hash = pbkdf2.GetBytes(20);
-                byte[] hashBytes = new byte[36];
-                Array.Copy(salt, 0, hashBytes, 0, 16);
-                Array.Copy(hash, 0, hashBytes, 16, 20);
-                return Convert.ToBase64String(hashBytes);
+                return Json(new { success = false, message = "Error: " + ex.Message });
             }
         }
 
@@ -130,6 +231,9 @@ namespace SRM.Controllers
                         agent.RoleId,
                         agent.ProgramId,
                         agent.Status,
+                        agent.UserType,
+                        agent.IsAdministrator,
+                        Gid = agent.Gid,
                         LastUpdate = agent.LastUpdate?.ToString("g")
                     }
                 }, JsonRequestBehavior.AllowGet);
@@ -137,43 +241,71 @@ namespace SRM.Controllers
             return Json(new { success = false, message = "No record found." }, JsonRequestBehavior.AllowGet);
         }
 
-        [HttpGet]
-        public JsonResult GetAllUsers()
-        {
-            var users = _db.agent
-                .Select(u => new {
-                    u.Pno,
-                    u.Name,
-                    u.Email,
-                    u.Mobile,
-                    u.RoleId,
-                    u.Status
-                })
-                .OrderByDescending(u => u.Pno)
-                .ToList();
-
-            return Json(users, JsonRequestBehavior.AllowGet);
-        }
-        [HttpGet]
-        public JsonResult GetMobileOperators()
+        [HttpPost]
+        public JsonResult DeleteUser(string pno)
         {
             try
             {
-                var operators = _db.agent
-                    .Select(a => a.MobileOperator)
-                    .Where(o => o != null && o != "")
-                    .Distinct()
-                    .ToList();
-
-                return Json(operators, JsonRequestBehavior.AllowGet);
+                var user = _db.agent.FirstOrDefault(u => u.Pno == pno);
+                if (user == null) return Json(new { success = false, message = "User not found" });
+                _db.agent.Remove(user);
+                _db.SaveChanges();
+                return Json(new { success = true });
             }
-            catch (Exception ex)
+            catch (Exception ex) { return Json(new { success = false, message = ex.Message }); }
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult ChangePassword(string Pno, string newPassword, string confirmPassword)
+        {
+            var currentUserPno = Session["AgentPno"] as string;
+            if (string.IsNullOrEmpty(currentUserPno))
+                return Json(new { success = false, message = "Session expired." });
+
+            var currentUser = _db.agent.FirstOrDefault(a => a.Pno == currentUserPno);
+
+            var targetPno = string.IsNullOrEmpty(Pno) ? currentUserPno : Pno;
+
+            var targetAgent = _db.agent.FirstOrDefault(a => a.Pno == targetPno); if (targetAgent == null) return Json(new { success = false, message = "User not found." });
+
+            // Updated Logic: Is Admin OR is the user changing their own password?
+            bool isAuthorized = currentUser != null &&
+                (currentUser.IsAdministrator == "Y" || currentUserPno == targetPno);
+            if (!isAuthorized) { 
+                var debugInfo = $"[SessionPno: {currentUserPno}, TargetPno: {Pno}, IsAdmin: {currentUser?.IsAdministrator}]";
+            return Json(new { success = false, message = "Unauthorized access. " + debugInfo });
+               
+            }
+            if (newPassword != confirmPassword)
+                return Json(new { success = false, message = "Passwords do not match." });
+
+           
+            targetAgent.Password = HashPassword(newPassword);
+            targetAgent.LastUpdate = DateTime.Now;
+            _db.SaveChanges();
+
+            return Json(new { success = true, message = "Password updated successfully." });
+        }
+        private string NormalizePno(string pno)
+        {
+            if (string.IsNullOrWhiteSpace(pno))
+                return "";
+
+            return pno.Trim().ToUpper().Replace("P", "");
+        }
+        private string HashPassword(string password)
+        {
+            using (var sha256 = new System.Security.Cryptography.SHA256Managed())
             {
-                return Json(new List<string> { "Error loading" }, JsonRequestBehavior.AllowGet);
+                var salt = new byte[16];
+                using (var rng = new System.Security.Cryptography.RNGCryptoServiceProvider()) { rng.GetBytes(salt); }
+                var pbkdf2 = new System.Security.Cryptography.Rfc2898DeriveBytes(password, salt, 10000);
+                byte[] hash = pbkdf2.GetBytes(20);
+                byte[] hashBytes = new byte[36];
+                Array.Copy(salt, 0, hashBytes, 0, 16);
+                Array.Copy(hash, 0, hashBytes, 16, 20);
+                return Convert.ToBase64String(hashBytes);
             }
         }
-
-
-        #endregion
     }
 }

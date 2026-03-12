@@ -1,449 +1,451 @@
 ﻿@using System.Security.Claims
-@model SRM.Models.Agent
+@model IEnumerable<SRM.Models.Agent>
+
 @{
     ViewBag.Title = "Manage User";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<style>
-    .profile-container {
-        padding: 20px;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        margin-top: 20px;
-    }
 
-    .form-row {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 15px;
-        flex-wrap: wrap;
-    }
+<div class="setup-container fade-in-up">
+    <div class="section-header">
+        <h2>Manage Users</h2>
+        <div class="action-row">
+            @* Added ID for JS targeting *@
+            <input type="text" id="PnoSearch" class="form-control" placeholder="Enter PNo (e.g. 51959)" />
+            <button type="button" id="btnLookup" class="setup-btn-green">🔍 Find Record</button>
+            <button type="button" id="btnToggleAction" class="setup-btn-green">Add New User</button>
+        </div>
+    </div>
 
-    .form-group {
-        flex: 1;
-        min-width: 250px;
-    }
-
-    .setup-btn-green {
-        background-color: #28a745;
-        color: white;
-        border: none;
-        padding: 8px 20px;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-        .setup-btn-green:hover {
-            background-color: #218838;
-        }
-
-    /* Radio Group Styling */
-    .radio-group {
-        display: flex;
-        gap: 20px;
-        align-items: center;
-        margin-top: 8px;
-    }
-
-    .radio-item {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        cursor: pointer;
-    }
-
-    /* Table Styling */
-    .setup-header {
-        background: #343a40;
-        color: white;
-        padding: 12px 15px;
-        border-radius: 4px 4px 0 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .table-responsive {
-        border: 1px solid #dee2e6;
-        border-top: none;
-        max-height: 500px;
-        overflow-y: auto;
-    }
-
-    #allUsersTable thead th {
-        position: sticky;
-        top: 0;
-        background: #f8f9fa;
-        z-index: 10;
-        border-bottom: 2px solid #dee2e6;
-    }
-</style>
-
-<div class="profile-container">
-    <h2>Manage Users</h2>
-
-    <div class="form-row" style="background: #fdfdfd; padding: 15px; border: 1px solid #eee; border-radius: 8px;">
-        <div class="form-group" style="flex: 1 1 100%; margin-bottom: 0;">
-            <label for="Pno">Search User by PNo.</label>
-            <div class="action-row" style="display: flex; gap: 10px;">
-                @Html.TextBoxFor(m => m.Pno, new { @class = "form-control", @id = "PnoSearch", placeholder = "Enter PNo (e.g. 10254)" })
-                <button type="button" id="btnLookup" class="setup-btn-green">🔍 Find Record</button>
-                <button type="button" id="btnBackToList" class="Back-To-List" style="display:none;">Back to List</button>
-            </div>
+    @* Container for the slider *@
+    <div id="activeToggleContainer" style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <label class="switch" style="margin:0;">
+                <input type="checkbox" id="toggleActiveOnly" checked>
+                <span class="slider round"></span>
+            </label>
+            <span style="font-size:0.9rem; font-weight:500;">Show active users only</span>
         </div>
     </div>
 
     <div id="userListSection">
-        <table class="crud-table">
+        <table class="crud-table " id="allUsersTable">
             <thead>
                 <tr>
-                    <th style="width: 100px;">PNo.</th>
-                    <th>Full Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
+                    <th>Image</th>
+                    <th>Name / PNo</th>
+                    <th>Last Login</th>
+                    <th>Email / Mobile</th>
                     <th style="text-align:center;">Status</th>
-                    <th style="text-align:center;">Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="allUsersTableBody">
-                @* Populated via AJAX *@
+                @{
+                    int currentRoleId = -1;
+                    var rolesSource = (IEnumerable<SRM.Models.Role>)ViewBag.RoleListSource;
+                }
+                @foreach (var u in Model)
+                {
+                    if (u.RoleId != currentRoleId)
+                    {
+                        currentRoleId = u.RoleId ?? 0;
+                        var roleDisplayName = rolesSource.FirstOrDefault(r => r.Role_Id == currentRoleId)?.Role_Name ?? "General Users";
+
+                        <tr class="role-group-header">
+                            <td colspan="6" style="text-align:center;">
+                                👤 @roleDisplayName
+                            </td>
+                        </tr>
+                    }
+
+                    var statusColor = (u.Status == "A" || u.Status == "Y") ? "#28a745" : "#dc3545";
+                    var statusText = (u.Status == "A" || u.Status == "Y") ? "Active" : "Inactive";
+
+                    <tr data-pno="@u.Pno">
+                        <td style="width:60px; text-align:center; vertical-align:middle;">
+                            <img src="https://systemsupport.piac.com.pk/admin/AgentImages/@(u.Pno).jpg"
+                                 width="60" height="60"
+                                 style="border-radius:50%; border: 1px solid #ddd; display:block; margin:auto;"
+                                 onerror="this.outerHTML='<div style=\'width:60px;height:60px;border-radius:50%;background:#white;color:white;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:auto;\'>👤</div>'" />
+                        </td>
+                        <td class="td-name-pno"><strong>@u.Name</strong><br /><small class="text-muted">@u.Pno</small></td>
+                        <td>
+                            <span style="font-size: 0.85rem;">@(u.LastLoginDateTime?.ToString("g") ?? "-")</span><br />
+                            <small class="text-muted" style="font-size: 0.75rem;">@u.LastLoginIp</small>
+                        </td>
+                        <td class="td-email-mobile">
+                            <span style="font-size: 0.85rem;">@u.Email</span><br />
+                            <span style="font-size: 0.85rem;">@u.Mobile</span>
+                        </td>
+                        <td class="td-status" style="text-align:center; color:@statusColor; font-weight:bold;">@statusText</td>
+                        <td>
+                            <button type="button" class="btn-select-user edit-btn" data-pno="@u.Pno">✏️</button>
+                            <button type="button" class="btn-delete-user delete-btn" data-pno="@u.Pno">❌</button>
+                        </td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
 
+    @* Form Section *@
     <div id="userDetailsForm" style="display:none; margin-top: 20px;">
-        <div class="alert alert-info">Editing details for PNo: <strong id="displayPno"></strong></div>
-
-        @using (Html.BeginForm("ManageUser", "User", FormMethod.Post))
-        {
+        <form id="manageUserForm">
             @Html.AntiForgeryToken()
-            @Html.HiddenFor(m => m.Pno, new { id = "MainHiddenPno" })
+            <input type="hidden" name="Pno" id="MainHiddenPno" />
+            <input type="hidden" id="IsNewUserFlag" name="IsNewUser" value="false" />
+            <input type="hidden" name="IsAdministrator" id="HiddenIsAdministrator" value="N" />
 
-            <div class="form-row">
-                <div class="form-group">
-                    @Html.LabelFor(m => m.Name)
-                    @Html.TextBoxFor(m => m.Name, new { @class = "form-control", id = "EditName" })
+            <div class="form-section-header">User Information</div>
+            <div class="grid-container">
+                <div class="grid-label">Full Name *</div>
+                <div class="grid-input">
+                    <input type="text" name="Name" id="EditName" class="form-control" required />
                 </div>
-                <div class="form-group">
-                    @Html.LabelFor(m => m.Email)
-                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control", id = "EditEmail", type = "email" })
-                </div>
-            </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    @Html.LabelFor(m => m.Mobile)
-                    @Html.TextBoxFor(m => m.Mobile, new { @class = "form-control", id = "EditMobile" })
+                <div class="grid-label">Email Address</div>
+                <div class="grid-input">
+                    <input type="email" name="Email" id="EditEmail" class="form-control" />
                 </div>
-                <div class="form-group">
-                    @Html.LabelFor(m => m.MobileOperator)
+
+                <div class="grid-label">Mobile No</div>
+                <div class="grid-input">
+                    <input type="text" name="Mobile" id="EditMobile" class="form-control" />
+                </div>
+
+                <div class="grid-label">Operator</div>
+                <div class="grid-input">
                     <select id="MobileOperator" name="MobileOperator" class="form-control">
                         <option value="">-- Select Operator --</option>
+                        @foreach (var op in ViewBag.Operators)
+                        {
+                            <option value="@op">@op</option>
+                        }
                     </select>
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>User Type</label>
-                    <div class="radio-group">
-                        <div class="radio-item">
-                            <input type="radio" id="typeIndiv" name="UserType" value="U" checked>
-                            <label for="typeIndiv">Individual</label>
-                        </div>
-                        <div class="radio-item">
-                            <input type="radio" id="typeGroup" name="UserType" value="G">
-                            <label for="typeGroup">Group</label>
+            <div class="form-section-header">Access & Role Permissions</div>
+            <div class="details-box">
+                <div class="details-row">
+                    <div class="details-label">Work Area</div>
+                    <div class="details-content">
+                        <select id="EditWorkArea" name="WorkArea" class="form-control" style="width:100%;">
+                            <option value="">-- Select Work Area --</option>
+                            @foreach (var wa in ViewBag.WorkAreas)
+                            {
+                                <option value="@wa">@wa</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="details-row">
+                    <div class="details-label">User Role</div>
+                    <div class="details-content">
+                        @Html.DropDownList("RoleId", (SelectList)ViewBag.RoleList, "-- Select Role --", new { @class = "form-control", id = "EditRoleId", style = "width:100%;" })
+                    </div>
+                </div>
+
+                <div class="details-row">
+                    <div class="details-label">User Type</div>
+                    <div class="details-content">
+                        <div class="radio-group" style="display:flex; gap:15px;">
+                            <label><input type="radio" id="typeIndiv" name="UserType" value="U"> Individual</label>
+                            <label><input type="radio" id="typeGroup" name="UserType" value="G"> Group</label>
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Group Name</label>
-                    <select id="GroupDropdown" name="GroupName" class="form-control" disabled>
-                        <option value="">-- Select Group --</option>
-                    </select>
+                <div class="details-row" id="groupDropdownRow" style="display:none;">
+                    <div class="details-label">Select Group</div>
+                    <div class="details-content">
+                        @* Use the GroupList already in your ViewBag *@
+                        @Html.DropDownList("Gid", (IEnumerable<SelectListItem>)ViewBag.GroupList, "-- Select Group Name --", new { @class = "form-control", id = "EditGroupId", style = "width:100%;" })
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    @Html.LabelFor(m => m.WorkArea)
-                    @Html.TextBoxFor(m => m.WorkArea, new { @class = "form-control", id = "EditWorkArea" })
-                </div>
-                <div class="form-group">
-                    @Html.LabelFor(m => m.Privilege)
-                    @Html.TextBoxFor(m => m.Privilege, new { @class = "form-control", id = "EditPrivilege" })
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>User Role</label>
-                    <select id="EditRoleId" name="RoleId" class="form-control">
-                        <option value="Engineer">Engineer</option>
-                        <option value="Admin">Admin</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Program Name</label>
-                    <select id="EditProgramId" name="ProgramId" class="form-control">
-                        <option value="">-- Select Program --</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Status</label>
-                    <div class="radio-group">
-                        <div class="radio-item">
-                            <input type="radio" id="statusActive" name="Status" value="A" checked>
-                            <label for="statusActive" style="color: green; font-weight: bold;">Active</label>
-                        </div>
-                        <div class="radio-item">
-                            <input type="radio" id="statusInactive" name="Status" value="I">
-                            <label for="statusInactive" style="color: red; font-weight: bold;">Inactive</label>
+                <div class="details-row">
+                    <div class="details-label">Status</div>
+                    <div class="details-content">
+                        <div class="radio-group" style="display:flex; gap:15px;">
+                            <label style="color:#28a745; font-weight:bold;"><input type="radio" id="statusActive" name="Status" value="A"> Active</label>
+                            <label style="color:#dc3545; font-weight:bold;"><input type="radio" id="statusInactive" name="Status" value="I"> Inactive</label>
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Last Update</label>
-                    <input type="text" id="lastUpdateDisplay" class="form-control" readonly />
+
+                <div class="details-row">
+                    <div class="details-label">Program</div>
+                    <div class="details-content">
+                        <select id="EditProgramId" name="ProgramId" class="form-control" style="width:100%;">
+                            <option value="">-- Select Program --</option>
+                            @foreach (var p in (List<SelectListItem>)ViewBag.AllPrograms)
+                            {
+                                <option value="@p.Value">@p.Text</option>
+                            }
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-row" style="margin-top: 20px;">
-                <button type="submit" class="btn btn-success" style="flex: 1; padding: 12px;">💾 Save Changes</button>
-
-                @{
-                    var isAdmin = (Context.User.Identity as ClaimsIdentity)?.FindFirst("IsAdmin")?.Value;
-                    bool auth = (isAdmin == "Y" || isAdmin == "True" || Session["IsAdmin"]?.ToString() == "True");
-                }
-                @if (auth)
-                {
-                    <button type="button" id="btnShowPass" class="btn btn-warning" style="flex: 1; padding: 12px;">🔑 Reset Password</button>
-                }
+            <div class="action-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" id="btnShowPass" class="setup-btn-green" style="background:#6c757d;">🔑 Reset Password</button>
+                <button type="submit" class="setup-btn-green" style="min-width:200px;">💾 Save User Changes</button>
             </div>
-        }
+        </form>
+    </div>
+    @* Password Section *@
+    <div id="passwordFields" style="display:none; margin-top: 20px;">
+        <div class="form-section-header" style="background:#fff3cd; color:#856404; border-color:#ffeeba;"> Reset Password</div>
 
-        <div id="passwordFields" style="display:none; margin-top: 20px; padding: 20px; border: 1px solid #ffeeba; background: #fffaf0; border-radius: 8px;">
-            <h4 style="color: #856404;">Change User Password</h4>
-            @using (Html.BeginForm("ChangePassword", "User", FormMethod.Post))
-            {
+        <div class="grid-container" style="border-color:#ffeeba; background: #fffdf7; display: grid; grid-template-columns: 200px 1fr; gap: 15px; padding: 20px 20px 20px 15px; border: 1px solid #ffeeba; border-top: none; border-radius: 0 0 8px 8px;">
+            <form id="changePassForm" style="display: contents;">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="Pno" id="PasswordResetPno" />
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>New Password</label>
-                        <input type="password" name="newPassword" class="form-control" required />
-                    </div>
-                    <div class="form-group">
-                        <label>Confirm Password</label>
-                        <input type="password" name="confirmPassword" class="form-control" required />
+
+                <div class="grid-label" style="align-self: start; padding-top: 8px;">New Password</div>
+                <div class="grid-input">
+                    <input type="password" name="newPassword" id="newPassword" class="form-control"
+                           style="width:100%; border-color: #ffeeba;" value="" autocomplete="new-password" required />
+
+                    @* Requirements List *@
+                    <div id="passwordRequirements" style="margin-top:12px; font-size: 0.85em; display: flex; flex-direction: column; gap: 6px;">
+                        <span id="reqLength" style="color: #d9534f;">● At least 6 characters</span>
+                        <span id="reqUpper" style="color: #d9534f;">● At least one uppercase letter (A-Z)</span>
+                        <span id="reqNumber" style="color: #d9534f;">● At least one number (0-9)</span>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Update Password</button>
-            }
+
+                <div class="grid-label">Confirm Pass</div>
+                <div class="grid-input">
+                    <input type="password" name="confirmPassword" id="confirmPassword" class="form-control"
+                           style="width:100%; border-color: #ffeeba;" value="" autocomplete="new-password" required />
+
+                    @* Single Checkbox for both fields *@
+                    <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="chkShowPasswords" style="width: 16px; height: 16px; cursor: pointer;" />
+                        <label for="chkShowPasswords" style="font-size: 0.9em; color: #856404; font-weight: 500; cursor: pointer; margin: 0;">Show Passwords</label>
+                    </div>
+
+                    <div id="matchError" style="color: #d9534f; font-size: 0.8em; display: none; margin-top: 5px; font-weight: 500;">⚠️ Passwords do not match!</div>
+                </div>
+
+                <div style="grid-column: 1 / span 2; display: flex; justify-content: flex-end; margin-top: 15px; border-top: 1px solid #ffeeba; padding-top: 20px;">
+                    <button type="submit" id="btnUpdatePass" class="setup-btn-green" style="width: 200px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" disabled>Update Password</button>
+                </div>
+            </form>
         </div>
     </div>
+    @section scripts {
+        <script>
+        $(document).ready(function () {
 
-    <div id="messageContainer" style="margin-top: 25px;">
-        @if (TempData["Success"] != null)
-        {
-            <div class="alert alert-success"><strong>✓ Success:</strong> @TempData["Success"]</div>
-        }
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger"><strong>⚠ Error:</strong> @TempData["Error"]</div>
-        }
-    </div>
-</div>
+            // --- 1. INITIALIZATION & TOASTS ---
+            const pendingToast = sessionStorage.getItem("pendingToast");
+            if (pendingToast) {
+                const toastData = JSON.parse(pendingToast);
+                if (typeof showGlobalToast === "function") {
+                    showGlobalToast(toastData.message, toastData.type);
+                }
+                sessionStorage.removeItem("pendingToast");
+            }
 
-@section scripts {
-    <script>
-    $(function () {
-        // --- 1. INITIALIZATION & DROPDOWNS ---
-        function init() {
-            // Load Operators
-            $.getJSON('@Url.Action("GetMobileOperators", "User")', function (data) {
-                $.each(data, function (i, v) { $('#MobileOperator').append($('<option>', { value: v, text: v })); });
+            const $newPass = $('#newPassword');
+            const $confirmPass = $('#confirmPassword');
+            const $submitPassBtn = $('#btnUpdatePass');
+
+            // --- 2. PASSWORD VALIDATION ---
+            $newPass.on('input', function () {
+                const val = $(this).val();
+                const isLengthValid = val.length >= 6;
+                const isUpperValid = /[A-Z]/.test(val);
+                const isNumberValid = /[0-9]/.test(val);
+
+                updateStatus('#reqLength', isLengthValid, "At least 6 characters");
+                updateStatus('#reqUpper', isUpperValid, "At least one uppercase letter (A-Z)");
+                updateStatus('#reqNumber', isNumberValid, "At least one number (0-9)");
+
+                validatePasswordForm(isLengthValid && isUpperValid && isNumberValid);
             });
-            // Load Programs
-            $.getJSON('@Url.Action("GetPrograms", "User")', function (data) {
-                $.each(data, function (i, item) { $('#EditProgramId').append($('<option>', { value: item.ProgramId, text: item.ProgramName })); });
-            });
-            loadTable();
-        }
 
-        function loadTable() {
-            $.getJSON('@Url.Action("GetAllUsers", "User")', function (data) {
-                var rows = '';
-                $('#userCount').text('Total: ' + data.length + ' users found');
-                $.each(data, function (i, u) {
-                    var sClass = (u.Status === "A" || u.Status === "Y") ? "text-success" : "text-danger";
-                    rows += '<tr>' +
-                        '<td>' + u.Pno + '</td>' +
-                        '<td>' + u.Name + '</td>' +
-                        '<td>' + u.Email + '</td>' +
-                        '<td>' + (u.Mobile || '-') + '</td>' +
-                        '<td>' + (u.RoleId || 'User') + '</td>' +
-                        '<td align="center"><span class="' + sClass + '" style="font-weight:bold;">' + (u.Status === "A" ? "Active" : "Inactive") + '</span></td>' +
-                        '<td align="center"><button class="btn btn-sm btn-info btn-edit-row" data-pno="' + u.Pno + '">Select</button></td>' +
-                    '</tr>';
+            $confirmPass.on('input', function () { validatePasswordForm(); });
+
+            function updateStatus(selector, isValid, text) {
+                const $el = $(selector);
+                if (isValid) {
+                    $el.attr('style', 'color: #2e7d57 !important; font-weight: bold;').html('✓ ' + text);
+                } else {
+                    $el.attr('style', 'color: #d9534f !important; font-weight: normal;').html('● ' + text);
+                }
+            }
+
+            function validatePasswordForm(requirementsMet) {
+                const pass = $newPass.val();
+                const confirm = $confirmPass.val();
+                const allReqs = requirementsMet ?? (pass.length >= 6 && /[A-Z]/.test(pass) && /[0-9]/.test(pass));
+                const match = (pass === confirm && confirm !== "");
+
+                if (confirm !== "" && !match) {
+                    $('#matchError').show();
+                    $confirmPass.css('border-color', '#d9534f');
+                } else {
+                    $('#matchError').hide();
+                    if (match) $confirmPass.css('border-color', '#2e7d57');
+                }
+                $submitPassBtn.prop('disabled', !(allReqs && match));
+            }
+
+            $(document).on('change', '#chkShowPasswords', function () {
+                const isChecked = $(this).is(':checked');
+                const type = isChecked ? 'text' : 'password';
+                $('#newPassword, #confirmPassword').attr('type', type);
+            });
+
+            $('input[name="UserType"]').on('change', function () {
+                if ($('#typeGroup').is(':checked')) {
+                    $('#groupDropdownRow').slideDown();
+                } else {
+                    $('#groupDropdownRow').slideUp();
+                    $('#EditGroupId').val('');
+                }
+            });
+
+            $('#changePassForm').on('submit', function (e) {
+                e.preventDefault();
+                $.post('@Url.Action("ChangePassword", "User")', $(this).serialize(), function (response) {
+                    if (response.success) {
+                        alert("Password updated successfully!");
+                        $('#passwordFields').fadeOut();
+                        $('#changePassForm')[0].reset();
+                    } else { alert("Error: " + response.message); }
                 });
-                $('#allUsersTable tbody').html(rows);
             });
-        }
 
-        init();
+            // --- 3. VIEW TOGGLING ---
+            function toggleView(showForm, isNewUser = false) {
+                if (showForm) {
+                    $('#userListSection, #activeToggleContainer, #searchControls').hide();
+                    $('#userDetailsForm').fadeIn();
+                    $('#btnToggleAction').text('⬅ Back to List');
+                    $('#IsNewUserFlag').val(isNewUser ? "true" : "false");
 
-        // --- 2. SEARCH & TOGGLE LOGIC ---
-        $('#btnLookup').click(function () {
-            var pVal = $('#PnoSearch').val().trim();
-            if (!pVal) return;
+                    if (isNewUser) {
+                        $('#manageUserForm')[0].reset();
+                        $('#MainHiddenPno').val($('#PnoSearch').val().trim());
+                        $('#typeIndiv').prop('checked', true);
+                        $('#groupDropdownRow').hide();
+                        $('#passwordFields').hide();
+                    } else {
+                        // Logic for Edit Mode (Existing User)
+                        $('#passwordFields').hide();
+                    }
+                } else {
+                    $('#userDetailsForm, #passwordFields').hide();
+                    $('#userListSection, #activeToggleContainer, #searchControls').fadeIn();
+                    $('#btnToggleAction').text('Add New User').removeClass('btn-secondary').addClass('setup-btn-green');
+                }
+            }
 
-            $(this).text("Searching...").prop('disabled', true);
-            $.ajax({
-                url: '@Url.Action("GetUserByPno", "User")',
-                type: 'GET',
-                data: { pno: pVal },
-                success: function (res) {
+            $('#btnToggleAction').click(function () {
+                if ($('#userDetailsForm').is(':visible')) {
+                    toggleView(false);
+                } else {
+                    var pVal = $('#PnoSearch').val().trim();
+                    if (!pVal) { alert("Enter PNo in the search box first."); return; }
+                    if ($('tr[data-pno="' + pVal + '"]').length > 0) {
+                        alert("User already exists in the list.");
+                        return;
+                    }
+                    toggleView(true, true);
+                }
+            });
+
+            // --- 4. USER CRUD ---
+            function updateAdminStatus() {
+                var selectedRoleText = $('#EditRoleId option:selected').text().trim().toLowerCase();
+                $('#HiddenIsAdministrator').val(selectedRoleText.includes('admin') ? 'Y' : 'N');
+            }
+
+            $(document).on('change', '#EditRoleId', updateAdminStatus);
+
+            $('#manageUserForm').submit(function (e) {
+                e.preventDefault();
+                updateAdminStatus();
+                const $submitBtn = $(this).find('button[type="submit"]');
+                $submitBtn.prop('disabled', true).text('Processing...');
+
+                $.post('@Url.Action("ManageUser", "User")', $(this).serialize(), function (res) {
                     if (res.success) {
-                        // Populate
-                        $('#displayPno').text(pVal);
+                        sessionStorage.setItem("pendingToast", JSON.stringify({
+                            message: $('#IsNewUserFlag').val() === "true" ? "User Created!" : "Changes Saved!",
+                            type: "success"
+                        }));
+                        location.reload();
+                    } else {
+                        alert(res.message);
+                        $submitBtn.prop('disabled', false).text('💾 Save User Changes');
+                    }
+                });
+            });
+
+            $('#btnLookup').click(function () {
+                var pVal = $('#PnoSearch').val().trim();
+                if (!pVal) return;
+                $.get('@Url.Action("GetUserByPno", "User")', { pno: pVal }, function (res) {
+                    if (res.success) {
                         $('#MainHiddenPno, #PasswordResetPno').val(pVal);
                         $('#EditName').val(res.data.Name);
                         $('#EditEmail').val(res.data.Email);
                         $('#EditMobile').val(res.data.Mobile);
                         $('#MobileOperator').val(res.data.MobileOperator);
                         $('#EditWorkArea').val(res.data.WorkArea);
-                        $('#EditPrivilege').val(res.data.Privilege);
                         $('#EditRoleId').val(res.data.RoleId);
                         $('#EditProgramId').val(res.data.ProgramId);
-                        $('#lastUpdateDisplay').val(res.data.LastUpdate);
+                        $('#HiddenIsAdministrator').val(res.data.IsAdministrator);
 
-                        if (res.data.UserType === "G") $('#typeGroup').prop('checked', true).trigger('change');
-                        else $('#typeIndiv').prop('checked', true).trigger('change');
+                        if (res.data.UserType === "G") {
+                            $('#typeGroup').prop('checked', true);
+                            $('#groupDropdownRow').show();
+                            $('#EditGroupId').val(res.data.Gid);
+                        } else {
+                            $('#typeIndiv').prop('checked', true);
+                            $('#groupDropdownRow').hide();
+                            $('#EditGroupId').val('');
+                        }
 
                         if (res.data.Status === "A" || res.data.Status === "Y") $('#statusActive').prop('checked', true);
                         else $('#statusInactive').prop('checked', true);
 
-                        // Swap Sections
-                        $('#userListSection').hide();
-                        $('#userDetailsForm').fadeIn();
-                        $('#btnBackToList').show();
-                    } else {
-                        alert(res.message);
-                    }
-                },
-                complete: function() { $('#btnLookup').html("🔍 Find Record").prop('disabled', false); }
-            });
-        });
-
-        $('#btnBackToList').click(function() {
-            $('#userDetailsForm, #passwordFields').hide();
-            $('#userListSection').fadeIn();
-            $(this).hide();
-            $('#PnoSearch').val('');
-        });
-
-        $(document).on('click', '.btn-edit-row', function() {
-            $('#PnoSearch').val($(this).data('pno'));
-            $('#btnLookup').trigger('click');
-        });
-
-        // --- 3. UI EXTRAS ---
-        $('input[name="UserType"]').on('change', function() {
-            $('#GroupDropdown').prop('disabled', !$('#typeGroup').is(':checked'));
-        });
-
-        $('#btnShowPass').click(function() { $('#passwordFields').slideToggle(); });
-
-        if ($('.alert').length > 0) {
-            $('html, body').animate({ scrollTop: $("#messageContainer").offset().top }, 500);
-            setTimeout(function() { $('.alert').fadeOut(); }, 5000);
-        }
-    });
-        $(function () {
-
-        // 1. Load Table Data
-        function loadAllUsers() {
-            $.getJSON('@Url.Action("GetAllUsers", "User")', function (data) {
-                var rows = '';
-                $.each(data, function (i, item) {
-                    var statusColor = (item.Status === "A" || item.Status === "Y") ? "#28a745" : "#dc3545";
-                    var statusText = (item.Status === "A" || item.Status === "Y") ? "Active" : "Inactive";
-
-                    rows += `<tr data-pno="${item.Pno}">
-                        <td><strong>${item.Pno}</strong></td>
-                        <td>${item.Name}</td>
-                        <td>${item.Email}</td>
-                        <td>${item.RoleId || "User"}</td>
-                        <td style="text-align:center; color:${statusColor}; font-weight:bold;">${statusText}</td>
-                        <td class="actions-cell" style="text-align:center;">
-                            <button type="button" class="btn-select-user" data-pno="${item.Pno}" title="Edit" style="border:none; background:none; cursor:pointer; font-size:1.2em;">✏️</button>
-                        </td>
-                    </tr>`;
+                        toggleView(true, false);
+                    } else { alert(res.message); }
                 });
-                $('#allUsersTableBody').html(rows);
             });
-        }
-        loadAllUsers();
 
-        // 2. Find Record Action
-        $('#btnLookup').click(function () {
-            var pnoVal = $('#PnoSearch').val().trim();
-            if (pnoVal === "") { alert("Please enter a PNo."); return; }
-
-            $.ajax({
-                url: '@Url.Action("GetUserByPno", "User")',
-                type: 'GET',
-                data: { pno: pnoVal },
-                success: function (res) {
-                    if (res.success) {
-                        // Populate the form fields
-                        $('#EditName').val(res.data.Name);
-                        $('#EditEmail').val(res.data.Email);
-                        $('#EditMobile').val(res.data.Mobile);
-                        $('#EditRoleId').val(res.data.RoleId);
-                        $('#MainHiddenPno').val(pnoVal);
-
-                        // UI Transition
-                        $('#userListSection').hide();
-                        $('#userDetailsForm').fadeIn();
-                        $('#btnBackToList').show();
-                        $('#messageContainer').empty();
-                    } else {
-                        alert(res.message);
-                    }
-                }
+            $(document).on('click', '.btn-select-user', function () {
+                var pno = $(this).data('pno');
+                $('#PnoSearch').val(pno);
+                $('#btnLookup').trigger('click');
             });
-        });
 
-        // 3. Edit Icon Click (Triggers Search logic)
-        $(document).on('click', '.btn-select-user', function() {
-            var pno = $(this).data('pno');
-            $('#PnoSearch').val(pno);
-            $('#btnLookup').trigger('click');
-        });
+            $('#btnShowPass').click(function () { $('#passwordFields').slideToggle(); });
 
-        // 4. Back to List Action
-        $('#btnBackToList').click(function() {
-            $('#userDetailsForm').hide();
-            $('#userListSection').fadeIn();
-            $(this).hide();
-            $('#PnoSearch').val('');
-        });
+            // --- 5. FILTERING ---
+            $('#toggleActiveOnly').on('change', function () {
+                const activeOnly = $(this).is(':checked');
+                $('#allUsersTableBody tr').not('.role-group-header').each(function () {
+                    const statusText = $(this).find('.td-status').text().trim();
+                    $(this).toggle(!activeOnly || statusText === 'Active');
+                });
+                $('#allUsersTableBody tr.role-group-header').each(function () {
+                    const hasVisibleRows = $(this).nextUntil('.role-group-header').filter(':visible').length > 0;
+                    $(this).toggle(hasVisibleRows);
+                });
+            });
 
-        // Auto-scroll to message if exists
-        if ($('.alert').length > 0) {
-            setTimeout(function() { $('.alert').fadeOut(); }, 5000);
-        }
-    });
-    </script>
-}
-    </script>
-}
+            $('#toggleActiveOnly').trigger('change');
+
+        });
+        </script>
+    }

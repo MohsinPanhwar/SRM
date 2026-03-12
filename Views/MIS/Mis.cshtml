@@ -1,0 +1,203 @@
+@model SRM.Models.ViewModels.DashboardVM
+@{
+    var vm = Model ?? new SRM.Models.ViewModels.DashboardVM();
+    ViewBag.Title = "MIS Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<div class="setup-container">
+    <div class="section-header">
+        <h2>Management Information System</h2>
+        <div class="action-row">
+            <select id="misCategory" class="mis-select" onchange="updateMISData()">
+                <option value="Requests">Request Status</option>
+                <option value="Activities">Activities Summary</option>
+                <option value="Assets">Asset Issuance</option>
+                <option value="Incidents">Incident Reports</option>
+            </select>
+            <button class="setup-btn-green" onclick="updateMISData()">Refresh Dashboard</button>
+        </div>
+        </div>
+    <div class="kpi-row">
+        <div class="kpi-card" style="border-left: 5px solid var(--forest-dark);">
+            <div id="kpiLabel1" class="kpi-label">Total</div>
+            <div id="kpiValue1" class="kpi-value">0</div>
+        </div>
+        <div class="kpi-card" style="border-left: 5px solid var(--forest-accent);">
+            <div id="kpiLabel2" class="kpi-label">Metric 1</div>
+            <div id="kpiValue2" class="kpi-value">0</div>
+        </div>
+        <div class="kpi-card" style="border-left: 5px solid #0277bd;">
+            <div id="kpiLabel3" class="kpi-label">Metric 2</div>
+            <div id="kpiValue3" class="kpi-value">0</div>
+        </div>
+        <div class="kpi-card" id="kpiCard4" style="border-left: 5px solid #dc3545; display: none;">
+            <div id="kpiLabel4" class="kpi-label">Metric 3</div>
+            <div id="kpiValue4" class="kpi-value">0</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="mis-card">
+            <div class="mis-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 class="mis-card-title" style="margin: 0;">Detailed Summary</h3>
+                <a id="viewAllLink" href="@Url.Action("ViewAllRequests", "ViewAllRequests", new { status = "All" })" class="view-all-btn">
+                    Show all requests <i class="fas fa-chevron-right" style="font-size: 0.8em; margin-left: 5px;"></i>
+                </a>
+            </div>
+            <div class="table-wrapper">
+                <table class="mis-table">
+                    <thead>
+                        <tr><th>DESCRIPTION</th><th style="text-align: right;">COUNT</th></tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mis-card">
+            <h3 class="mis-card-title">Trend Analysis</h3>
+            <div style="flex: 1; min-height: 0; position: relative;">
+                <canvas id="misChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    let misChart;
+    $(document).ready(function () { updateMISData(); });
+
+    function updateMISData() {
+    const category = $('#misCategory').val();
+    const link = $('#viewAllLink');
+
+    // Dynamically update the link based on category
+    if (category === "Requests") {
+        link.attr("href", '@Url.Action("ViewAllRequests", "ViewAllRequests", new { status = "All" })');
+        link.html('Show all requests <i class="fas fa-chevron-right"></i>');
+    } else if (category === "Activities") {
+        link.attr("href", '@Url.Action("ShowAllActivities", "Activity")');
+        link.html('Show all activities <i class="fas fa-chevron-righ"></i>');
+    } else if (category === "Assets") {
+        link.attr("href", '@Url.Action("IssuedAssets", "AssetIssuance")');
+        link.html('Show all assets <i class="fas fa-chevron-right"></i>');
+    } else {
+        link.attr("href", '@Url.Action("IncidentLog", "Incidents")');
+        link.html('Show all incidents <i class="fas fa-chevron-right"></i>');
+    }
+
+    // Call your existing AJAX update
+    $.getJSON('@Url.Action("Overall", "MIS")', { category: category }, function (res) {
+        updateKPICards(category, res);
+        renderTable(res.labels, res.data);
+        renderChart(res.labels, res.data, category);
+    });
+}
+
+    function updateKPICards(cat, data) {
+        const card4 = $('#kpiCard4');
+        card4.hide(); // Reset
+
+        if (cat === "Activities") {
+            $('#kpiLabel1').text("Total Activities");
+            $('#kpiLabel2').text("Open Tasks");
+            $('#kpiLabel3').text("Closed");
+            $('#kpiValue1').text(data.kpi3);
+            $('#kpiValue2').text(data.kpi1);
+            $('#kpiValue3').text(data.kpi2);
+        } else if (cat === "Requests") {
+            card4.show();
+            $('#kpiLabel1').text("Total Requests");
+            $('#kpiLabel2').text("Pending/Open");
+            $('#kpiLabel3').text("Resolved");
+            $('#kpiLabel4').text("Closed");
+
+            $('#kpiValue1').text(data.kpi3);
+            $('#kpiValue2').text(data.kpi1);
+            $('#kpiValue3').text(data.kpi2);
+            $('#kpiValue4').text(data.data[2]); // The "Closed" count from array
+        } else if (cat === "Assets") {
+            $('#kpiLabel1').text("Total Assets");
+            $('#kpiLabel2').text("Items Issued");
+            $('#kpiLabel3').text("Unique Locations");
+            $('#kpiValue1').text(data.kpi1);
+            $('#kpiValue2').text(data.kpi1);
+            $('#kpiValue3').text(data.kpi2);
+        } else {
+            $('#kpiLabel1').text("Incidents Total");
+            $('#kpiLabel2').text("Resolved");
+            $('#kpiLabel3').text("Unresolved");
+            $('#kpiValue1').text(data.kpi3);
+            $('#kpiValue2').text(data.kpi1);
+            $('#kpiValue3').text(data.kpi2);
+        }
+    }
+
+    function renderTable(labels, data) {
+        let html = "";
+        labels.forEach((l, i) => {
+            html += `<tr><td>${l}</td><td style="text-align:right; font-weight:700;">${data[i]}</td></tr>`;
+        });
+        $('#tableBody').html(html);
+    }
+
+        function renderChart(labels, data, title) {
+            const ctx = document.getElementById('misChart').getContext('2d');
+            if (misChart) misChart.destroy();
+
+            misChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: title,
+                        data: data,
+                        backgroundColor: [
+                            '#0f2f27', // Deepest Green
+                            '#1e5645', // Dark Emerald
+                            '#388e6b', // Medium Green
+                            '#7cc68d'  // Soft Green
+                        ],
+                        hoverBackgroundColor: [
+                            '#164539', // Slightly lighter hover states
+                            '#29705a',
+                            '#4ba87f',
+                            '#98db9d'
+                        ],
+                        borderRadius: 6,
+                        barPercentage: 0.4,
+                        categoryPercentage: 0.5,
+                        maxBarThickness: 40
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f2f27',
+                            padding: 10,
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f0f0f0', drawTicks: false },
+                            ticks: { font: { size: 10 }, color: '#888' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 10, weight: '600' }, color: '#444' }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+}

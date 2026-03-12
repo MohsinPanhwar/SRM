@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SRM.Models
@@ -20,7 +16,7 @@ namespace SRM.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string uid { get; set; }
 
-        
+
         public string manager_pno { get; set; }
     }
 }

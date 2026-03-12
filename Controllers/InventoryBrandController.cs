@@ -1,21 +1,18 @@
 ﻿using SRM.Data;
 using SRM.Models;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 
 namespace SRM.Controllers
 {
-    public class InventoryBrandController : Controller
+    public class InventoryBrandController : BaseController
     {
         private AppDbContext db = new AppDbContext();
 
         // GET
-        public ActionResult Index()
+        public ActionResult ViewBrand()
         {
-            return View(db.invBrand.ToList());
+            return View("~/Views/AssetIssuance/ViewBrand.cshtml", db.invBrand.ToList());
         }
 
         // SAVE (Add + Update)
