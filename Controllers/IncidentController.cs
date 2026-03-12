@@ -37,6 +37,7 @@ namespace SRM.Controllers
             // Initially filter by the session Program. 
             // These will repopulate via AJAX if the program dropdown changes.
             ViewBag.IncidentCategories = _db.IncidentCategories
+                    .Where(x => !globalProgramId.HasValue || x.program_id == globalProgramId)
                     .OrderBy(x => x.cat_name)
                     .ToList();
 
