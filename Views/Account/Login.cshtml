@@ -19,15 +19,14 @@
         <div class="login-header">
             <h1>SRM</h1>
         </div>
-
-        @* --- Message Section --- *@
-        @if (TempData["SuccessMessage"] != null || ViewBag.SuccessMessage != null)
-        {
-            <div class="success-message">
-                @(TempData["SuccessMessage"] ?? ViewBag.SuccessMessage)
-            </div>
-        }
-
+            @* --- Message Section --- *@
+            @if (TempData["SuccessMessage"] != null || ViewBag.SuccessMessage != null)
+            {
+                <div class="success-message">
+                    @(TempData["SuccessMessage"] ?? ViewBag.SuccessMessage)
+                </div>
+            }
+        
         @if (!ViewData.ModelState.IsValid || !string.IsNullOrEmpty(ViewBag.ErrorMessage))
         {
             <div class="error-message">

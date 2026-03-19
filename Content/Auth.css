@@ -174,3 +174,25 @@ body.login-page {
         opacity: 0.8;
     }
 
+
+.error-message {
+    background: rgb(204 87 98 / 8%);
+    border: 1px solid rgb(255 8 31 / 40%);
+    color: #fb4a4d;
+    padding: 5px 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+    /* Optional icon before error text */
+    .error-message::before {
+        content: "\f071"; /* Font Awesome warning icon */
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        color: #ff4d4f;
+    }

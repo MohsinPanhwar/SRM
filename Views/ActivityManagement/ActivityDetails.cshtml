@@ -72,14 +72,13 @@ else
             </div>
 
             <div class="grid-label">Activity Detail</div>
-            <div class="grid-input" style="grid-column: span 3;margin-top:10px;">
+            <div class="grid-input" style="grid-column: span 3; margin-top:10px;">
                 @Html.TextAreaFor(m => m.Detail, new
-           {
-               @readonly = "readonly",
-               @class = "form-control form-control-readonly",
-               rows = "3",
-               style = "resize:none; width:100%; padding-top:15px !important; line-height:0.3;"
-           })
+                {
+                    @readonly = "readonly",
+                    @class = "form-control form-control-readonly auto-expand",
+                    style = "resize:none; width:100%; padding-top:15px; min-height:60px; overflow:hidden;"
+                })
             </div>
         </div>
 
@@ -167,6 +166,21 @@ else
             if (worklogBox) {
                 // Set the vertical scroll position to the bottom
                 worklogBox.scrollTop = worklogBox.scrollHeight;
+            }
+        });
+        document.addEventListener("DOMContentLoaded", function () {
+            // Target specifically the Activity Detail textarea
+            const detailBox = document.querySelector('.auto-expand');
+
+            if (detailBox) {
+                // Function to set height based on content
+                const adjustHeight = (el) => {
+                    el.style.height = 'auto'; // Reset to calculate
+                    el.style.height = (el.scrollHeight) + 'px'; // Set to full content height
+                };
+
+                // Run on load
+                adjustHeight(detailBox);
             }
         });
     </script>
