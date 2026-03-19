@@ -58,7 +58,9 @@
                 <td>@item.sno</td>
                 <td>@item.entry_date.ToString("dd-MMM-yyyy")</td>
                 <td>@item.Issued_to_PNO</td>
-                <td>@item.IssueDate.ToString("dd-MMM-yyyy")</td>
+                <td>
+                    @(item.IssueDate.HasValue ? item.IssueDate.Value.ToString("dd-MMM-yyyy") : "NULL")
+                </td>
                 <td style="max-width:130px; position:relative;">
                     <span class="truncate-tooltip" title="@item.Locations"
                           style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer;">

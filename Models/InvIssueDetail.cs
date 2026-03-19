@@ -70,7 +70,7 @@ namespace SRM.Models
         public string remarks { get; set; }
         public string ponum { get; set; }
 
-        public DateTime IssueDate { get; set; }
+        public DateTime? IssueDate { get; set; }
         public string TelExt { get; set; }
     }
 }

@@ -135,64 +135,7 @@ namespace SRM.Controllers
             }
         }
 
-        [HttpGet]
-        [AllowAnonymous]
-        public ActionResult Register()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public ActionResult Register(string pno, string name, string email, string mobile, string password, string confirmPassword)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(pno)) ModelState.AddModelError("pno", "Personnel number is required.");
-                if (string.IsNullOrWhiteSpace(name)) ModelState.AddModelError("name", "Full name is required.");
-                if (string.IsNullOrWhiteSpace(password)) ModelState.AddModelError("password", "Password is required.");
-                if (password != confirmPassword) ModelState.AddModelError("confirmPassword", "Passwords do not match.");
-                if (password != null && password.Length < 6) ModelState.AddModelError("password", "Password must be at least 6 characters.");
-
-                // Uniqueness check
-                if (!string.IsNullOrWhiteSpace(pno) && _context.agent.Any(a => a.Pno == pno))
-                    ModelState.AddModelError("pno", "Personnel number already exists.");
-
-                if (!string.IsNullOrEmpty(email) && _context.agent.Any(a => a.Email == email))
-                    ModelState.AddModelError("email", "Email already registered.");
-
-                if (!ModelState.IsValid) return View();
-
-                var agent = new Agent
-                {
-                    Pno = pno.Trim(),
-                    Name = name.Trim(),
-                    Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim(),
-                    Mobile = string.IsNullOrWhiteSpace(mobile) ? null : mobile.Trim(),
-                    Password = HashPassword(password),
-                    Status = "A",
-                    IsAdministrator = "N",
-                    UserType = "U",
-                    CreateDateTime = DateTime.UtcNow,
-                    LastUpdate = DateTime.UtcNow,
-                    Privilege = "View"
-                };
-
-                _context.agent.Add(agent);
-                _context.SaveChanges();
-
-                TempData["SuccessMessage"] = "Registration Complete! Log in Now";
-                return RedirectToAction("Login");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Register error: {ex.Message}");
-                ModelState.AddModelError("", "An error occurred during registration.");
-                return View();
-            }
-        }
-
+        
         [Authorize]
         [HttpGet]
         public ActionResult Logout()

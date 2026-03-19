@@ -230,7 +230,7 @@
                 {
                     <tr>
                         <td>@item.sno</td>
-                        <td>@item.IssueDate.ToString("dd-MMM-yyyy")</td>
+                        <td>@(item.IssueDate.HasValue ? item.IssueDate.Value.ToString("dd-MMM-yyyy") : "NULL")</td>
                         <td>@item.CategoryName</td>
                         <td>@item.BrandName</td>
                         <td>@item.accessories</td>

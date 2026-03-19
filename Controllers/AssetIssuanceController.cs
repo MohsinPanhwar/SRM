@@ -82,7 +82,6 @@ namespace SRM.Controllers
             return Json(new { success = false, message = "Employee not found." }, JsonRequestBehavior.AllowGet);
         }
 
-        // 🔹 SAVE ASSET: Handles both New Issuance and Updates
         [HttpPost]
         public JsonResult SaveAsset(InvIssueDetail Issue)
         {
@@ -90,11 +89,20 @@ namespace SRM.Controllers
             {
                 if (Issue == null) return Json(new { success = false, message = "No data received." });
 
+                // 1. FIX: Check if IssueDate was provided. 
+                // If it's a new record and date is missing, default to Today.
+                if (Issue.IssueDate == default(DateTime))
+                {
+                    Issue.IssueDate = DateTime.Now;
+                }
+
                 Issue.entry_date = DateTime.Now;
                 Issue.enter_by = User.Identity.Name ?? "System";
 
                 if (Issue.sno > 0)
                 {
+                    // For updates, we often want to keep the original IssueDate 
+                    // unless the user specifically changed it.
                     db.Entry(Issue).State = EntityState.Modified;
                     db.SaveChanges();
                     return Json(new { success = true, message = "Asset updated successfully!" });
@@ -108,11 +116,11 @@ namespace SRM.Controllers
             }
             catch (Exception ex)
             {
+                // This captures the specific EF validation or DB constraint error
                 var msg = ex.InnerException?.InnerException?.Message ?? ex.Message;
                 return Json(new { success = false, message = "DB Error: " + msg });
             }
         }
-
         // 🔹 SAVE USER: Syncs/Updates Employee Profile details
         [HttpPost]
         public async Task<JsonResult> SaveUser(EmployeeProfile emp)
@@ -232,7 +240,7 @@ namespace SRM.Controllers
             {
                 success = true,
                 data = asset,
-                issueDate = asset.IssueDate.ToString("yyyy-MM-dd")
+                issueDate = asset.IssueDate?.ToString("yyyy-MM-dd") ?? ""
             }, JsonRequestBehavior.AllowGet);
         }
     }
