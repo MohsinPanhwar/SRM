@@ -12,105 +12,104 @@
     <link rel="stylesheet" href="~/Content/Site.css">
 </head>
 <body>
-
     <nav class="navbar">
-        <div class="nav-left">
-            <a href="~/Home/home" class="logo">SRM</a>
-            <div class="nav-items">
+        <a href="~/Home/home" class="logo">SRM</a>
 
-                <div class="dropdown">
-                    <button class="dropbtn">System Setup</button>
-                    <div class="dropdown-content">
-                        @if (PrivilegeHelper.IsSuperAdmin())
-                        {
-                            <a href="@Url.Action("ManagePrograms", "Program")">Manage Program</a>
-                            <a href="@Url.Action("ManageUser", "User")">Manage User</a>
-                            <a href="@Url.Action("ManageGroup", "Group")">Manage Group</a>
-                            <a href="@Url.Action("ManageLocation", "Location")">Manage Work Area</a>
-                            <a href="@Url.Action("ManageRole", "Role")">Manage Role</a>
-                            <a href="@Url.Action("MessageBoard", "Message")">Message Board</a>
-                        }
-                        <a href="@Url.Action("ManageProfile", "User")">Manage Profile</a>
-                    </div>
+        <div class="nav-items">
+
+            <div class="dropdown">
+                <button class="dropbtn">System Setup</button>
+                <div class="dropdown-content">
+                    @if (PrivilegeHelper.IsSuperAdmin())
+                    {
+                        <a href="@Url.Action("ManagePrograms", "Program")">Manage Program</a>
+                        <a href="@Url.Action("ManageUser", "User")">Manage User</a>
+                        <a href="@Url.Action("ManageGroup", "Group")">Manage Group</a>
+                        <a href="@Url.Action("ManageLocation", "Location")">Manage Work Area</a>
+                        <a href="@Url.Action("ManageRole", "Role")">Manage Role</a>
+                        <a href="@Url.Action("MessageBoard", "Message")">Message Board</a>
+                    }
+                    <a href="@Url.Action("ManageProfile", "User")">Manage Profile</a>
                 </div>
-
-                @if (PrivilegeHelper.IsSuperAdmin())
-                {
-                    <div class="dropdown">
-                        <button class="dropbtn">Asset Issuance</button>
-                        <div class="dropdown-content">
-                            <a href="@Url.Action("ViewCategory", "Category")">View All Categories</a>
-                            <a href="@Url.Action("ViewBrand", "InventoryBrand")">View All Brands</a>
-                            <a href="@Url.Action("Issuance", "AssetIssuance")">Issuance</a>
-                            <a href="@Url.Action("IssuedAssets", "AssetIssuance")">View All Asset</a>
-                        </div>
-                    </div>
-                }
-
-                <div class="dropdown">
-                    <button class="dropbtn">Service Request</button>
-                    <div class="dropdown-content">
-                        @if (PrivilegeHelper.HasPrivilege("LNR"))
-                        {
-                            <a href="@Url.Action("LogNewRequest", "NewRequest")">Log new request</a>
-                        }
-                        @if (PrivilegeHelper.HasPrivilege("VR"))
-                        {
-                            <a href="@Url.Action("ViewAllRequests", "ViewAllRequests", new { status = "All" })">Show all requests</a>
-                        }
-                        @if (PrivilegeHelper.HasPrivilege("SMS"))
-                        {
-                            <a href="@Url.Action("SendSMS", "Send")">Send SMS</a>
-                        }
-                        @if (PrivilegeHelper.HasPrivilege("SPWD"))
-                        {
-                            <a href="@Url.Action("SendPassword", "Send")">Send Password to Agents</a>
-                        }
-                    </div>
-                </div>
-
-                <div class="dropdown">
-                    <button class="dropbtn">Hardware Dispatch</button>
-                    <div class="dropdown-content">
-                        <a href="@Url.Action("NewHardware", "HardwareDispatch")">Log New Hardware Dispatch</a>
-                    </div>
-                </div>
-
-                <div class="dropdown">
-                    <button class="dropbtn">Log Reports</button>
-                    <div class="dropdown-content">
-                        <a href="@Url.Action("DailyNOCReports", "LogReport")">View Daily Log Reports</a>
-                        <a href="@Url.Action("ManageReportCategory", "LogReport")">Add new description</a>
-                        <a href="@Url.Action("LogNew", "LogReport")">Log new report</a>
-                    </div>
-                </div>
-
-                <div class="dropdown">
-                    <button class="dropbtn">Incident Management</button>
-                    <div class="dropdown-content">
-                        <a href="@Url.Action("LogNewIncident", "Incident")">Log new Incident</a>
-                        <a href="@Url.Action("ShowAllIncident", "Incident")">Show all Incident</a>
-                        <a href="@Url.Action("SearchIncident", "Incident")">Search</a>
-                    </div>
-                </div>
-
-                <div class="dropdown">
-                    <button class="dropbtn">Activity Management</button>
-                    <div class="dropdown-content">
-                        <a href="@Url.Action("LogNewActivity", "Activity")">Log new Activity</a>
-                        <a href="@Url.Action("ShowAllActivities", "Activity")">Show All Activities</a>
-                    </div>
-                </div>
-
-                <div class="dropdown">
-                    <button class="dropbtn">MIS</button>
-                    <div class="dropdown-content">
-                        <a href="@Url.Action("MIS", "MIS")">MIS</a>
-                        <a href="@Url.Action("Dashboard", "MIS")">Dashboards</a>
-                    </div>
-                </div>
-
             </div>
+
+            @if (PrivilegeHelper.IsSuperAdmin())
+            {
+                <div class="dropdown">
+                    <button class="dropbtn">Asset Issuance</button>
+                    <div class="dropdown-content">
+                        <a href="@Url.Action("ViewCategory", "Category")">View All Categories</a>
+                        <a href="@Url.Action("ViewBrand", "InventoryBrand")">View All Brands</a>
+                        <a href="@Url.Action("Issuance", "AssetIssuance")">Issuance</a>
+                        <a href="@Url.Action("IssuedAssets", "AssetIssuance")">View All Asset</a>
+                    </div>
+                </div>
+            }
+
+            <div class="dropdown">
+                <button class="dropbtn">Service Request</button>
+                <div class="dropdown-content">
+                    @if (PrivilegeHelper.HasPrivilege("LNR"))
+                    {
+                        <a href="@Url.Action("LogNewRequest", "NewRequest")">Log new request</a>
+                    }
+                    @if (PrivilegeHelper.HasPrivilege("VR"))
+                    {
+                        <a href="@Url.Action("ViewAllRequests", "ViewAllRequests", new { status = "All" })">Show all requests</a>
+                    }
+                    @if (PrivilegeHelper.HasPrivilege("SMS"))
+                    {
+                        <a href="@Url.Action("SendSMS", "Send")">Send SMS</a>
+                    }
+                    @if (PrivilegeHelper.HasPrivilege("SPWD"))
+                    {
+                        <a href="@Url.Action("SendPassword", "Send")">Send Password to Agents</a>
+                    }
+                </div>
+            </div>
+
+            @*  
+            <div class="dropdown">
+            <button class="dropbtn">Hardware Dispatch</button>
+            <div class="dropdown-content">
+                <a href="@Url.Action("NewHardware", "HardwareDispatch")">Log New Hardware Dispatch</a>
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <button class="dropbtn">Log Reports</button>
+            <div class="dropdown-content">
+                <a href="@Url.Action("DailyNOCReports", "LogReport")">View Daily Log Reports</a>
+                <a href="@Url.Action("ManageReportCategory", "LogReport")">Add new description</a>
+                <a href="@Url.Action("LogNew", "LogReport")">Log new report</a>
+            </div>
+        </div>
+            *@
+            <div class="dropdown">
+                <button class="dropbtn">Incident Management</button>
+                <div class="dropdown-content">
+                    <a href="@Url.Action("LogNewIncident", "Incident")">Log new Incident</a>
+                    <a href="@Url.Action("ShowAllIncident", "Incident")">Show all Incident</a>
+                    <a href="@Url.Action("SearchIncident", "Incident")">Search</a>
+                </div>
+            </div>
+
+            <div class="dropdown">
+                <button class="dropbtn">Activity Management</button>
+                <div class="dropdown-content">
+                    <a href="@Url.Action("LogNewActivity", "Activity")">Log new Activity</a>
+                    <a href="@Url.Action("ShowAllActivities", "Activity")">Show All Activities</a>
+                </div>
+            </div>
+
+            <div class="dropdown">
+                <button class="dropbtn">MIS</button>
+                <div class="dropdown-content">
+                    <a href="@Url.Action("MIS", "MIS")">MIS</a>
+                    <a href="@Url.Action("Dashboard", "MIS")">Dashboards</a>
+                </div>
+            </div>
+
         </div>
 
         <button class="logout-button" onclick="window.location.href='@Url.Action("Logout","Account")'">Logout</button>
@@ -216,6 +215,15 @@
             @if (TempData["Error"] != null) {
                 <text>showGlobalToast("@TempData["Error"]", "error");</text>
             }
+        });
+        document.querySelectorAll('.dropdown').forEach(function (dropdown) {
+            dropdown.addEventListener('mouseenter', function () {
+                var btn = dropdown.querySelector('.dropbtn');
+                var rect = btn.getBoundingClientRect();
+                var content = dropdown.querySelector('.dropdown-content');
+                content.style.left = rect.left + 'px';
+                content.style.top = (rect.bottom - 0) + 'px';  // -4 closes the gap
+            });
         });
     </script>
 

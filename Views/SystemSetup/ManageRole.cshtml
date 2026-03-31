@@ -110,6 +110,7 @@
         </tbody>
     </table>
 </div>
+
 @section scripts {
     <script>
 $(function () {
@@ -128,7 +129,7 @@ $(function () {
     }
 
     // 2. FORM CONTROL
-    function resetForm(isUpdate = false, name = "", programId = null) {
+    function resetForm(isUpdate = false, name = "", programId = null, programName = "") {
         const $status = $('#formStatus');
         const $addBtn = $('#addRoleBtn');
         const $checks = $('.priv-cb');
@@ -139,7 +140,7 @@ $(function () {
         if (isUpdate) {
             $status.addClass('status-editing');
             $status.find('.status-icon').text('📝');
-            $status.find('.status-text').html(`Editing: <strong>${name}</strong>`);
+            $status.find('.status-text').html(`Editing: <strong>${name}</strong> (Program: <strong>${programName || 'N/A'}</strong>)`);
             $addBtn.text('💾 Update Role');
             $('#programSelect').val(programId || '');
         } else {
@@ -156,7 +157,10 @@ $(function () {
 
     // 3. EDIT ACTION
     $(document).on('click', '.edit-btn', function () {
-        const id = $(this).closest('tr').data('id');
+        const $row = $(this).closest('tr');
+        const id = $row.data('id');
+        const programNameFromTable = $row.find('.program-name').text().trim();
+
         $.get('@Url.Action("GetRoleDetails", "Role")', { id: id }, function (res) {
             if (res.success) {
                 $('#roleId').val(res.data.RoleId);
@@ -165,7 +169,7 @@ $(function () {
                 $('.priv-cb').each(function () {
                     $(this).prop('checked', res.data[this.id] === true);
                 });
-                resetForm(true, res.data.RoleName, res.data.program_Id);
+                resetForm(true, res.data.RoleName, res.data.program_Id, programNameFromTable);
                 $("html, body").animate({ scrollTop: 0 }, "fast");
             } else {
                 showGlobalToast(res.message || "Error loading role", "error");
@@ -194,7 +198,6 @@ $(function () {
                 showGlobalToast(id == "0" ? "Role created!" : "Role updated!");
 
                 if (id == "0") {
-                    // NEW ROLE: Append a fresh row to the table
                     const programName = $('#programSelect option:selected').text();
                     const newRow = `
                         <tr data-id="${res.role.RoleId}">
@@ -214,7 +217,6 @@ $(function () {
                     $('#roleTableBody').append($nr);
                     $nr.css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
                 } else {
-                    // EDITING ROLE: Update the existing row
                     const $row = $(`tr[data-id="${id}"]`);
                     const programName = $('#programSelect option:selected').text();
                     $row.find('.role-name').text(name);
@@ -222,7 +224,7 @@ $(function () {
                     $row.css('background-color', '#e6fffa').animate({backgroundColor: 'transparent'}, 1000);
                 }
 
-                resetForm(false); // Clear the form back to "Add" mode
+                resetForm(false);
             } else {
                 showGlobalToast(res.message, "error");
             }
@@ -249,7 +251,6 @@ $(function () {
         resetForm(false);
     });
 
-    // Initialize form on load
     resetForm(false);
 });
     </script>

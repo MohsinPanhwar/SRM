@@ -12,43 +12,44 @@ namespace SRM.Controllers
     {
         private AppDbContext _db = new AppDbContext();
 
-        // 1. Initial Page Load (Shell)
+        // 1. Initial Page Load (Supports Super User "All Programs")
         public ActionResult ManageRole()
         {
             var vm = new ManageRoleVM();
 
-            // Get program filter from session
+            // Get program filter from session (Switcher value)
             int? agentProgramId = Session["AgentProgramId"] as int?;
 
-            if (!agentProgramId.HasValue)
+            // Use AsQueryable to build the query dynamically
+            var rolesQuery = _db.Role.AsQueryable();
+
+            // If a specific program is selected (not "All"), apply the filter
+            if (agentProgramId.HasValue && agentProgramId.Value > 0)
             {
-                // No program assigned - show no roles
-                vm.ExistingRoles = new List<ManageRoleVM>();
-            }
-            else
-            {
-                // Show ONLY roles for this program
-                vm.ExistingRoles = _db.Role
-                    .Where(r => r.program_Id == agentProgramId)  // ONLY this program
-                    .ToList()
-                    .Select(r => new ManageRoleVM
-                    {
-                        RoleId = r.Role_Id,
-                        RoleName = r.Role_Name,
-                        program_Id = r.program_Id,
-                        ProgramName = _db.Programs.FirstOrDefault(p => p.Program_Id == r.program_Id)?.Program_Name ?? "Unknown",
-                        UserCount = _db.agent.Count(a => a.RoleId == r.Role_Id && a.ProgramId == agentProgramId)
-                    }).ToList();
+                rolesQuery = rolesQuery.Where(r => r.program_Id == agentProgramId.Value);
             }
 
-            // Show ONLY the user's program in dropdown
-            var programs = agentProgramId.HasValue
+            vm.ExistingRoles = rolesQuery.ToList().Select(r => new ManageRoleVM
+            {
+                RoleId = r.Role_Id,
+                RoleName = r.Role_Name,
+                program_Id = r.program_Id,
+                // Fetch the program name; fallback to "Global" if ID is 0 or null
+                ProgramName = _db.Programs.FirstOrDefault(p => p.Program_Id == r.program_Id)?.Program_Name ?? "Shared/Global",
+                // Count users: filter by program ONLY if a specific program is selected
+                UserCount = _db.agent.Count(a => a.RoleId == r.Role_Id && (!agentProgramId.HasValue || agentProgramId == 0 || a.ProgramId == agentProgramId))
+            }).ToList();
+
+            // Populate Dropdown: Show all programs for Super User, or just the one restricted program
+            var programs = (agentProgramId.HasValue && agentProgramId.Value > 0)
                 ? _db.Programs.Where(p => p.Program_Id == agentProgramId).ToList()
-                : new List<Program_Setup>();
+                : _db.Programs.ToList();
 
             ViewBag.Programs = new SelectList(programs, "Program_Id", "Program_Name");
             ViewBag.ProgramId = agentProgramId;
-            ViewBag.ProgramName = programs.FirstOrDefault()?.Program_Name ?? "No Program";
+            ViewBag.ProgramName = agentProgramId.HasValue && agentProgramId.Value > 0
+                ? (programs.FirstOrDefault(p => p.Program_Id == agentProgramId)?.Program_Name)
+                : "All Programs";
 
             return View("~/Views/SystemSetup/ManageRole.cshtml", vm);
         }
@@ -61,13 +62,13 @@ namespace SRM.Controllers
 
             var role = _db.Role.FirstOrDefault(r => r.Role_Id == id);
             if (role == null)
-                return Json(new { success = false, message = "Not found" }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Role not found" }, JsonRequestBehavior.AllowGet);
 
-            // User can ONLY view roles from their program
-            if (!agentProgramId.HasValue || role.program_Id != agentProgramId)
-                return Json(new { success = false, message = "Access denied" }, JsonRequestBehavior.AllowGet);
+            // Access Check: If restricted to a program, ensure the role belongs to it
+            if (agentProgramId.HasValue && agentProgramId.Value > 0 && role.program_Id != agentProgramId)
+                return Json(new { success = false, message = "Access denied to this program's role" }, JsonRequestBehavior.AllowGet);
 
-            string programName = _db.Programs.FirstOrDefault(p => p.Program_Id == role.program_Id)?.Program_Name ?? "Unknown";
+            string programName = _db.Programs.FirstOrDefault(p => p.Program_Id == role.program_Id)?.Program_Name ?? "Shared/Global";
 
             var privilegeList = (role.Privilege ?? "")
                 .Split(',')
@@ -81,6 +82,7 @@ namespace SRM.Controllers
                 RoleName = role.Role_Name,
                 program_Id = role.program_Id,
                 ProgramName = programName,
+                // Privilege Mapping
                 CanAddEditEngineer = privilegeList.Contains("AFE"),
                 CanLogNewRequest = privilegeList.Contains("LNR"),
                 CanViewForwardAny = privilegeList.Contains("FQR"),
@@ -108,25 +110,21 @@ namespace SRM.Controllers
         public JsonResult SaveRole(ManageRoleVM vm)
         {
             if (vm == null || string.IsNullOrWhiteSpace(vm.RoleName))
-                return Json(new { success = false, message = "Invalid data" });
+                return Json(new { success = false, message = "Invalid data: Role Name is required" });
 
             int? agentProgramId = Session["AgentProgramId"] as int?;
-            if (!agentProgramId.HasValue)
-                return Json(new { success = false, message = "No program assigned" });
+
+            // Priority: Session ID (if locked). Fallback: Dropdown ID (if Super User).
+            int targetProgramId = (agentProgramId.HasValue && agentProgramId.Value > 0)
+                                  ? agentProgramId.Value
+                                  : (vm.program_Id ?? 0);
+
+            if (targetProgramId == 0)
+                return Json(new { success = false, message = "Please select a specific program for this role." });
 
             try
             {
-                // Force program to user's program
-                vm.program_Id = agentProgramId.Value;
-
-                bool exists = _db.Role.Any(r =>
-                    r.Role_Name.Trim().ToLower() == vm.RoleName.Trim().ToLower()
-                    && r.Role_Id != vm.RoleId
-                    && r.program_Id == agentProgramId);
-
-                if (exists)
-                    return Json(new { success = false, message = "Role name already exists in this program" });
-
+                // Logic for Privilege CSV string creation
                 var privileges = new List<string>();
                 if (vm.CanAddEditEngineer) privileges.Add("AFE");
                 if (vm.CanLogNewRequest) privileges.Add("LNR");
@@ -149,35 +147,40 @@ namespace SRM.Controllers
                 string privilegeCsv = string.Join(",", privileges);
 
                 Role role;
-
-                if (vm.RoleId == 0)
+                if (vm.RoleId == 0) // CREATE
                 {
+                    // Check for duplicates in the target program
+                    if (_db.Role.Any(r => r.Role_Name.ToLower() == vm.RoleName.ToLower() && r.program_Id == targetProgramId))
+                        return Json(new { success = false, message = "This role name already exists in the selected program." });
+
                     role = new Role
                     {
                         Role_Name = vm.RoleName.Trim(),
                         Privilege = privilegeCsv,
-                        program_Id = vm.program_Id
+                        program_Id = targetProgramId
                     };
                     _db.Role.Add(role);
                 }
-                else
+                else // UPDATE
                 {
                     role = _db.Role.Find(vm.RoleId);
-                    if (role == null || role.program_Id != agentProgramId)
+                    if (role == null) return Json(new { success = false, message = "Role not found" });
+
+                    // Ensure Super User isn't editing a restricted role they shouldn't see
+                    if (agentProgramId.HasValue && agentProgramId.Value > 0 && role.program_Id != agentProgramId)
                         return Json(new { success = false, message = "Access denied" });
 
                     role.Role_Name = vm.RoleName.Trim();
                     role.Privilege = privilegeCsv;
-                    role.program_Id = vm.program_Id;
+                    role.program_Id = targetProgramId;
                 }
 
                 _db.SaveChanges();
-
                 return Json(new { success = true, role = new { RoleId = role.Role_Id, RoleName = role.Role_Name } });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Error: " + ex.Message });
+                return Json(new { success = false, message = "Database Error: " + ex.Message });
             }
         }
 
@@ -186,19 +189,17 @@ namespace SRM.Controllers
         public JsonResult DeleteRole(int id)
         {
             int? agentProgramId = Session["AgentProgramId"] as int?;
-            if (!agentProgramId.HasValue)
-                return Json(new { success = false, message = "Access denied" });
-
             var role = _db.Role.Find(id);
+
             if (role == null)
                 return Json(new { success = false, message = "Role not found." });
 
-            // User can ONLY delete roles from their program
-            if (role.program_Id != agentProgramId)
+            if (agentProgramId.HasValue && agentProgramId.Value > 0 && role.program_Id != agentProgramId)
                 return Json(new { success = false, message = "Access denied" });
 
-            if (_db.agent.Any(a => a.RoleId == id && a.ProgramId == agentProgramId))
-                return Json(new { success = false, message = "Cannot delete: Users are assigned to this role." });
+            // Ensure no users are currently using this role before deletion
+            if (_db.agent.Any(a => a.RoleId == id && (!agentProgramId.HasValue || a.ProgramId == agentProgramId)))
+                return Json(new { success = false, message = "Cannot delete: Users are currently assigned to this role." });
 
             _db.Role.Remove(role);
             _db.SaveChanges();
