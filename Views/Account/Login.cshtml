@@ -117,5 +117,17 @@
             setTimeout(() => { this.submit(); }, 800);
         }
     });
+ 
+    window.addEventListener('pageshow', function (e) {
+        if (e.persisted || window.performance.navigation.type === 2) {
+            // Arrived here via forward button — replace so forward is disabled
+            window.location.replace('@Url.Action("Login", "Account")');
+        }
+    });
+    history.pushState(null, null, window.location.href);
+    window.addEventListener('popstate', function () {
+        history.pushState(null, null, window.location.href);
+    });
 </script>
+
 </html>
