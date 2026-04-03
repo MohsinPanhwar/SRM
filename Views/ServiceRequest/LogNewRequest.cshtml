@@ -11,16 +11,16 @@
 <div class="setup-container">
     <div class="section-header">
         <h2>Log New Request</h2>
-    </div>
 
-    @* 1. Search Section *@
-    <div class="action-row" style="margin-bottom:20px; padding:15px; background:#fdfdfd; border:1px solid #eee; border-radius:4px;">
-        @using (Html.BeginForm("LogNewRequest", "NewRequest", FormMethod.Get, new { @class = "form-inline" }))
-        {
-            <label class="control-label" style="margin-right:10px;"><strong>Reported Employee ID:</strong></label>
-            <input type="text" name="searchPno" value="@Model.Pno" class="form-control" style="width:200px; display:inline-block;" placeholder="Enter P-No..." required />
-            <button type="submit" class="setup-btn-green">🔍 Search & Load</button>
-        }
+        @* 1. Search Section *@
+        <div class="action-row" >
+            @using (Html.BeginForm("LogNewRequest", "NewRequest", FormMethod.Get, new { @class = "form-inline" }))
+            {
+                <label class="control-label" style="margin-right:10px;"><strong>Reported Employee ID:</strong></label>
+                <input type="text" name="searchPno" value="@Model.Pno" class="form-control" style="width:200px; display:inline-block;" placeholder="Enter P-No..." required />
+                <button type="submit" class="setup-btn-green">🔍 Search & Load</button>
+            }
+        </div>
     </div>
 
     @using (Html.BeginForm("SaveRequest", "NewRequest", FormMethod.Post, new { id = "logRequestForm" }))
@@ -109,7 +109,7 @@
                 <div class="details-row" style="align-items:center;">
                     <div class="details-label" style="align-self:center;">Fault Description</div>
                     <div class="details-content">
-                    <textarea name="Fault" class="form-control" rows="2" style="width:100%; padding-top:10px; line-height:2.5;"></textarea>
+                        <textarea name="Fault" class="form-control" rows="2" style="width:100%; padding-top:10px; line-height:2.5;"></textarea>
                     </div>
                 </div>
                 <div class="details-row" style="align-items:center;">

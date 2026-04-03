@@ -45,7 +45,7 @@ else
 
         <div class="grid-label">Assigned Group</div>
         <div class="grid-input">
-            @Html.TextBoxFor(m => m.GroupName, new { @readonly = "readonly", @class = "form-control form-control-readonly", style = "font-weight:bold; color:#0056b3;" })
+            @Html.TextBoxFor(m => m.GroupName, new { @readonly = "readonly", @class = "form-control form-control-readonly", style = "font-weight:bold;" })
         </div>
         <div class="grid-label">Group Manager</div>
         <div class="grid-input">
@@ -77,16 +77,11 @@ else
         </div>
 
         <div class="grid-label">Incident Detail</div>
-        <div class="grid-input" style="grid-column: span 3; margin-top:10px;">
-            @Html.TextAreaFor(m => m.Detail, new
-            {
-                @readonly = "readonly",
-                @class = "form-control form-control-readonly",
-                rows = "3",
-                style = "resize:none; width:100%; padding-top:15px !important; line-height:1.2;"
-            })
+        <div class="grid-input" style="grid-column: span 3;">
+            <div class="form-control-readonly"
+                 style="min-height: 40px; height: auto; width: 100%; padding: 8px 12px; white-space: pre-wrap; word-break: break-all; display: block; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; line-height: 1.4;">@Model.Detail</div>
+            </div>
         </div>
-    </div>
 
     <br /><hr />
 

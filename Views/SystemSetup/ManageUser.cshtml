@@ -6,6 +6,20 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+<style>
+    /* This hides the sorting arrows while keeping the logic active */
+    table.dataTable thead .sorting:before,
+    table.dataTable thead .sorting:after,
+    table.dataTable thead .sorting_asc:before,
+    table.dataTable thead .sorting_asc:after {
+        display: none !important;
+    }
+
+    table.dataTable thead th {
+        cursor: default !important;
+    }
+</style>
+
 <div class="setup-container fade-in-up">
     <div class="section-header">
         <h2>Manage Users</h2>
@@ -16,13 +30,13 @@
         </div>
     </div>
 
-    <div id="activeToggleContainer" style="display:flex; justify-content:flex-end; margin-bottom:8px;">
-        <div style="display:flex; align-items:center; gap:8px;">
+    <div id="activeToggleContainer" style="margin-bottom: 15px; text-align: left;">
+        <div style="display: inline-flex; align-items: center; gap: 8px;">
             <label class="switch" style="margin:0;">
                 <input type="checkbox" id="toggleActiveOnly" checked>
                 <span class="slider round"></span>
             </label>
-            <span style="font-size:0.9rem; font-weight:500;">Show active users only</span>
+            <span style="font-size:0.9rem; font-weight:600;">Show active users only</span>
         </div>
     </div>
 
@@ -30,6 +44,7 @@
         <table class="crud-table smart-table" id="allUsersTable">
             <thead>
                 <tr>
+                    <th style="display:none;">SortOrder</th>
                     <th>Image</th>
                     <th>Name / PNo</th>
                     <th>Last Login</th>
@@ -48,8 +63,11 @@
                     var statusText = (u.Status == "A" || u.Status == "Y") ? "Active" : "Inactive";
                     var roleName = rolesSource.FirstOrDefault(r => r.Role_Id == u.RoleId)?.Role_Name ?? "General Users";
 
-                    // data-role-id and data-role-name are used by drawCallback to inject group headers
+                    // Prefix 1 for Roles, 2 for General to force the bottom position
+                    var sortKey = (u.RoleId == null || u.RoleId == 0) ? "2-General" : "1-" + roleName;
+
                     <tr data-pno="@u.Pno" data-role-id="@u.RoleId" data-role-name="@roleName">
+                        <td style="display:none;">@sortKey</td>
                         <td style="width:60px; text-align:center; vertical-align:middle;">
                             <img src="https://systemsupport.piac.com.pk/admin/AgentImages/@(u.Pno).jpg"
                                  width="60" height="60"
@@ -76,7 +94,7 @@
         </table>
     </div>
 
-    @* ── Form Section ──────────────────────────────────────────────────────── *@
+    @* ── Form Section ── *@
     <div id="userDetailsForm" style="display:none; margin-top: 20px;">
         <form id="manageUserForm">
             @Html.AntiForgeryToken()
@@ -183,10 +201,9 @@
         </form>
     </div>
 
-    @* ── Password Section ──────────────────────────────────────────────────── *@
+    @* ── Password Section ── *@
     <div id="passwordFields" style="display:none; margin-top: 20px;">
         <div class="form-section-header" style="background:#fff3cd; color:#856404; border-color:#ffeeba;">Reset Password</div>
-
         <div class="grid-container" style="border-color:#ffeeba; background: #fffdf7; display: grid; grid-template-columns: 200px 1fr; gap: 15px; padding: 20px 20px 20px 15px; border: 1px solid #ffeeba; border-top: none; border-radius: 0 0 8px 8px;">
             <form id="changePassForm" style="display: contents;">
                 @Html.AntiForgeryToken()
@@ -196,7 +213,6 @@
                 <div class="grid-input">
                     <input type="password" name="newPassword" id="newPassword" class="form-control"
                            style="width:100%; border-color: #ffeeba;" value="" autocomplete="new-password" required />
-
                     <div id="passwordRequirements" style="margin-top:12px; font-size: 0.85em; display: flex; flex-direction: column; gap: 6px;">
                         <span id="reqLength" style="color: #d9534f;">● At least 6 characters</span>
                         <span id="reqUpper" style="color: #d9534f;">● At least one uppercase letter (A-Z)</span>
@@ -208,12 +224,10 @@
                 <div class="grid-input">
                     <input type="password" name="confirmPassword" id="confirmPassword" class="form-control"
                            style="width:100%; border-color: #ffeeba;" value="" autocomplete="new-password" required />
-
                     <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="checkbox" id="chkShowPasswords" style="width: 16px; height: 16px; cursor: pointer;" />
                         <label for="chkShowPasswords" style="font-size: 0.9em; color: #856404; font-weight: 500; cursor: pointer; margin: 0;">Show Passwords</label>
                     </div>
-
                     <div id="matchError" style="color: #d9534f; font-size: 0.8em; display: none; margin-top: 5px; font-weight: 500;">⚠️ Passwords do not match!</div>
                 </div>
 
@@ -223,13 +237,13 @@
             </form>
         </div>
     </div>
-
 </div>
+
 @section scripts {
     <script>
 $(document).ready(function () {
 
-    // ── 1. PENDING TOAST ────────────────────────────────────────────────────
+    // ── 1. PENDING TOAST ──
     const pendingToast = sessionStorage.getItem("pendingToast");
     if (pendingToast) {
         const toastData = JSON.parse(pendingToast);
@@ -237,44 +251,48 @@ $(document).ready(function () {
         sessionStorage.removeItem("pendingToast");
     }
 
-    // ── 2. ACTIVE-ONLY FILTER STATE ─────────────────────────────────────────
-    // Declared BEFORE DataTable init and BEFORE ext.search.push
-    // so the closure captures the variable correctly
+    // ── 2. ACTIVE-ONLY FILTER ──
     var showActiveOnly = true;
-    var table = null; // forward declaration — assigned after DataTable init
+    var table = null;
 
     $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
         if (settings.nTable.id !== 'allUsersTable') return true;
         if (!showActiveOnly) return true;
-        if (!table) return true; // safety guard before table is assigned
+        if (!table) return true;
         var rowNode = table.row(dataIndex).node();
         var statusText = $(rowNode).find('.td-status').text().trim();
         return statusText === 'Active';
     });
 
-    // ── 3. DATATABLE INIT ───────────────────────────────────────────────────
+    // ── 3. DATATABLE INIT ──
     table = $('#allUsersTable').DataTable({
         "pageLength": 10,
         "lengthChange": false,
         "info": true,
-        "ordering": false,
         "pagingType": "simple_numbers",
         "language": {
             "search": "",
             "searchPlaceholder": "Search...",
             "paginate": { "previous": "«", "next": "»" },
-             "infoFiltered": ""   // ← add this
+             "infoFiltered": ""
         },
+        "ordering": true,           // Keep logic active
+        "order": [[0, 'asc']],      // Sort by hidden column
+        "columnDefs": [
+            { "targets": 0, "visible": false, "searchable": false },
+            { "targets": "_all", "orderable": false } // Disables clicking on headers
+        ],
+        "orderFixed": [[0, 'asc']],  // Hard-locks the grouping
         "drawCallback": function () {
             var api      = this.api();
             var lastRole = null;
 
-            // rows({ page:'current' }).nodes() returns a DataTables API NodeList
-            // — iterate with .each() on the API object, not jQuery
+            $(this).find('.role-group-header').remove();
+
             api.rows({ page: 'current' }).every(function () {
                 var $row     = $(this.node());
-                var roleId   = $row.data('role-id');
-                var roleName = $row.data('role-name');
+                var roleId   = $row.data('role-id') || 0;
+                var roleName = $row.data('role-name') || "General Users";
 
                 if (roleId !== lastRole) {
                     $row.before(
@@ -288,18 +306,17 @@ $(document).ready(function () {
         }
     });
 
-    // ── 4. ACTIVE TOGGLE ────────────────────────────────────────────────────
+    // ── 4. ACTIVE TOGGLE ──
     $('#toggleActiveOnly').on('change', function () {
         showActiveOnly = $(this).is(':checked');
         table.draw();
     });
 
-    // Trigger initial draw — table is now assigned so filter works correctly
     $('#toggleActiveOnly').prop('checked', true);
     showActiveOnly = true;
     table.draw();
 
-    // ── 5. PASSWORD VALIDATION ──────────────────────────────────────────────
+    // ── 5. PASSWORD VALIDATION ──
     const $newPass       = $('#newPassword');
     const $confirmPass   = $('#confirmPassword');
     const $submitPassBtn = $('#btnUpdatePass');
@@ -358,7 +375,7 @@ $(document).ready(function () {
         });
     });
 
-    // ── 6. VIEW TOGGLING ────────────────────────────────────────────────────
+    // ── 6. VIEW TOGGLING ──
     function toggleView(showForm, isNewUser = false) {
         if (showForm) {
             $('#userListSection, #activeToggleContainer, #searchControls').hide();
@@ -392,7 +409,7 @@ $(document).ready(function () {
         }
     });
 
-    // ── 7. USER CRUD ────────────────────────────────────────────────────────
+    // ── 7. USER CRUD ──
     function updateAdminStatus() {
         var selectedRoleText = $('#EditRoleId option:selected').text().trim().toLowerCase();
         $('#HiddenIsAdministrator').val(selectedRoleText.includes('admin') ? 'Y' : 'N');

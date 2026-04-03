@@ -181,7 +181,7 @@
             $('#notification-area').append($toast);
 
             $toast.show().animate({ left: "0px", opacity: "1" }, 300)
-                  .delay(1000)
+                  .delay(1500)
                   .animate({ left: "-40px", opacity: "0" }, 300, function () {
                       $(this).remove();
                   });
@@ -192,22 +192,24 @@
             // ── Global DataTables init — EXCLUDES #allUsersTable ──────────────
             // #allUsersTable has role-group-header rows and its own custom init
             // in ManageUser.cshtml via drawCallback, so we skip it here.
-            $('.smart-table').not('#allUsersTable').DataTable({
-                "pageLength": 10,
-                "lengthChange": false,
-                "info": true,
-                "ordering": false,
-                "pagingType": "simple_numbers",
-                "language": {
-                    "search": "",
-                    "searchPlaceholder": "Search...",
-                    "paginate": {
-                        "previous": "«",
-                        "next": "»"
+            $(document).ready(function () {
+                // This targets all tables EXCEPT ViewAllRequests (which uses Ajax)
+                $('.smart-table').not('.manual-init, #allUsersTable').DataTable({
+                    "pageLength": 10,
+                    "lengthChange": false,
+                    "info": true,
+                    "ordering": false,
+                    "pagingType": "simple_numbers",
+                    "language": {
+                        "search": "",
+                        "searchPlaceholder": "Search...",
+                        "paginate": {
+                            "previous": "Previous",
+                            "next": "Next"
+                        }
                     }
-                }
+                });
             });
-
             // ── Server-Side TempData toasts ───────────────────────────────────
             @if (TempData["Success"] != null) {
                 <text>showGlobalToast("@TempData["Success"]", "success");</text>

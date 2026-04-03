@@ -104,10 +104,10 @@
                     <option value="Network">Network</option>
                 </select>
             </div>
-
             <div class="grid-label">Select Group</div>
             <div class="grid-input">
-                @Html.DropDownList("Incident", (IEnumerable<SelectListItem>)ViewBag.IncidentGroups, "-- Select Group --", new { @id = "ddlGroup", @class = "form-control" })
+                @* Changed "Incident" to "gid" to match Controller logic *@
+                @Html.DropDownList("gid", (IEnumerable<SelectListItem>)ViewBag.IncidentGroups, "-- Select Group --", new { @id = "ddlGroup", @class = "form-control" })
             </div>
 
             @* Row 5: Incident Detail *@

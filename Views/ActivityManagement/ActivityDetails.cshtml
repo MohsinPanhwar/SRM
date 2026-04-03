@@ -70,15 +70,9 @@ else
             <div class="grid-input">
                 @Html.TextBoxFor(m => m.ReportBy, new { @readonly = "readonly", @class = "form-control form-control-readonly", style = "margin-left:20px;" })
             </div>
-
             <div class="grid-label">Activity Detail</div>
-            <div class="grid-input" style="grid-column: span 3; margin-top:10px;">
-                @Html.TextAreaFor(m => m.Detail, new
-                {
-                    @readonly = "readonly",
-                    @class = "form-control form-control-readonly auto-expand",
-                    style = "resize:none; width:100%; padding-top:15px; min-height:60px; overflow:hidden;"
-                })
+            <div class="grid-input" style="grid-column: span 3;">
+                <div class="form-control-readonly"style="min-height: 40px;height: auto;width: 100%;padding: 8px 12px;white-space: pre-wrap;word-break: break-all;display: block;box-sizing: border-box;border: 1px solid #ccc; border-radius: 4px;font-size: 14px;line-height: 1.4;">@Model.Detail</div>
             </div>
         </div>
 

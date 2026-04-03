@@ -4,20 +4,6 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<style>
-    /* Smoothing transitions for row filtering */
-    .incident-row {
-        transition: opacity 0.4s ease, transform 0.4s ease;
-        opacity: 1;
-        transform: scaleY(1);
-    }
-
-        .incident-row.filtered-out {
-            opacity: 0;
-            transform: scaleY(0);
-            display: none;
-        }
-</style>
 
 <div class="setup-container">
     <div class="section-header">
@@ -155,9 +141,6 @@
             });
         }
 
-        $(document).ready(function () {
-            // Initial table fade-in effect
-            $('#incidentsTable').hide().fadeIn(800);
-        });
+      
     </script>
 }

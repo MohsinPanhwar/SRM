@@ -298,7 +298,64 @@ namespace SRM.Controllers
 
             return RedirectToAction("Details", new { id });
         }
+        [HttpPost]
+        public JsonResult GetTableData(int draw, int start, int length, string statusFilter, string fromDate, string toDate, string searchBy, string searchText)
+        {
+            try
+            {
+                var query = _db.Request_Master.AsNoTracking().AsQueryable();
 
+                // 1. Apply Filters (Existing Logic)
+                if (DateTime.TryParse(fromDate, out DateTime fDate))
+                    query = query.Where(r => r.RequestDate >= fDate);
+                if (DateTime.TryParse(toDate, out DateTime tDate))
+                    query = query.Where(r => r.RequestDate <= DbFunctions.TruncateTime(tDate).Value);
+
+                if (!string.IsNullOrEmpty(statusFilter) && statusFilter != "All")
+                    query = query.Where(r => r.status == statusFilter);
+
+                if (!string.IsNullOrEmpty(searchText))
+                {
+                    if (searchBy == "RequestID" && int.TryParse(searchText, out int id))
+                        query = query.Where(r => r.RequestID == id);
+                    else
+                        query = query.Where(r => r.ReqSummary.Contains(searchText));
+                }
+
+                int totalRecords = query.Count();
+
+                // 2. Paginate and Select SPECIFIC fields (Fixes the Ajax Error)
+                var jsonData = query.OrderByDescending(r => r.RequestID)
+                                   .Skip(start)
+                                   .Take(length)
+                                   .ToList() // Execute query first
+                                   .Select(r => new {
+                                       r.RequestID,
+                                       r.ReqSummary,
+                                       r.Priority,
+                                       r.Forward_To,
+                                       r.Location,
+                                       r.status,
+                                       // Pre-format date to avoid JS date parsing headaches
+                                       DisplayDate = r.RequestDate?.ToString("dd-MMM-yyyy hh:mm tt") ?? "---",
+                                       // Calculate pending time here
+                                       PendingTime = (r.status == "C" || r.status == "R") ? "---" :
+                                                    $"{(DateTime.Now - r.RequestDate.Value).Days}d {(DateTime.Now - r.RequestDate.Value).Hours}h"
+                                   });
+
+                return Json(new
+                {
+                    draw = draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = jsonData
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
         protected override void Dispose(bool disposing)
         {
             if (disposing) _db.Dispose();

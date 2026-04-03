@@ -7,11 +7,11 @@
     <!-- HEADER -->
     <div class="section-header">
         <h2>Issued Assets</h2>
-        <div class="action-row">
-            @using (Html.BeginForm("IssuedAssets", "AssetIssuance", FormMethod.Get))
-            {
-                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                    <select name="brandId" class="form-control" style="width:auto; min-width:150px;">
+            <div class="action-row">
+                @using (Html.BeginForm("IssuedAssets", "AssetIssuance", FormMethod.Get, new { @class = "full-width-form" }))
+                {
+                    <select name="brandId" class="form-control">
+                        <option value="">-- Select Brand --</option>
                         @foreach (var item in Model.BrandList)
                         {
                             <option value="@item.Value" @(item.Value == Model.SelectedBrandId?.ToString() ? "selected" : "")>
@@ -19,7 +19,9 @@
                             </option>
                         }
                     </select>
-                    <select name="pno" class="form-control" style="width:auto; min-width:150px;">
+
+                    <select name="pno" class="form-control">
+                        <option value="">-- Select Employee --</option>
                         @foreach (var item in Model.PnoList)
                         {
                             <option value="@item.Value" @(item.Value == Model.SelectedPno ? "selected" : "")>
@@ -27,11 +29,11 @@
                             </option>
                         }
                     </select>
+
                     <button type="submit" class="setup-btn-green">🔍 Filter</button>
-                </div>
-            }
+                }
+            </div>
         </div>
-    </div>
 
     <!-- TABLE -->
     <table class="crud-table smart-table">
